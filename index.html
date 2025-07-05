@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YGWIN - Color Prediction</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #111; font-family: Arial; color: white; text-align: center; margin: 0; padding: 0; }
+    .header { background: #222; padding: 10px; font-size: 24px; font-weight: bold; color: gold; }
+    .wallet { margin: 15px; font-size: 20px; }
+    .btn { padding: 12px 25px; border: none; margin: 10px; border-radius: 8px; font-size: 16px; color: white; }
+    .green { background: green; }
+    .red { background: red; }
+    .violet { background: purple; }
+    .big { background: orange; }
+    .small { background: blue; }
+    .section { padding: 10px 0; border-top: 1px solid #333; }
+    .timer { font-size: 20px; color: yellow; margin: 10px 0; }
+    table { width: 95%; margin: auto; color: white; border-collapse: collapse; margin-top: 10px; }
+    td, th { padding: 8px; border-bottom: 1px solid #555; }
+    .highlight { font-weight: bold; font-size: 18px; }
+    .footer-btns { margin: 15px; }
+    .footer-btns button { padding: 10px 20px; margin: 5px; font-size: 16px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">🎮 YGWIN</div>
+
+  <div class="wallet">Wallet Balance: ₹<span id="wallet">500</span></div>
+
+  <div class="footer-btns">
+    <button onclick="alert('Deposit UPI: ygwin@upi')" style="background:green; color:white;">Deposit</button>
+    <button onclick="alert('Withdraw request sent')" style="background:red; color:white;">Withdraw</button>
+  </div>
+
+  <div class="section">
+    <div class="timer">⏱ Time Remaining: <span id="time">60</span>s</div>
+    <div>
+      <button class="btn red" onclick="placeBet('Red')">Red</button>
+      <button class="btn green" onclick="placeBet('Green')">Green</button>
+      <button class="btn violet" onclick="placeBet('Violet')">Violet</button>
+    </div>
+    <div>
+      <button class="btn big" onclick="placeBet('Big')">Big (5-9)</button>
+      <button class="btn small" onclick="placeBet('Small')">Small (0-4)</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>📊 Game History</h3>
+    <table>
+      <tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>
+      <tr><td>20250705100010936</td><td class="highlight">0</td><td>Small</td><td>🔴🟣</td></tr>
+      <tr><td>20250705100010935</td><td class="highlight">7</td><td>Big</td><td>🟢</td></tr>
+      <tr><td>20250705100010934</td><td class="highlight">2</td><td>Small</td><td>🔴</td></tr>
+    </table>
+  </div>
+
+<script>
+  let wallet = 500;
+  let timer = 60;
+  const timeEl = document.getElementById("time");
+  const walletEl = document.getElementById("wallet");
+
+  setInterval(() => {
+    if (timer > 0) {
+      timer--;
+      timeEl.innerText = timer;
+    }
+  }, 1000);
+
+  function placeBet(option) {
+    if (wallet < 10) return alert("Low balance!");
+    wallet -= 10;
+    walletEl.innerText = wallet;
+    alert("₹10 bet placed on " + option);
+  }
+</script>
+
+</body>
+  </html>
