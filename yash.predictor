@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color Trading</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 20px; }
+    .btn { padding: 10px 20px; margin: 10px; font-size: 18px; }
+    .red { background: red; color: white; }
+    .green { background: green; color: white; }
+    .violet { background: purple; color: white; }
+    .big { background: orange; color: white; }
+    .small { background: blue; color: white; }
+  </style>
+</head>
+<body>
+  <h2>🎨 Color Trading Game</h2>
+  <div>Wallet: ₹<span id="wallet">1000</span></div>
+  <hr/>
+  <h3>Select Color:</h3>
+  <button class="btn red" onclick="placeBet('Red')">Red</button>
+  <button class="btn green" onclick="placeBet('Green')">Green</button>
+  <button class="btn violet" onclick="placeBet('Violet')">Violet</button>
+
+  <h3>Big / Small:</h3>
+  <button class="btn big" onclick="placeBet('Big')">Big</button>
+  <button class="btn small" onclick="placeBet('Small')">Small</button>
+
+  <hr/>
+  <h3>Result: <span id="result">Waiting...</span></h3>
+
+  <button onclick="checkResult()">🔁 Refresh Result</button>
+  <br><br>
+  <button onclick="alert('Send payment to UPI: 1234567890@upi')">💰 Deposit</button>
+  <button onclick="alert('Withdrawal request sent! Wait for admin approval.')">💸 Withdraw</button>
+
+  <script>
+    let wallet = 1000;
+    function placeBet(option) {
+      if(wallet < 10) return alert("Not enough balance!");
+      wallet -= 10;
+      document.getElementById("wallet").innerText = wallet;
+      alert("Bet placed on " + option + " (-₹10)");
+    }
+
+    function checkResult() {
+      fetch("data/result.txt")
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById("result").innerText = data;
+        });
+    }
+  </script>
+</body>
+</html>
