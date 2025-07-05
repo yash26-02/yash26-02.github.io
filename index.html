@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YGWIN - Wingo 1 Minute</title>
+  <style>
+    body {
+      background: #0d0c11;
+      color: white;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background: #1e1d23;
+      padding: 10px;
+      text-align: center;
+      font-size: 18px;
+    }
+    .container {
+      padding: 15px;
+    }
+    .wallet {
+      display: flex;
+      justify-content: space-between;
+      background: #2e2d36;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .wallet span {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+    }
+    .green { background: #0f0; color: #000; }
+    .red { background: #f00; }
+    .violet { background: #a020f0; }
+    .big { background: #0033ff; }
+    .small { background: #ff6600; }.numbers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+.num-btn {
+  background: #222;
+  padding: 15px;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+}
+.num-btn[data-num='0']::after {
+  content: ' (Red+Violet)';
+  font-size: 10px;
+  display: block;
+  color: #ff0;
+}
+.num-btn[data-num='5']::after {
+  content: ' (Green+Violet)';
+  font-size: 10px;
+  display: block;
+  color: #0f0;
+}
+.bet-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1e1d23;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 999;
+}
+.bet-modal input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.bet-modal button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+  </style>
+</head>
+<body>
+  <header>YGWIN - Wingo 1-Minute Game</header>  <div class="container">
+    <div class="wallet">
+      <span>Balance: ₹<span id="balance">1000.00</span></span>
+      <span>Period: <span id="period">--</span></span>
+      <span>Time: <span id="timer">--</span></span>
+    </div><div class="actions">
+  <button class="green" onclick="openBet('Green')">Green</button>
+  <button class="violet" onclick="openBet('Violet')">Violet</button>
+  <button class="red" onclick="openBet('Red')">Red</button>
+</div>
+<div class="actions">
+  <button class="big" onclick="openBet('Big')">Big</button>
+  <button class="small" onclick="openBet('Small')">Small</button>
+</div>
+
+<div class="numbers">
+  ${[0,1,2,3,4,5,6,7,8,9].map(n => `<div class="num-btn" data-num="${n}" onclick="openBet(${n})">${n}</div>`).join('')}
+</div>
+
+  </div>  <div class="bet-modal" id="betModal">
+    <h3>Place Bet on: <span id="betTarget"></span></h3>
+    <input type="number" id="betAmount" placeholder="Enter Amount" />
+    <button onclick="placeBet()">Confirm Bet</button>
+  </div>  <script>
+    // Timer + Period logic (UTC based)
+    setInterval(() => {
+      const now = new Date();
+      const utc = new Date(now.toUTCString().substr(0, 25));
+      const seconds = utc.getSeconds();
+      const remainingSeconds = 60 - seconds;
+      const minutes = utc.getUTCHours() * 60 + utc.getUTCMinutes();
+      const period = `${utc.getUTCFullYear()}${('0' + (utc.getUTCMonth()+1)).slice(-2)}${('0' + utc.getUTCDate()).slice(-2)}1000${10001 + minutes}`;
+      document.getElementById("timer").textContent = `00:${remainingSeconds.toString().padStart(2, '0')}`;
+      document.getElementById("period").textContent = period;
+    }, 1000);
+
+    // Bet modal logic
+    let currentBetTarget = '';
+    function openBet(target) {
+      currentBetTarget = target;
+      document.getElementById("betTarget").textContent = target;
+      document.getElementById("betAmount").value = '';
+      document.getElementById("betModal").style.display = 'block';
+    }
+
+    function placeBet() {
+      const amount = document.getElementById("betAmount").value;
+      alert(`Bet Placed on ${currentBetTarget} with ₹${amount}`);
+      document.getElementById("betModal").style.display = 'none';
+    }
+  </script>  <footer>
+    © 2025 YGWIN - All rights reserved
+  </footer>
+</body>
+  </html>
