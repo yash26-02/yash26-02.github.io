@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color Trading</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #00ffcc;
+    }
+    .btn {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+    }
+    .red { background: red; }
+    .green { background: green; }
+    .violet { background: purple; }
+    .balance {
+      margin: 20px;
+      font-size: 22px;
+    }
+    .timer {
+      font-size: 28px;
+      margin-top: 20px;
+      color: yellow;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Color Trading Game</h1>
+  <div class="balance">Balance: ₹1000</div>
+
+  <div>
+    <button class="btn red">Red</button>
+    <button class="btn green">Green</button>
+    <button class="btn violet">Violet</button>
+  </div>
+
+  <div class="timer">Time Left: <span id="timer">30</span>s</div>
+
+  <script>
+    let time = 30;
+    let timer = setInterval(() => {
+      time--;
+      document.getElementById("timer").innerText = time;
+      if (time === 0) {
+        clearInterval(timer);
+        alert("Time up! Wait for result.");
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
