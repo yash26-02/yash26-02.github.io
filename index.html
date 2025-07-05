@@ -1,165 +1,125 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YGWIN - Wingo 1 Minute</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YGWIN - Wingo 1-Minute Game</title>
   <style>
     body {
-      background: #0d0c11;
+      margin: 0;
+      background-color: #121212;
       color: white;
       font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header, footer {
-      background: #1e1d23;
-      padding: 10px;
       text-align: center;
-      font-size: 18px;
     }
-    .container {
+    header {
+      background: #1f1f1f;
       padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      color: gold;
     }
     .wallet {
       display: flex;
-      justify-content: space-between;
-      background: #2e2d36;
+      justify-content: space-around;
       padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .wallet span {
-      font-weight: bold;
+      background: #1a1a1a;
       font-size: 16px;
     }
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      padding: 20px;
     }
-    .actions button {
-      flex: 1;
-      padding: 10px;
+    button {
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
+      border-radius: 10px;
       cursor: pointer;
-      color: white;
     }
-    .green { background: #0f0; color: #000; }
-    .red { background: #f00; }
-    .violet { background: #a020f0; }
-    .big { background: #0033ff; }
-    .small { background: #ff6600; }.numbers {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  margin-top: 15px;
-}
-.num-btn {
-  background: #222;
-  padding: 15px;
-  text-align: center;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-}
-.num-btn[data-num='0']::after {
-  content: ' (Red+Violet)';
-  font-size: 10px;
-  display: block;
-  color: #ff0;
-}
-.num-btn[data-num='5']::after {
-  content: ' (Green+Violet)';
-  font-size: 10px;
-  display: block;
-  color: #0f0;
-}
-.bet-modal {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #1e1d23;
-  padding: 20px;
-  border-radius: 10px;
-  z-index: 999;
-}
-.bet-modal input {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-.bet-modal button {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  font-weight: bold;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-}
-
+    .green { background-color: #00ff00; color: #000; }
+    .violet { background-color: #a020f0; color: #fff; }
+    .red { background-color: #ff0000; color: #fff; }
+    .big { background-color: #0055ff; color: #fff; }
+    .small { background-color: #ff8c00; color: #fff; }
+    .footer {
+      background: #1a1a1a;
+      padding: 12px;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    .extra-btns {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 20px;
+    }
+    .extra-btns button {
+      background: #444;
+      color: white;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
-  <header>YGWIN - Wingo 1-Minute Game</header>  <div class="container">
-    <div class="wallet">
-      <span>Balance: ₹<span id="balance">1000.00</span></span>
-      <span>Period: <span id="period">--</span></span>
-      <span>Time: <span id="timer">--</span></span>
-    </div><div class="actions">
-  <button class="green" onclick="openBet('Green')">Green</button>
-  <button class="violet" onclick="openBet('Violet')">Violet</button>
-  <button class="red" onclick="openBet('Red')">Red</button>
-</div>
-<div class="actions">
-  <button class="big" onclick="openBet('Big')">Big</button>
-  <button class="small" onclick="openBet('Small')">Small</button>
-</div>
 
-<div class="numbers">
-  ${[0,1,2,3,4,5,6,7,8,9].map(n => `<div class="num-btn" data-num="${n}" onclick="openBet(${n})">${n}</div>`).join('')}
-</div>
+  <header>YGWIN - Wingo 1-Minute Game</header>
 
-  </div>  <div class="bet-modal" id="betModal">
-    <h3>Place Bet on: <span id="betTarget"></span></h3>
-    <input type="number" id="betAmount" placeholder="Enter Amount" />
-    <button onclick="placeBet()">Confirm Bet</button>
-  </div>  <script>
-    // Timer + Period logic (UTC based)
-    setInterval(() => {
-      const now = new Date();
-      const utc = new Date(now.toUTCString().substr(0, 25));
-      const seconds = utc.getSeconds();
-      const remainingSeconds = 60 - seconds;
-      const minutes = utc.getUTCHours() * 60 + utc.getUTCMinutes();
-      const period = `${utc.getUTCFullYear()}${('0' + (utc.getUTCMonth()+1)).slice(-2)}${('0' + utc.getUTCDate()).slice(-2)}1000${10001 + minutes}`;
-      document.getElementById("timer").textContent = `00:${remainingSeconds.toString().padStart(2, '0')}`;
-      document.getElementById("period").textContent = period;
-    }, 1000);
+  <div class="wallet">
+    <div>Balance: ₹1000.00</div>
+    <div>Period: <span id="period">Loading...</span></div>
+    <div>Time: <span id="timer">00:00</span></div>
+  </div>
 
-    // Bet modal logic
-    let currentBetTarget = '';
-    function openBet(target) {
-      currentBetTarget = target;
-      document.getElementById("betTarget").textContent = target;
-      document.getElementById("betAmount").value = '';
-      document.getElementById("betModal").style.display = 'block';
+  <div class="buttons">
+    <button class="green">Green</button>
+    <button class="violet">Violet</button>
+    <button class="red">Red</button>
+    <button class="big">Big</button>
+    <button class="small">Small</button>
+  </div>
+
+  <div class="extra-btns">
+    <button>Deposit</button>
+    <button>Withdraw</button>
+    <button>Result Coming</button>
+  </div>
+
+  <div class="footer">© 2025 YGWIN - All rights reserved</div>
+
+  <script>
+    function updateTimerAndPeriod() {
+      const timerSpan = document.getElementById("timer");
+      const periodSpan = document.getElementById("period");
+
+      function pad(num) {
+        return num.toString().padStart(2, "0");
+      }
+
+      function update() {
+        const now = new Date();
+        const sec = now.getSeconds();
+        const remaining = 60 - sec;
+        timerSpan.innerText = `00:${pad(remaining)}`;
+
+        const yyyy = now.getFullYear();
+        const MM = pad(now.getMonth() + 1);
+        const dd = pad(now.getDate());
+        const hh = pad(now.getHours());
+        const mm = pad(now.getMinutes());
+        const ss = pad(now.getSeconds());
+        const period = `${yyyy}${MM}${dd}${hh}${mm}${ss}`;
+        periodSpan.innerText = period;
+      }
+
+      update();
+      setInterval(update, 1000);
     }
 
-    function placeBet() {
-      const amount = document.getElementById("betAmount").value;
-      alert(`Bet Placed on ${currentBetTarget} with ₹${amount}`);
-      document.getElementById("betModal").style.display = 'none';
-    }
-  </script>  <footer>
-    © 2025 YGWIN - All rights reserved
-  </footer>
+    updateTimerAndPeriod();
+  </script>
+
 </body>
-  </html>
+</html>
