@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YGWIN - Color Trading</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body { margin:0; font-family:Arial; background:#121212; color:#fff; }
+    .card { max-width:400px; margin:30px auto; background:#1e1e1e; padding:20px; border-radius:10px; box-shadow:0 0 10px #000; }
+    h2 { text-align:center; color:#fbc531; }
+    input, button, select { width:100%; padding:10px; margin:10px 0; border:none; border-radius:5px; }
+    button { background:#fbc531; font-weight:bold; cursor:pointer; }
+    .hidden { display:none; }
+    .wallet { background:#222; padding:15px; border-radius:10px; margin:10px 0; }
+    .game-buttons button { width:23%; margin:1%; font-weight:bold; border-radius:50%; height:60px; font-size:18px; }
+    .color-btn { width:30%; margin:1%; font-weight:bold; border-radius:20px; height:40px; }
+    .green { background:#44bd32; color:#fff; }
+    .red { background:#e84118; color:#fff; }
+    .violet { background:purple; color:#fff; }
+    .history { margin-top:20px; background:#1e1e1e; padding:10px; border-radius:10px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:8px; text-align:center; border-bottom:1px solid #333; }
+    #nav { position:fixed; bottom:0; left:0; right:0; background:#1e1e1e; display:flex; justify-content:space-around; padding:10px 0; }
+    #nav button { background:none; border:none; color:#fff; font-weight:bold; }
+  </style>
+</head>
+<body>
+
+<div id="registerPage" class="card">
+  <h2>Register</h2>
+  <input type="text" id="regPhone" placeholder="Enter Phone Number" />
+  <input type="password" id="regPass" placeholder="Set Password" />
+  <input type="password" id="regCPass" placeholder="Confirm Password" />
+  <button onclick="register()">Register</button>
+  <p style="text-align:center;">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</div>
+
+<div id="loginPage" class="card hidden">
+  <h2>Login</h2>
+  <input type="text" id="loginPhone" placeholder="Phone Number" />
+  <input type="password" id="loginPass" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <p style="text-align:center;">No account? <a href="#" onclick="showRegister()">Register</a></p>
+</div>
+
+<div id="mainPage" class="card hidden">
+  <h2>Wallet Balance: ₹<span id="wallet">0</span></h2>
+  <div class="wallet">
+    <button onclick="deposit()">Deposit</button>
+    <button onclick="withdraw()">Withdraw</button>
+  </div>
+
+  <h2>Wingo 1 Min</h2>
+  <div class="color-btns">
+    <button class="color-btn green" onclick="placeBet('Green')">Green</button>
+    <button class="color-btn violet" onclick="placeBet('Violet')">Violet</button>
+    <button class="color-btn red" onclick="placeBet('Red')">Red</button>
+  </div>
+
+  <div class="game-buttons">
+    <button onclick="placeBet(0)">0</button>
+    <button onclick="placeBet(1)">1</button>
+    <button onclick="placeBet(2)">2</button>
+    <button onclick="placeBet(3)">3</button>
+    <button onclick="placeBet(4)">4</button>
+    <button onclick="placeBet(5)">5</button>
+    <button onclick="placeBet(6)">6</button>
+    <button onclick="placeBet(7)">7</button>
+    <button onclick="placeBet(8)">8</button>
+    <button onclick="placeBet(9)">9</button>
+  </div>
+
+  <div class="history">
+    <h3>Game History</h3>
+    <table>
+      <thead>
+        <tr><th>Period</th><th>Number</th><th>Big/Small</th><th>Color</th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="nav" class="hidden">
+  <button onclick="showGame()">Home</button>
+  <button onclick="showHistory()">History</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+  let users = JSON.parse(localStorage.getItem("users")) || {};
+  let currentUser = localStorage.getItem("loggedIn");
+  let wallet = localStorage.getItem("wallet") || 0;
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+
+  function showLogin() {
+    document.getElementById("registerPage").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
+  }
+
+  function showRegister() {
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("registerPage").classList.remove("hidden");
+  }
+
+  function register() {
+    let phone = regPhone.value;
+    let pass = regPass.value;
+    let cpass = regCPass.value;
+    if (users[phone]) return alert("Number already registered!");
+    if (pass !== cpass) return alert("Passwords do not match");
+    users[phone] = { password: pass };
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Registered successfully!");
+    showLogin();
+  }
+
+  function login() {
+    let phone = loginPhone.value;
+    let pass = loginPass.value;
+    if (!users[phone]) return alert("Not registered!");
+    if (users[phone].password !== pass) return alert("Wrong password!");
+    localStorage.setItem("loggedIn", phone);
+    currentUser = phone;
+    showGame();
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    location.reload();
+  }
+
+  function showGame() {
+    document.getElementById("registerPage").classList.add("hidden");
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("mainPage").classList.remove("hidden");
+    document.getElementById("nav").classList.remove("hidden");
+    document.getElementById("wallet").innerText = wallet;
+    loadHistory();
+  }
+
+  function deposit() {
+    let amt = prompt("Enter amount to deposit:");
+    if (amt) {
+      wallet = parseInt(wallet) + parseInt(amt);
+      localStorage.setItem("wallet", wallet);
+      document.getElementById("wallet").innerText = wallet;
+    }
+  }
+
+  function withdraw() {
+    let amt = prompt("Enter amount to withdraw:");
+    if (amt && parseInt(amt) <= wallet) {
+      wallet = parseInt(wallet) - parseInt(amt);
+      localStorage.setItem("wallet", wallet);
+      document.getElementById("wallet").innerText = wallet;
+    } else {
+      alert("Not enough balance");
+    }
+  }
+
+  function placeBet(val) {
+    let amount = prompt(`Enter amount for ${val}`);
+    if (amount && amount <= wallet) {
+      wallet -= amount;
+      localStorage.setItem("wallet", wallet);
+      document.getElementById("wallet").innerText = wallet;
+      let period = "P" + Date.now();
+      let color = (val === 0) ? "Red/Violet" : (val === 5) ? "Green/Violet" :
+                  (val === "Red" || val === "Green" || val === "Violet") ? val : (val >= 5) ? "Green" : "Red";
+      let size = (val >= 5) ? "Big" : "Small";
+      history.unshift({ period, number: val, size, color });
+      localStorage.setItem("history", JSON.stringify(history));
+      loadHistory();
+    } else {
+      alert("Invalid or Insufficient amount");
+    }
+  }
+
+  function loadHistory() {
+    let html = "";
+    history.slice(0, 10).forEach(item => {
+      html += `<tr><td>${item.period}</td><td>${item.number}</td><td>${item.size}</td><td>${item.color}</td></tr>`;
+    });
+    document.getElementById("historyBody").innerHTML = html;
+  }
+
+  function showHistory() {
+    alert("Scroll down to see history");
+  }
+
+  // Auto login if already logged in
+  if (currentUser) showGame();
+</script>
+
+</body>
+    </html>
