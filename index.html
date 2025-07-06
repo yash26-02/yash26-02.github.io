@@ -1,0 +1,163 @@
+<!-- Game Section -->
+  <div id="gameSection" class="section">
+    <h3>Wingo 1 Minute Game</h3>
+    <div class="balance">Wallet: ₹<span id="walletInGame">0</span></div>
+    <div id="numberButtons"></div>
+    <div style="margin-top:10px;">
+      <button onclick="placeBet('Red')">Red</button>
+      <button onclick="placeBet('Green')">Green</button>
+      <button onclick="placeBet('Violet')">Violet</button>
+      <button onclick="placeBet('Big')">Big</button>
+      <button onclick="placeBet('Small')">Small</button>
+    </div>
+    <input id="betAmount" placeholder="Enter Bet Amount" />
+    <button onclick="confirmBet()">Confirm Bet</button>
+    <p id="betMsg"></p>
+    <button onclick="showSection('dashboardSection')">Back</button>
+  </div>
+
+  <!-- Withdraw Section -->
+  <div id="withdrawSection" class="section">
+    <h3>Withdraw</h3>
+    <input id="withdrawAmount" placeholder="Enter amount to withdraw" />
+    <input id="withdrawUPI" placeholder="Enter your UPI ID" />
+    <button onclick="withdraw()">Request Withdraw</button>
+    <p id="withdrawMsg"></p>
+    <button onclick="showSection('dashboardSection')">Back</button>
+  </div>
+
+  <!-- History Section -->
+  <div id="historySection" class="section">
+    <h3>Game History</h3>
+    <ul id="historyList" style="list-style:none; padding:0;"></ul>
+    <button onclick="showSection('dashboardSection')">Back</button>
+  </div>
+</div>
+
+<script>
+  let currentUser = null;
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  const history = JSON.parse(localStorage.getItem('history') || '[]');
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+    document.getElementById(id).classList.add('visible');
+    if (id === 'dashboardSection') {
+      updateDashboard();
+    }
+    if (id === 'gameSection') {
+      updateGameWallet();
+    }
+    if (id === 'historySection') {
+      renderHistory();
+    }
+  }
+
+  function register() {
+    const phone = regPhone.value.trim();
+    const pass = regPass.value;
+    const pass2 = regPass2.value;
+    if (users[phone]) return regMsg.innerText = "Number already registered!";
+    if (pass !== pass2) return regMsg.innerText = "Passwords do not match!";
+    if (phone.length !== 10) return regMsg.innerText = "Enter valid 10 digit phone number";
+
+    users[phone] = { pass, balance: 0 };
+    localStorage.setItem('users', JSON.stringify(users));
+    regMsg.innerText = "Registered successfully! You can now login.";
+    showSection('loginSection');
+  }
+
+  function login() {
+    const phone = loginPhone.value.trim();
+    const pass = loginPass.value;
+    if (!users[phone]) return loginMsg.innerText = "Number not registered!";
+    if (users[phone].pass !== pass) return loginMsg.innerText = "Incorrect password!";
+
+    currentUser = phone;
+    loginMsg.innerText = "";
+    showSection('dashboardSection');
+  }
+
+  function updateDashboard() {
+    document.getElementById("userPhone").innerText = currentUser;
+    document.getElementById("walletBalance").innerText = users[currentUser].balance;
+  }
+
+  function updateGameWallet() {
+    document.getElementById("walletInGame").innerText = users[currentUser].balance;
+  }
+
+  function confirmDeposit() {
+    depositMsg.innerHTML = `<span class="success">Deposit request sent! Admin will approve it shortly.</span>`;
+  }
+
+  function withdraw() {
+    const amt = parseInt(document.getElementById("withdrawAmount").value);
+    const upi = document.getElementById("withdrawUPI").value;
+    if (isNaN(amt) || amt < 50) return withdrawMsg.innerText = "Min ₹50 required!";
+    if (users[currentUser].balance < amt) return withdrawMsg.innerText = "Insufficient balance!";
+    if (!upi.includes('@')) return withdrawMsg.innerText = "Enter valid UPI ID";
+
+    users[currentUser].balance -= amt;
+    localStorage.setItem('users', JSON.stringify(users));
+    withdrawMsg.innerHTML = `<span class="success">Withdraw request sent for ₹${amt} to ${upi}</span>`;
+    updateDashboard();
+  }
+
+  // Betting
+  let selectedBet = null;
+  function placeBet(option) {
+    selectedBet = option;
+    betMsg.innerText = `Selected: ${option}`;
+  }
+
+  function confirmBet() {
+    const amt = parseInt(document.getElementById("betAmount").value);
+    if (!selectedBet) return betMsg.innerText = "Choose number or color first!";
+    if (isNaN(amt) || amt <= 0) return betMsg.innerText = "Enter valid bet amount!";
+    if (users[currentUser].balance < amt) return betMsg.innerText = "Insufficient balance!";
+    
+    users[currentUser].balance -= amt;
+    const result = generateResult();
+    const win = result === selectedBet;
+    const winAmount = win ? amt * 2 : 0;
+    users[currentUser].balance += winAmount;
+
+    history.unshift({
+      phone: currentUser,
+      bet: selectedBet,
+      amount: amt,
+      result,
+      winAmount,
+      time: new Date().toLocaleTimeString()
+    });
+
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('history', JSON.stringify(history));
+    betMsg.innerHTML = win ? `<span class="success">You won ₹${winAmount}!</span>` : `<span class="error">You lost!</span>`;
+    updateDashboard();
+  }
+
+  function generateResult() {
+    const options = ['0','1','2','3','4','5','6','7','8','9','Red','Green','Violet','Big','Small'];
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  function renderHistory() {
+    const list = history.filter(h => h.phone === currentUser).map(h => 
+      `<li>Bet: ${h.bet}, Result: ${h.result}, ₹${h.amount} ➝ Won: ₹${h.winAmount} (${h.time})</li>`
+    ).join('');
+    historyList.innerHTML = list || "<li>No history</li>";
+  }
+
+  // Buttons for 0–9
+  const numBtns = document.getElementById("numberButtons");
+  for (let i = 0; i <= 9; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = i;
+    btn.onclick = () => placeBet(i.toString());
+    numBtns.appendChild(btn);
+  }
+</script>
+</body>
+    </html>
