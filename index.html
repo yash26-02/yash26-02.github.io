@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color Game</title>
+  <style>
+    body { font-family: Arial; background: #111; color: #fff; padding: 20px; }
+    .box { background: #222; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 10px; margin: 8px 0; border: none; border-radius: 5px; }
+    input { background: #333; color: #fff; }
+    button { background: #f04; color: #fff; font-weight: bold; cursor: pointer; }
+    .admin-table { width: 100%; background: #333; border-radius: 8px; margin-top: 10px; padding: 10px; }
+    .row { display: flex; justify-content: space-between; margin: 5px 0; }
+    .row span { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div id="auth" class="box">
+  <h2 id="auth-title">Register</h2>
+  <input type="text" id="mobile" placeholder="Mobile Number">
+  <input type="password" id="pass" placeholder="Password">
+  <input type="password" id="cpass" placeholder="Confirm Password">
+  <button id="auth-btn">Register</button>
+  <p id="switch"><a href="#">Already registered? Login</a></p>
+</div>
+
+<div id="game" class="box" style="display:none;">
+  <h2>Wallet Balance: ₹<span id="balance">0</span></h2>
+  <button onclick="showDeposit()">Deposit</button>
+  <button onclick="showWithdraw()">Withdraw</button>
+
+  <div id="deposit-box" style="display:none;">
+    <h3>Scan QR & Pay</h3>
+    <img src="https://raw.githubusercontent.com/yash26-02/yash26-02.github.io/main/qr.png" width="100%">
+    <p><b>UPI:</b> yashgolani26@fam</p>
+    <input type="number" id="dep-amt" placeholder="Enter amount (₹)">
+    <input type="text" id="dep-utr" placeholder="Enter 12-digit UTR">
+    <button onclick="submitDeposit()">Submit Deposit</button>
+  </div>
+
+  <div id="withdraw-box" style="display:none;">
+    <input type="number" id="wamt" placeholder="Enter withdraw amount">
+    <button onclick="submitWithdraw()">Submit Withdraw</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin" class="box" style="display:none;">
+  <h2>Admin Panel</h2>
+  <h3>Deposit Requests</h3>
+  <div id="admin-deposits" class="admin-table"></div>
+
+  <h3>Withdraw Requests</h3>
+  <div id="admin-withdraws" class="admin-table"></div>
+</div>
+
+<script>
+const STORAGE = 'color_user';
+const USERS = 'color_users';
+const DEPOSITS = 'color_deposits';
+const WITHDRAWS = 'color_withdraws';
+
+const urlParams = new URLSearchParams(window.location.search);
+const isAdmin = urlParams.get('admin') === 'true';
+
+// ---------------- AUTH ------------------
+
+function saveUser(mobile) {
+  localStorage.setItem(STORAGE, JSON.stringify({ mobile, bal: 0 }));
+}
+
+function getUser() {
+  const u = JSON.parse(localStorage.getItem(STORAGE) || 'null');
+  return u;
+}
+
+function updateUser(u) {
+  localStorage.setItem(STORAGE, JSON.stringify(u));
+}
+
+function switchAuth(toRegister) {
+  document.getElementById('auth-title').innerText = toRegister ? "Register" : "Login";
+  document.getElementById('cpass').style.display = toRegister ? "block" : "none";
+  document.getElementById('auth-btn').innerText = toRegister ? "Register" : "Login";
+  document.getElementById('switch').innerHTML = toRegister ?
+    '<a href="#">Already registered? Login</a>' :
+    '<a href="#">New user? Register</a>';
+  document.getElementById('switch').onclick = () => switchAuth(!toRegister);
+}
+
+switchAuth(true);
+
+document.getElementById('auth-btn').onclick = () => {
+  const mobile = document.getElementById('mobile').value.trim();
+  const pass = document.getElementById('pass').value.trim();
+  const cpass = document.getElementById('cpass').value.trim();
+  let users = JSON.parse(localStorage.getItem(USERS) || '[]');
+
+  if (document.getElementById('cpass').style.display !== 'none') {
+    if (!mobile || !pass || pass !== cpass) return alert("Invalid input");
+    if (users.find(u => u.mobile === mobile)) return alert("Already registered");
+    users.push({ mobile, pass });
+    localStorage.setItem(USERS, JSON.stringify(users));
+    saveUser(mobile);
+  } else {
+    const user = users.find(u => u.mobile === mobile && u.pass === pass);
+    if (!user) return alert("Invalid login");
+    saveUser(mobile);
+  }
+
+  initGame();
+};
+
+// ---------------- GAME ------------------
+
+function initGame() {
+  if (isAdmin) {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('admin').style.display = 'block';
+    loadAdmin();
+    return;
+  }
+
+  const u = getUser();
+  if (!u) return;
+  document.getElementById('auth').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('balance').innerText = u.bal;
+}
+
+function showDeposit() {
+  document.getElementById('deposit-box').style.display = 'block';
+  document.getElementById('withdraw-box').style.display = 'none';
+}
+
+function showWithdraw() {
+  document.getElementById('deposit-box').style.display = 'none';
+  document.getElementById('withdraw-box').style.display = 'block';
+}
+
+// ---------------- DEPOSIT ------------------
+
+function submitDeposit() {
+  const amt = +document.getElementById('dep-amt').value;
+  const utr = document.getElementById('dep-utr').value.trim();
+  if (!/^\d{12}$/.test(utr)) return alert("Enter valid 12-digit UTR");
+  if (amt < 50) return alert("Minimum ₹50");
+
+  let list = JSON.parse(localStorage.getItem(DEPOSITS) || '[]');
+  if (list.find(x => x.utr === utr)) return alert("UTR already used");
+  const user = getUser();
+  list.push({ mobile: user.mobile, amt, utr, approved: false });
+  localStorage.setItem(DEPOSITS, JSON.stringify(list));
+  alert("Deposit request submitted. Wait for admin approval.");
+  document.getElementById('deposit-box').style.display = 'none';
+}
+
+// ---------------- WITHDRAW ------------------
+
+function submitWithdraw() {
+  const amt = +document.getElementById('wamt').value;
+  let u = getUser();
+  if (amt < 50 || amt > u.bal) return alert("Invalid amount");
+  let list = JSON.parse(localStorage.getItem(WITHDRAWS) || '[]');
+  list.push({ mobile: u.mobile, amt, done: false });
+  u.bal -= amt;
+  updateUser(u);
+  localStorage.setItem(WITHDRAWS, JSON.stringify(list));
+  document.getElementById('balance').innerText = u.bal;
+  alert("Withdraw request sent!");
+  document.getElementById('withdraw-box').style.display = 'none';
+}
+
+// ---------------- ADMIN PANEL ------------------
+
+function loadAdmin() {
+  const deposits = JSON.parse(localStorage.getItem(DEPOSITS) || '[]');
+  const withdraws = JSON.parse(localStorage.getItem(WITHDRAWS) || '[]');
+
+  const dDiv = document.getElementById('admin-deposits');
+  const wDiv = document.getElementById('admin-withdraws');
+  dDiv.innerHTML = '';
+  wDiv.innerHTML = '';
+
+  deposits.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<span>${d.mobile}</span><span>₹${d.amt}</span><span>${d.utr}</span>
+      <button onclick="approveDeposit(${i})">Approve</button>`;
+    dDiv.appendChild(row);
+  });
+
+  withdraws.forEach((w, i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<span>${w.mobile}</span><span>₹${w.amt}</span>
+      <button onclick="approveWithdraw(${i})">Done</button>`;
+    wDiv.appendChild(row);
+  });
+}
+
+function approveDeposit(i) {
+  const list = JSON.parse(localStorage.getItem(DEPOSITS));
+  const dep = list[i];
+  let u = JSON.parse(localStorage.getItem(STORAGE));
+  if (u.mobile !== dep.mobile) {
+    u = { mobile: dep.mobile, bal: 0 };
+  }
+  u.bal += +dep.amt;
+  localStorage.setItem(STORAGE, JSON.stringify(u));
+  list.splice(i, 1);
+  localStorage.setItem(DEPOSITS, JSON.stringify(list));
+  loadAdmin();
+  alert("Deposit approved");
+}
+
+function approveWithdraw(i) {
+  const list = JSON.parse(localStorage.getItem(WITHDRAWS));
+  list.splice(i, 1);
+  localStorage.setItem(WITHDRAWS, JSON.stringify(list));
+  loadAdmin();
+  alert("Withdraw marked as done");
+}
+
+initGame();
+</script>
+</body>
+  </html>
