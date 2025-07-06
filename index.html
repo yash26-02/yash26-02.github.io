@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Game - Red/Green</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#121212; color:#fff; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; }
+  .box { background:#1e1e1e; border-radius:8px; padding:20px; margin:20px; width:320px; }
+  input, button { width:100%; padding:10px; margin:8px 0; border:none; border-radius:4px; }
+  input { background:#333; color:#fff; }
+  button { background:#ff4455; color:#fff; cursor:pointer; font-weight:bold; }
+  .bet-btn { width:48%; display:inline-block; margin:1%; }
+</style>
+</head>
+<body>
+
+<div id="auth" class="box">
+  <h2 id="auth-title">Register</h2>
+  <input type="text" id="mobile" placeholder="Mobile Number">
+  <input type="password" id="pass" placeholder="Password">
+  <input type="password" id="cpass" placeholder="Confirm Password">
+  <button id="auth-btn">Register</button>
+  <p id="switch"><a href="#">Already registered? Login</a></p>
+</div>
+
+<div id="game" class="box" style="display:none;">
+  <h2>Wallet Balance: ₹<span id="balance">0</span></h2>
+  <button onclick="showDeposit()">Deposit</button>
+
+  <div id="deposit-box" style="display:none;">
+    <h3>Scan & Pay</h3>
+    <img src="https://raw.githubusercontent.com/yash26-02/yash26-02.github.io/main/qr.png" width="250" style="border-radius:10px;">
+    <p style="font-size:14px;">UPI ID: <b>yashgolani26@fam</b></p>
+    <input type="number" id="dep-amt" placeholder="Enter amount (₹)">
+    <input type="text" id="utr" placeholder="Enter 12-digit UTR">
+    <button onclick="makeDeposit()">Add Balance</button>
+  </div>
+
+  <h3>Place Your Bet</h3>
+  <div>
+    <button class="bet-btn" onclick="placeBet('Red')">Red</button>
+    <button class="bet-btn" onclick="placeBet('Green')">Green</button>
+  </div>
+  <div id="bet-box" style="display:none;">
+    <input type="number" id="bet-amt" placeholder="Enter bet amount">
+    <button onclick="confirmBet()">Confirm Bet</button>
+  </div>
+  <div id="result"></div>
+</div>
+
+<script>
+const STORAGE = 'cp_user';
+const usersKey = 'cp_users';
+let currentBet = null;
+
+function getSaved() {
+  const d = localStorage.getItem(STORAGE);
+  if (!d) return null;
+  const u = JSON.parse(d);
+  if ((Date.now()-u.t)/(1000*60*60*24)>5) { localStorage.removeItem(STORAGE); return null; }
+  return u;
+}
+
+function saveUser(mobile) {
+  localStorage.setItem(STORAGE, JSON.stringify({ mobile, t: Date.now(), bal: 0, dep: [], wdr: [] }));
+}
+
+function switchAuth(toReg) {
+  document.getElementById('auth-title').innerText = toReg ? 'Register' : 'Login';
+  document.getElementById('cpass').style.display = toReg ? 'block' : 'none';
+  document.getElementById('auth-btn').innerText = toReg ? 'Register' : 'Login';
+  document.getElementById('switch').innerHTML = toReg 
+    ? '<a href="#">Already have account? Login</a>' 
+    : '<a href="#">New? Register</a>';
+  document.getElementById('switch').onclick = e => { e.preventDefault(); switchAuth(!toReg); };
+}
+switchAuth(true);
+
+document.getElementById('auth-btn').onclick = () => {
+  const mb = document.getElementById('mobile').value, pw = document.getElementById('pass').value;
+  const cp = document.getElementById('cpass').value;
+  let users = JSON.parse(localStorage.getItem(usersKey)||'[]');
+  if (document.getElementById('cpass').style.display!='none') {
+    if (!mb||!pw||pw!==cp) return alert('Invalid input or mismatch');
+    if (users.find(u=>u.mobile===mb)) return alert('Number exists');
+    users.push({mobile:mb,pw}); localStorage.setItem(usersKey, JSON.stringify(users));
+    saveUser(mb);
+  } else {
+    const u = users.find(u=>u.mobile===mb&&u.pw===pw);
+    if (!u) return alert('Invalid login');
+    saveUser(mb);
+  }
+  initGame();
+};
+
+function initGame() {
+  const u = getSaved(); if (!u) return;
+  document.getElementById('auth').style.display='none';
+  document.getElementById('game').style.display='block';
+  document.getElementById('balance').innerText = u.bal;
+}
+
+function showDeposit(){
+  document.getElementById('deposit-box').style.display = 'block';
+}
+
+function makeDeposit(){
+  const amt = +document.getElementById('dep-amt').value;
+  const utr = document.getElementById('utr').value.trim();
+  if (amt < 50) return alert('Minimum deposit ₹50');
+  if (!/^\d{12}$/.test(utr)) return alert('Enter valid 12-digit UTR');
+
+  const u = getSaved();
+  if (u.dep.includes(utr)) return alert('UTR already used!');
+  u.dep.push(utr);
+  u.bal += amt;
+  localStorage.setItem(STORAGE, JSON.stringify(u));
+  document.getElementById('balance').innerText = u.bal;
+  alert('₹'+amt+' added to wallet!');
+  document.getElementById('deposit-box').style.display = 'none';
+}
+
+function placeBet(type){
+  currentBet = type;
+  document.getElementById('bet-box').style.display='block';
+}
+
+function confirmBet(){
+  const amt = +document.getElementById('bet-amt').value;
+  const u = getSaved();
+  if (amt < 1 || amt > u.bal) return alert('Invalid bet amount');
+  u.bal -= amt;
+  localStorage.setItem(STORAGE, JSON.stringify(u));
+  document.getElementById('balance').innerText = u.bal;
+  document.getElementById('bet-box').style.display = 'none';
+  document.getElementById('result').innerText = 'Bet placed: '+currentBet+' ₹'+amt;
+}
+</script>
+
+</body>
+  </html>
