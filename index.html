@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YGWIN - Color Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; background: #2b1d1d; color: white; margin: 0; padding: 0; }
+    .container { max-width: 100%; padding: 20px; font-size: 18px; }
+    .card { background: #3c2b2b; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    input, button {
+      width: 100%; padding: 14px; font-size: 16px;
+      margin-top: 10px; border: none; border-radius: 8px;
+    }
+    button { background: purple; color: white; font-weight: bold; }
+    .green { background: green; }
+    .red { background: red; }
+    .balance { font-weight: bold; margin-top: 10px; font-size: 20px; }
+    .hide { display: none; }
+    .qr-img { width: 100%; border-radius: 10px; margin-top: 10px; }
+    nav button { width: 24%; margin-right: 1%; font-size: 16px; }
+    .timer-box { text-align: center; font-size: 22px; margin-top: 10px; }
+    ul { padding-left: 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div id="loginCard" class="card">
+    <h2>Login</h2>
+    <input type="text" id="loginPhone" placeholder="Enter Phone Number">
+    <input type="password" id="loginPass" placeholder="Enter Password">
+    <button onclick="login()">Login</button>
+    <p>Don't have account? <a href="#" onclick="switchTo('registerCard')">Register</a></p>
+  </div>
+
+  <div id="registerCard" class="card hide">
+    <h2>Register</h2>
+    <input type="text" id="regPhone" placeholder="Enter Phone Number">
+    <input type="password" id="regPass" placeholder="Enter Password">
+    <input type="password" id="regCpass" placeholder="Confirm Password">
+    <button onclick="register()">Register</button>
+    <p>Already registered? <a href="#" onclick="switchTo('loginCard')">Login</a></p>
+  </div>
+
+  <div id="gameCard" class="card hide">
+    <h2>Wingo 1 Minute</h2>
+    <div id="period" class="timer-box">Period: --</div>
+    <div id="timer" class="timer-box">Timer: 00 : 00</div>
+    <div class="balance">Balance: ₹<span id="balance">0</span></div>
+    <button class="red" onclick="showBetPopup('RED')">Bet Red</button>
+    <button class="green" onclick="showBetPopup('GREEN')">Bet Green</button>
+    <div id="resultBox" class="timer-box">Result: --</div>
+    <h3>History</h3>
+    <ul id="history" style="max-height:200px;overflow-y:auto;"></ul>
+  </div>
+
+  <div id="depositCard" class="card hide">
+    <h2>Deposit</h2>
+    <img src="https://uploadthing.com/f/7e10592b-e36d-4e6f-9ff2-250aefcd1c10_yashqr.jpg" alt="QR" class="qr-img">
+    <p><b>UPI ID:</b> yashgolani26@fam</p>
+    <input type="number" id="depositAmount" placeholder="Enter Amount">
+    <input type="text" id="utr" placeholder="Enter 12-digit UTR">
+    <button onclick="submitUTR()">Submit for Approval</button>
+  </div>
+
+  <div id="withdrawCard" class="card hide">
+    <h2>Withdraw</h2>
+    <input type="text" id="upiId" placeholder="Enter your UPI ID">
+    <input type="number" id="withdrawAmount" placeholder="Enter Amount">
+    <button onclick="withdraw()">Request Withdrawal</button>
+  </div>
+
+  <nav class="card hide" id="navBar">
+    <button onclick="switchTo('gameCard')">Game</button>
+    <button onclick="switchTo('depositCard')">Deposit</button>
+    <button onclick="switchTo('withdrawCard')">Withdraw</button>
+    <button onclick="logout()">Logout</button>
+  </nav>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || {};
+let currentUser = null;
+let balance = 0;
+let currentBet = null;
+let history = [];
+
+function switchTo(id) {
+  document.querySelectorAll('.card').forEach(el => el.classList.add("hide"));
+  document.getElementById(id).classList.remove("hide");
+  if (currentUser) document.getElementById("navBar").classList.remove("hide");
+}
+
+function register() {
+  let phone = regPhone.value;
+  let pass = regPass.value;
+  let cpass = regCpass.value;
+  if (users[phone]) return alert("Number already registered!");
+  if (pass !== cpass) return alert("Passwords do not match!");
+  users[phone] = { password: pass, balance: 0 };
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Registered! Please login.");
+  switchTo('loginCard');
+}
+
+function login() {
+  let phone = loginPhone.value;
+  let pass = loginPass.value;
+  if (!users[phone]) return alert("Number not registered.");
+  if (users[phone].password !== pass) return alert("Wrong password!");
+  currentUser = phone;
+  balance = users[phone].balance;
+  updateBalance();
+  switchTo("gameCard");
+}
+
+function logout() {
+  currentUser = null;
+  switchTo("loginCard");
+  document.getElementById("navBar").classList.add("hide");
+}
+
+function updateBalance() {
+  document.getElementById("balance").innerText = balance.toFixed(2);
+  users[currentUser].balance = balance;
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
+function showBetPopup(color) {
+  const amt = prompt("Enter bet amount for " + color + ":");
+  if (amt && !isNaN(amt) && parseFloat(amt) > 0) {
+    confirmBet(color, parseFloat(amt));
+  }
+}
+
+function confirmBet(color, amt) {
+  if (balance < amt) return alert("Insufficient balance!");
+  balance -= amt;
+  updateBalance();
+  currentBet = { color, amt };
+  alert("Bet placed on " + color + " for ₹" + amt);
+}
+
+function submitUTR() {
+  const amt = parseFloat(document.getElementById("depositAmount").value);
+  const utr = document.getElementById("utr").value;
+  if (utr.length !== 12 || isNaN(amt) || amt <= 0) return alert("Enter valid amount and 12-digit UTR");
+  balance += amt;
+  updateBalance();
+  alert("₹" + amt + " added after approval.");
+}
+
+function withdraw() {
+  const upi = document.getElementById("upiId").value;
+  const amt = parseFloat(document.getElementById("withdrawAmount").value);
+  if (upi.length < 5 || isNaN(amt) || amt <= 0) return alert("Enter valid UPI and amount");
+  if (balance < amt) return alert("Insufficient balance");
+  balance -= amt;
+  updateBalance();
+  alert("Withdrawal request sent to admin.");
+}
+
+function updatePeriodAndTimer() {
+  let now = new Date();
+  let seconds = now.getUTCSeconds();
+  let remaining = 60 - seconds;
+  let totalMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  let period = now.getUTCFullYear().toString() +
+               String(now.getUTCMonth() + 1).padStart(2, '0') +
+               String(now.getUTCDate()).padStart(2, '0') +
+               "1000" + String(10001 + totalMinutes);
+  document.getElementById("period").innerText = "Period: " + period;
+  document.getElementById("timer").innerText = "Timer: 00 : " + String(remaining).padStart(2, '0');
+
+  if (seconds === 0) {
+    let adminResult = localStorage.getItem("adminResult");
+    let result = adminResult || (Math.random() > 0.5 ? "RED" : "GREEN");
+    localStorage.removeItem("adminResult");
+    document.getElementById("resultBox").innerText = "Result: " + result;
+
+    if (currentBet) {
+      if (currentBet.color === result) {
+        balance += currentBet.amt * 2;
+        alert("You WON ₹" + currentBet.amt * 2);
+      } else {
+        alert("You LOST ₹" + currentBet.amt);
+      }
+      updateBalance();
+      currentBet = null;
+    }
+
+    history.unshift(period + " = " + result);
+    let historyList = document.getElementById("history");
+    historyList.innerHTML = "";
+    history.forEach(item => {
+      let li = document.createElement("li");
+      li.innerText = item;
+      historyList.appendChild(li);
+    });
+  }
+}
+
+setInterval(updatePeriodAndTimer, 1000);
+</script>
+
+</body>
+  </html>
