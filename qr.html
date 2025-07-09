@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload QR - YGWIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    input[type="file"] {
+      background: #333;
+      padding: 10px;
+      color: white;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #6a0dad;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Upload New QR Code</h2>
+    <input type="file" id="qrInput" accept="image/*">
+    <button onclick="uploadQR()">Submit</button>
+    <div id="preview"></div>
+  </div>  <script>
+    function uploadQR() {
+      const file = document.getElementById("qrInput").files[0];
+      if (!file) return alert("Please select an image file");
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataURL = e.target.result;
+        localStorage.setItem("qrImage", dataURL);
+        alert("QR Code updated successfully ✅");
+        document.getElementById("preview").innerHTML = `<img src="${dataURL}" alt="QR Code" />`;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // Show previously uploaded QR
+    const existingQR = localStorage.getItem("qrImage");
+    if (existingQR) {
+      document.getElementById("preview").innerHTML = `<img src="${existingQR}" alt="QR Code" />`;
+    }
+  </script></body>
+  </html>
