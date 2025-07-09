@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - YGWIN</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #6a0dad;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .hide { display: none; }
+    .section-title { font-size: 18px; margin-top: 20px; }
+    .req-box { background: #2a2a2a; padding: 10px; border-radius: 8px; margin-top: 10px; }
+    .req-box span { display: block; margin-bottom: 6px; }
+  </style>
+</head>
+<body>  <div id="loginBox" class="card">
+    <h2>Admin Login</h2>
+    <input id="adminPhone" placeholder="Enter Number">
+    <input id="adminPass" type="password" placeholder="Enter Password">
+    <button onclick="adminLogin()">Login</button>
+  </div>  <div id="adminPanel" class="hide">
+    <h2>Admin Dashboard</h2><div class="card">
+  <h3>Set Game Result</h3>
+  <p id="adminPeriod"></p>
+  <button onclick="setResult('RED')">Set RED</button>
+  <button onclick="setResult('GREEN')">Set GREEN</button>
+</div>
+
+<div class="card">
+  <h3>Deposit Requests</h3>
+  <div id="depositList"></div>
+</div>
+
+<div class="card">
+  <h3>Withdrawal Requests</h3>
+  <div id="withdrawList"></div>
+</div>
+
+<div class="card">
+  <h3>Total Bets This Period</h3>
+  <p id="totalBets"></p>
+</div>
+
+<div class="card">
+  <h3>Add Admin Account</h3>
+  <input id="newAdminPhone" placeholder="Enter Number">
+  <input id="newAdminPass" placeholder="Enter Password">
+  <button onclick="addAdmin()">Add Admin</button>
+</div>
+
+<button onclick="logoutAdmin()">Logout</button>
+
+  </div>  <script>
+    const defaultAdmins = { "9770528555": "myselfyg26" };
+    const savedAdmins = JSON.parse(localStorage.getItem("admins") || '{}');
+    const admins = { ...defaultAdmins, ...savedAdmins };
+
+    function adminLogin() {
+      const phone = adminPhone.value;
+      const pass = adminPass.value;
+      if (admins[phone] === pass) {
+        localStorage.setItem("adminLoggedIn", phone);
+        loginBox.classList.add("hide");
+        adminPanel.classList.remove("hide");
+        loadAdmin();
+      } else {
+        alert("Invalid credentials");
+      }
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminLoggedIn");
+      location.reload();
+    }
+
+    function addAdmin() {
+      const phone = newAdminPhone.value;
+      const pass = newAdminPass.value;
+      if (!phone || !pass) return alert("Enter valid number and password");
+      savedAdmins[phone] = pass;
+      localStorage.setItem("admins", JSON.stringify(savedAdmins));
+      alert("New admin added");
+    }
+
+    function getPeriod(offset = 0) {
+      const now = new Date();
+      const mins = now.getUTCHours() * 60 + now.getUTCMinutes() + offset;
+      return now.getUTCFullYear().toString() +
+        String(now.getUTCMonth() + 1).padStart(2, '0') +
+        String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+    }
+
+    function loadAdmin() {
+      document.getElementById("adminPeriod").innerText = "Current Period: " + getPeriod();
+
+      const deposits = JSON.parse(localStorage.getItem("depositRequests") || '[]');
+      const withdrawals = JSON.parse(localStorage.getItem("withdrawRequests") || '[]');
+
+      depositList.innerHTML = deposits.map((r, i) => `
+        <div class='req-box'>
+          <span>User: ${r.user}</span>
+          <span>Amount: ₹${r.amt}</span>
+          <span>UTR: ${r.utr}</span>
+          <button onclick="approveDeposit(${i})">Approve</button>
+          <button onclick="rejectDeposit(${i})">Reject</button>
+        </div>`).join('');
+
+      withdrawList.innerHTML = withdrawals.map((r, i) => `
+        <div class='req-box'>
+          <span>User: ${r.user}</span>
+          <span>Amount: ₹${r.amt}</span>
+          <span>UPI: ${r.upi}</span>
+          <button onclick="approveWithdraw(${i})">Approve</button>
+          <button onclick="rejectWithdraw(${i})">Reject</button>
+        </div>`).join('');
+
+      const all = JSON.parse(localStorage.getItem("allBets") || '[]');
+      const current = getPeriod();
+      let red = 0, green = 0;
+      all.filter(b => b.period === current).forEach(b => {
+        if (b.color === 'RED') red += b.amt;
+        else if (b.color === 'GREEN') green += b.amt;
+      });
+      totalBets.innerText = `RED: ₹${red.toFixed(2)} | GREEN: ₹${green.toFixed(2)}`;
+    }
+
+    function setResult(color) {
+      const period = getPeriod(-1);
+      let res = JSON.parse(localStorage.getItem("manualResults") || '{}');
+      res[period] = color;
+      localStorage.setItem("manualResults", JSON.stringify(res));
+      alert(`Result for period ${period} set to ${color}`);
+    }
+
+    function approveDeposit(i) {
+      const deposits = JSON.parse(localStorage.getItem("depositRequests") || '[]');
+      const req = deposits[i];
+      const users = JSON.parse(localStorage.getItem("users") || '{}');
+      if (!users[req.user]) return;
+      users[req.user].balance += Number(req.amt);
+      deposits.splice(i, 1);
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("depositRequests", JSON.stringify(deposits));
+      loadAdmin();
+    }
+
+    function rejectDeposit(i) {
+      const deposits = JSON.parse(localStorage.getItem("depositRequests") || '[]');
+      deposits.splice(i, 1);
+      localStorage.setItem("depositRequests", JSON.stringify(deposits));
+      loadAdmin();
+    }
+
+    function approveWithdraw(i) {
+      const withdrawals = JSON.parse(localStorage.getItem("withdrawRequests") || '[]');
+      const req = withdrawals[i];
+      const users = JSON.parse(localStorage.getItem("users") || '{}');
+      if (!users[req.user]) return;
+      if (users[req.user].balance >= Number(req.amt)) {
+        users[req.user].balance -= Number(req.amt);
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+      withdrawals.splice(i, 1);
+      localStorage.setItem("withdrawRequests", JSON.stringify(withdrawals));
+      loadAdmin();
+    }
+
+    function rejectWithdraw(i) {
+      const withdrawals = JSON.parse(localStorage.getItem("withdrawRequests") || '[]');
+      withdrawals.splice(i, 1);
+      localStorage.setItem("withdrawRequests", JSON.stringify(withdrawals));
+      loadAdmin();
+    }
+
+    if (localStorage.getItem("adminLoggedIn")) {
+      loginBox.classList.add("hide");
+      adminPanel.classList.remove("hide");
+      loadAdmin();
+    }
+  </script></body>
+  </html>
