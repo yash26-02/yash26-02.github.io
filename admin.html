@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - YGWIN</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+    h2 {
+      margin-top: 0;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 4px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button.approve { background-color: #4caf50; color: white; }
+    button.reject { background-color: #f44336; color: white; }
+    select, input {
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    .entry {
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+<body>  <div class="card">
+    <h2>Live Period</h2>
+    <div id="period">Loading...</div>
+  </div>  <div class="card">
+    <h2>Set Result</h2>
+    <select id="resultValue">
+      <option value="RED">RED</option>
+      <option value="GREEN">GREEN</option>
+    </select>
+    <button onclick="setResult()">Set Result</button>
+    <p id="resultMsg"></p>
+  </div>  <div class="card">
+    <h2>Pending Deposits</h2>
+    <div id="depositList">Loading...</div>
+  </div>  <div class="card">
+    <h2>Pending Withdrawals</h2>
+    <div id="withdrawList">Loading...</div>
+  </div><script>
+const users = JSON.parse(localStorage.getItem("users") || "{}");
+let deposits = JSON.parse(localStorage.getItem("deposits") || "[]");
+let withdrawals = JSON.parse(localStorage.getItem("withdrawals") || "[]");
+let manualResults = JSON.parse(localStorage.getItem("manualResults") || "{}");
+
+function renderDeposits() {
+  const list = document.getElementById("depositList");
+  list.innerHTML = "";
+  deposits.forEach((d, i) => {
+    if (d.status === "pending") {
+      const div = document.createElement("div");
+      div.className = "entry";
+      div.innerHTML = `
+        <b>Phone:</b> ${d.phone}<br>
+        <b>Amount:</b> ₹${d.amount}<br>
+        <b>UTR:</b> ${d.utr}<br>
+        <button class="approve" onclick="approveDeposit(${i})">Approve</button>
+        <button class="reject" onclick="rejectDeposit(${i})">Reject</button>
+      `;
+      list.appendChild(div);
+    }
+  });
+}
+
+function renderWithdrawals() {
+  const list = document.getElementById("withdrawList");
+  list.innerHTML = "";
+  withdrawals.forEach((w, i) => {
+    if (w.status === "pending") {
+      const div = document.createElement("div");
+      div.className = "entry";
+      div.innerHTML = `
+        <b>Phone:</b> ${w.phone}<br>
+        <b>Amount:</b> ₹${w.amount}<br>
+        <b>UPI:</b> ${w.upi}<br>
+        <button class="approve" onclick="approveWithdraw(${i})">Approve</button>
+        <button class="reject" onclick="rejectWithdraw(${i})">Reject</button>
+      `;
+      list.appendChild(div);
+    }
+  });
+}
+
+function approveDeposit(i) {
+  const d = deposits[i];
+  d.status = "approved";
+  if (users[d.phone]) {
+    users[d.phone].balance += d.amount;
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+  localStorage.setItem("deposits", JSON.stringify(deposits));
+  renderDeposits();
+}
+
+function rejectDeposit(i) {
+  deposits[i].status = "rejected";
+  localStorage.setItem("deposits", JSON.stringify(deposits));
+  renderDeposits();
+}
+
+function approveWithdraw(i) {
+  const w = withdrawals[i];
+  w.status = "approved";
+  if (users[w.phone]) {
+    users[w.phone].balance -= w.amount;
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+  localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+  renderWithdrawals();
+}
+
+function rejectWithdraw(i) {
+  withdrawals[i].status = "rejected";
+  localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+  renderWithdrawals();
+}
+
+function updatePeriod() {
+  const now = new Date();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const period = now.getUTCFullYear().toString() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+  document.getElementById("period").innerText = "Current Period: " + period;
+  return period;
+}
+
+function setResult() {
+  const period = updatePeriod();
+  const result = document.getElementById("resultValue").value;
+  manualResults[period] = result;
+  localStorage.setItem("manualResults", JSON.stringify(manualResults));
+  document.getElementById("resultMsg").innerText = `Set ${result} for Period ${period}`;
+}
+
+renderDeposits();
+renderWithdrawals();
+updatePeriod();
+setInterval(updatePeriod, 1000);
+</script></body>
+        </html>
