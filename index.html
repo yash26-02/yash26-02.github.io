@@ -1,0 +1,267 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YGWIN - Wingo Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #0f0f0f, #1e1e1e);
+      color: #fff;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+      margin-bottom: 25px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    button {
+      font-weight: bold;
+      background: #6a0dad;
+      color: white;
+      cursor: pointer;
+    }
+    button.red { background: #e53935; }
+    button.green { background: #43a047; }
+    .qr-img {
+      width: 100%;
+      border-radius: 12px;
+      background: white;
+    }
+    .hide { display: none; }
+    .neon {
+      font-weight: bold;
+      padding: 8px 14px;
+      border: 2px solid #6a0dad;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 10px;
+      color: #f5f5f5;
+      background: rgba(106, 13, 173, 0.2);
+    }
+    ul { padding-left: 18px; font-size: 14px; }
+    .center { text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="authCard" class="card">
+    <h2 id="authTitle">Register</h2>
+    <input id="phone" type="text" placeholder="Enter Phone Number">
+    <input id="password" type="password" placeholder="Enter Password">
+    <input id="confirm" type="password" placeholder="Confirm Password">
+    <button onclick="register()">Register</button>
+    <p class="center">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+  </div>  <div id="gameSection" class="hide">
+    <div class="card">
+      <h2>Wingo 1 Minute Game</h2>
+      <p id="period">Period: Loading...</p>
+      <p id="timer">Timer: 00:00</p>
+      <p id="wallet">Wallet Balance: ₹0.00</p>
+      <input id="betAmount" type="number" placeholder="Enter Bet Amount">
+      <button class="red" onclick="placeBet('RED')">Bet RED</button>
+      <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>
+      <p id="result">Result: --</p>
+    </div><div class="card">
+  <h3>Scan QR to Pay</h3>
+  <img id="gameQR" class="qr-img" alt="QR Code will appear here" />
+  <input id="depositAmt" type="number" placeholder="Enter Amount">
+  <input id="utr" type="text" placeholder="Enter 12-digit UTR">
+  <button onclick="submitDeposit()">Submit for Approval</button>
+</div>
+
+<div class="card">
+  <h3>Request Withdrawal</h3>
+  <input id="withdrawAmt" type="number" placeholder="Enter Amount to Withdraw">
+  <input id="upi" type="text" placeholder="Enter Your UPI ID">
+  <button onclick="submitWithdrawal()">Request Withdraw</button>
+</div>
+
+<div class="card">
+  <h3>History</h3>
+  <button onclick="clearHistory()">Clear History</button>
+  <ul id="historyList"></ul>
+</div>
+<div class="card center">
+  <button onclick="logout()">Logout</button>
+</div>
+
+  </div><script>
+let balance = 0;
+let currentBet = null;
+let globalHistory = JSON.parse(localStorage.getItem("globalHistory") || "[]");
+let manualResults = JSON.parse(localStorage.getItem("manualResults") || "{}");
+let users = JSON.parse(localStorage.getItem("users") || "{}");
+let currentUser = localStorage.getItem("currentUser");
+
+function getPeriod(minuteOffset = 0) {
+  const now = new Date();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes() + minuteOffset;
+  return now.getUTCFullYear().toString() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+}
+
+function updatePeriodAndTimer() {
+  const now = new Date();
+  const sec = now.getUTCSeconds();
+  const rem = 60 - sec;
+  const currentPeriod = getPeriod();
+  const previousPeriod = getPeriod(-1);
+
+  document.getElementById("period").innerText = "Period: " + currentPeriod;
+  document.getElementById("timer").innerText = "Timer: 00:" + String(rem).padStart(2, '0');
+
+  if (sec === 0) {
+    let result = manualResults[previousPeriod] || (Math.random() > 0.5 ? "RED" : "GREEN");
+    document.getElementById("result").innerText = "Result: " + result;
+    if (currentBet) {
+      if (currentBet.color === result) {
+        let win = currentBet.amt + (currentBet.amt * 0.96);
+        balance += win;
+        alert("You WON ₹" + win.toFixed(2));
+      } else {
+        alert("You LOST ₹" + currentBet.amt);
+      }
+      currentBet = null;
+      saveUserData();
+    }
+    updateGlobalHistory(previousPeriod + " = " + result);
+    updateUI();
+  }
+}
+
+function updateGlobalHistory(entry) {
+  globalHistory.unshift(entry);
+  if (globalHistory.length > 20) globalHistory.pop();
+  localStorage.setItem("globalHistory", JSON.stringify(globalHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
+  globalHistory.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    list.appendChild(li);
+  });
+}
+
+function clearHistory() {
+  globalHistory = [];
+  localStorage.removeItem("globalHistory");
+  renderHistory();
+}
+
+function placeBet(color) {
+  const amt = parseFloat(document.getElementById("betAmount").value);
+  if (!amt || amt <= 0) return alert("Enter a valid amount");
+  if (balance < amt) return alert("Insufficient balance");
+  balance -= amt;
+  currentBet = { color, amt };
+  saveUserData();
+  alert("Bet placed on " + color + " for ₹" + amt);
+}
+
+function submitDeposit() {
+  const amt = parseFloat(document.getElementById("depositAmt").value);
+  const utr = document.getElementById("utr").value;
+  if (!amt || !utr || utr.length !== 12) return alert("Invalid input");
+  const reqs = JSON.parse(localStorage.getItem("depositRequests") || "[]");
+  reqs.push({ user: currentUser, amt, utr });
+  localStorage.setItem("depositRequests", JSON.stringify(reqs));
+  alert("Deposit request submitted ✅");
+}
+
+function submitWithdrawal() {
+  const amt = parseFloat(document.getElementById("withdrawAmt").value);
+  const upi = document.getElementById("upi").value;
+  if (!amt || !upi || amt > balance) return alert("Invalid or insufficient amount");
+  const reqs = JSON.parse(localStorage.getItem("withdrawRequests") || "[]");
+  reqs.push({ user: currentUser, amt, upi });
+  localStorage.setItem("withdrawRequests", JSON.stringify(reqs));
+  alert("Withdraw request submitted ✅");
+}
+
+function saveUserData() {
+  users[currentUser].balance = balance;
+  localStorage.setItem("users", JSON.stringify(users));
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById("wallet").innerText = "Wallet Balance: ₹" + balance.toFixed(2);
+}
+
+function showLogin() {
+  document.getElementById("authTitle").innerText = "Login";
+  document.getElementById("confirm").style.display = "none";
+  document.querySelector("#authCard button").setAttribute("onclick", "login()");
+}
+
+function login() {
+  const phone = document.getElementById("phone").value;
+  const pass = document.getElementById("password").value;
+  if (!users[phone] || users[phone].password !== pass) return alert("Invalid credentials");
+  currentUser = phone;
+  localStorage.setItem("currentUser", currentUser);
+  balance = users[phone].balance;
+  showGame();
+}
+
+function register() {
+  const phone = document.getElementById("phone").value;
+  const pass = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+  if (users[phone]) return alert("Phone already registered");
+  if (pass !== confirm) return alert("Passwords do not match");
+  users[phone] = { password: pass, balance: 0 };
+  localStorage.setItem("users", JSON.stringify(users));
+  currentUser = phone;
+  localStorage.setItem("currentUser", currentUser);
+  balance = 0;
+  showGame();
+}
+
+function showGame() {
+  document.getElementById("authCard").style.display = "none";
+  document.getElementById("gameSection").style.display = "block";
+  updateUI();
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+
+if (currentUser && users[currentUser]) {
+  balance = users[currentUser].balance;
+  showGame();
+}
+
+// Load QR from storage
+const savedQR = localStorage.getItem("qrImage");
+if (savedQR) {
+  const qrEl = document.getElementById("gameQR");
+  if (qrEl) qrEl.src = savedQR;
+}
+
+// Init
+renderHistory();
+setInterval(updatePeriodAndTimer, 1000);
+</script></body>
+  </html>
