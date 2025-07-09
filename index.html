@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YGWIN - Wingo Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #fff;
+      padding: 20px;
+    }
+    .card {
+      background: #1f1f1f;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 12px;
+      margin: 8px 0;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #6a0dad;
+      color: white;
+      font-weight: bold;
+    }
+    button.red { background: #e53935; }
+    button.green { background: #43a047; }
+    .hide { display: none; }
+    .history {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    img.qr-img {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 10px;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="loginBox" class="card">
+    <h2>Register / Login</h2>
+    <input id="phone" placeholder="Enter Phone Number">
+    <input id="pass" type="password" placeholder="Enter Password">
+    <input id="conf" type="password" placeholder="Confirm Password">
+    <button onclick="registerUser()">Register</button>
+    <button onclick="loginUser()">Login</button>
+  </div>  <div id="gameBox" class="hide">
+    <div class="card">
+      <h2>Wingo 1 Minute Game</h2>
+      <p id="period">Period:</p>
+      <p id="timer">Timer:</p>
+      <p>Wallet Balance: ₹<span id="balance">0</span></p>
+      <input id="betAmt" type="number" placeholder="Enter Bet Amount">
+      <button class="red" onclick="placeBet('RED')">Bet RED</button>
+      <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>
+      <p id="result">Result:</p>
+      <div class="history" id="historyList"></div>
+      <button onclick="clearHistory()">Clear History</button>
+    </div><div class="card">
+  <h3>Deposit</h3>
+  <img id="qrImg" class="qr-img" />
+  <p>UPI ID: yashgolani26@fam</p>
+  <input id="depAmt" type="number" placeholder="Enter Amount">
+  <input id="utr" placeholder="Enter 12-digit UTR">
+  <button onclick="submitDeposit()">Submit for Approval</button>
+</div>
+
+<div class="card">
+  <h3>Withdraw</h3>
+  <input id="withAmt" type="number" placeholder="Enter Amount">
+  <input id="withUpi" placeholder="Enter UPI ID">
+  <button onclick="submitWithdraw()">Request Withdrawal</button>
+</div>
+
+<button onclick="logoutUser()">Logout</button>
+
+  </div>  <script>
+    let currentUser = null;
+    let currentBet = JSON.parse(localStorage.getItem("currentBet") || 'null');
+    const users = JSON.parse(localStorage.getItem("users") || '{}');
+    const manualResults = JSON.parse(localStorage.getItem("manualResults") || '{}');
+
+    function saveUsers() {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function updateUI() {
+      if (!currentUser) return;
+      document.getElementById("balance").innerText = users[currentUser].balance.toFixed(2);
+    }
+
+    function registerUser() {
+      const p = phone.value;
+      const pw = pass.value;
+      const c = conf.value;
+      if (!p || !pw || pw !== c) return alert("Invalid or unmatched password");
+      if (users[p]) return alert("User already exists");
+      users[p] = { pass: pw, balance: 0 };
+      saveUsers();
+      alert("Registered! Please login.");
+    }
+
+    function loginUser() {
+      const p = phone.value;
+      const pw = pass.value;
+      if (!users[p] || users[p].pass !== pw) return alert("Invalid login");
+      currentUser = p;
+      localStorage.setItem("currentUser", currentUser);
+      loginBox.classList.add("hide");
+      gameBox.classList.remove("hide");
+      updateUI();
+      loadQR();
+    }
+
+    function logoutUser() {
+      localStorage.removeItem("currentUser");
+      location.reload();
+    }
+
+    function getPeriod(offset = 0) {
+      const now = new Date();
+      const mins = now.getUTCHours() * 60 + now.getUTCMinutes() + offset;
+      return now.getUTCFullYear().toString() +
+        String(now.getUTCMonth() + 1).padStart(2, '0') +
+        String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+    }
+
+    function placeBet(color) {
+      const amt = Number(betAmt.value);
+      if (!amt || amt <= 0) return alert("Invalid amount");
+      if (users[currentUser].balance < amt) return alert("Insufficient balance");
+      const p = getPeriod();
+      currentBet = { user: currentUser, color, amt, period: p };
+      localStorage.setItem("currentBet", JSON.stringify(currentBet));
+      users[currentUser].balance -= amt;
+      saveUsers();
+      updateUI();
+      alert(`Bet placed on ${color}`);
+      let all = JSON.parse(localStorage.getItem("allBets") || '[]');
+      all.push(currentBet);
+      localStorage.setItem("allBets", JSON.stringify(all));
+    }
+
+    function updatePeriodAndTimer() {
+      const now = new Date();
+      const sec = now.getUTCSeconds();
+      const rem = 60 - sec;
+      const current = getPeriod();
+      const prev = getPeriod(-1);
+      period.innerText = "Period: " + current;
+      timer.innerText = "Timer: 00:" + String(rem).padStart(2, '0');
+
+      if (sec === 0) {
+        let result = manualResults[prev] || (Math.random() > 0.5 ? "RED" : "GREEN");
+        result = result.toUpperCase();
+        document.getElementById("result").innerText = "Result: " + result;
+
+        if (currentBet && currentBet.period === prev) {
+          if (currentBet.color === result) {
+            const win = currentBet.amt + currentBet.amt * 0.96;
+            users[currentUser].balance += win;
+            alert("You WON ₹" + win.toFixed(2));
+          } else {
+            alert("You LOST ₹" + currentBet.amt);
+          }
+          currentBet = null;
+          localStorage.removeItem("currentBet");
+          saveUsers();
+        }
+
+        let hist = JSON.parse(localStorage.getItem("history") || '[]');
+        hist.unshift(prev + " = " + result);
+        if (hist.length > 20) hist.pop();
+        localStorage.setItem("history", JSON.stringify(hist));
+        showHistory();
+        updateUI();
+      }
+    }
+
+    function showHistory() {
+      const hist = JSON.parse(localStorage.getItem("history") || '[]');
+      historyList.innerHTML = hist.map(h => `<div>${h}</div>`).join('');
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("history");
+      showHistory();
+    }
+
+    function loadQR() {
+      const qr = localStorage.getItem("qrImg");
+      if (qr) document.getElementById("qrImg").src = qr;
+      else document.getElementById("qrImg").alt = "QR not found";
+    }
+
+    function submitDeposit() {
+      const amt = Number(document.getElementById("depAmt").value);
+      const utr = document.getElementById("utr").value;
+      if (!amt || !utr || utr.length !== 12) return alert("Invalid");
+      let reqs = JSON.parse(localStorage.getItem("depositRequests") || '[]');
+      reqs.push({ user: currentUser, amt, utr });
+      localStorage.setItem("depositRequests", JSON.stringify(reqs));
+      alert("Deposit request submitted");
+    }
+
+    function submitWithdraw() {
+      const amt = Number(document.getElementById("withAmt").value);
+      const upi = document.getElementById("withUpi").value;
+      if (!amt || !upi) return alert("Invalid");
+      if (users[currentUser].balance < amt) return alert("Insufficient balance");
+      let reqs = JSON.parse(localStorage.getItem("withdrawRequests") || '[]');
+      reqs.push({ user: currentUser, amt, upi });
+      localStorage.setItem("withdrawRequests", JSON.stringify(reqs));
+      alert("Withdraw request submitted");
+    }
+
+    setInterval(updatePeriodAndTimer, 1000);
+    showHistory();
+
+    const loggedIn = localStorage.getItem("currentUser");
+    if (loggedIn && users[loggedIn]) {
+      currentUser = loggedIn;
+      loginBox.classList.add("hide");
+      gameBox.classList.remove("hide");
+      updateUI();
+      loadQR();
+    }
+  </script></body>
+    </html>
