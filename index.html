@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YGWIN - Color Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    body { font-family: Arial; background: #1e1e1e; color: white; margin: 0; font-size: 20px; }
+    .container { max-width: 600px; margin: auto; padding: 20px; }
+    .card { background: #2e2e2e; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    input, button {
+      width: 100%; padding: 12px; font-size: 18px; margin-top: 10px;
+      border: none; border-radius: 8px;
+    }
+    button { background: #6a0dad; color: white; font-weight: bold; }
+    .green { background: green; }
+    .red { background: red; }
+    .hide { display: none; }
+    .qr-img { width: 100%; margin-top: 15px; border-radius: 10px; background: white; }
+    #adminDrawer {
+      position: fixed; top: 0; right: -100%; height: 100%; width: 300px;
+      background: #111; padding: 20px; transition: right 0.3s ease; z-index: 999;
+    }
+    #adminDrawer.open { right: 0; }
+    .admin-toggle {
+      position: fixed; top: 10px; left: 10px;
+      background: #444; color: white; padding: 10px 16px; border-radius: 8px; z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+<button class="admin-toggle" onclick="toggleAdmin()">☰ Admin</button>
+
+<div id="adminDrawer">
+  <h3>Admin Panel</h3>
+  <label>Set Manual Result:</label>
+  <select id="manualResult">
+    <option value="">Auto (Random)</option>
+    <option value="RED">RED</option>
+    <option value="GREEN">GREEN</option>
+  </select>
+  <hr>
+  <label>Upload New QR:</label>
+  <input type="file" id="qrInput" accept="image/*">
+  <button onclick="uploadQR()">Upload QR</button>
+  <p id="qrStatus"></p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h2>Wingo 1 Minute</h2>
+    <div id="period">Period: --</div>
+    <div id="timer">Timer: 00:00</div>
+    <div>Balance: ₹<span id="balance">0</span></div>
+    <button class="red" onclick="placeBet('RED')">Bet RED</button>
+    <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>
+    <input type="number" id="betAmount" placeholder="Enter Bet Amount">
+    <div id="result">Result: --</div>
+    <h3>History</h3>
+    <ul id="history"></ul>
+  </div>
+
+  <div class="card">
+    <h2>Deposit</h2>
+    <img id="qrImg" src="qr.jpg" class="qr-img" alt="QR">
+    <p><b>UPI:</b> yashgolani26@fam</p>
+    <input type="number" id="depositAmt" placeholder="Enter Amount (₹)">
+    <input type="text" id="utr" placeholder="Enter 12-digit UTR">
+    <button onclick="deposit()">Submit for Approval</button>
+  </div>
+
+  <div class="card">
+    <h2>Withdraw</h2>
+    <input type="text" id="upi" placeholder="Your UPI ID">
+    <input type="number" id="withdrawAmt" placeholder="Amount">
+    <button onclick="withdraw()">Request Withdrawal</button>
+  </div>
+</div>
+
+<script>
+let balance = 0;
+let currentBet = null;
+let history = [];
+let manualResult = "";
+
+function toggleAdmin() {
+  document.getElementById("adminDrawer").classList.toggle("open");
+}
+
+document.getElementById("manualResult").addEventListener("change", e => {
+  manualResult = e.target.value;
+});
+
+function updatePeriodAndTimer() {
+  const now = new Date();
+  const sec = now.getUTCSeconds();
+  const rem = 60 - sec;
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const period = now.getUTCFullYear().toString() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+  document.getElementById("period").innerText = "Period: " + period;
+  document.getElementById("timer").innerText = "Timer: 00:" + String(rem).padStart(2, '0');
+
+  if (sec === 0) {
+    let result = manualResult || (Math.random() > 0.5 ? "RED" : "GREEN");
+    document.getElementById("result").innerText = "Result: " + result;
+    if (currentBet) {
+      if (currentBet.color === result) {
+        const win = currentBet.amt + (currentBet.amt * 0.96);
+        balance += win;
+        alert("You WON ₹" + win.toFixed(2));
+      } else {
+        alert("You LOST ₹" + currentBet.amt);
+      }
+      currentBet = null;
+      updateUI();
+    }
+    history.unshift(period + " = " + result);
+    document.getElementById("history").innerHTML = history.map(h => "<li>" + h + "</li>").join("");
+  }
+}
+
+function updateUI() {
+  document.getElementById("balance").innerText = balance.toFixed(2);
+}
+
+function placeBet(color) {
+  const amt = parseFloat(document.getElementById("betAmount").value);
+  if (!amt || amt <= 0 || amt > balance) return alert("Invalid amount");
+  balance -= amt;
+  updateUI();
+  currentBet = { color, amt };
+  alert("Bet placed on " + color);
+}
+
+function deposit() {
+  const amt = parseFloat(document.getElementById("depositAmt").value);
+  const utr = document.getElementById("utr").value;
+  if (utr.length !== 12 || isNaN(amt) || amt <= 0) return alert("Enter valid amount and 12-digit UTR");
+  balance += amt;
+  updateUI();
+  alert("₹" + amt + " will be added after admin approval.");
+}
+
+function withdraw() {
+  const amt = parseFloat(document.getElementById("withdrawAmt").value);
+  if (!amt || amt > balance) return alert("Invalid amount");
+  balance -= amt;
+  updateUI();
+  alert("Withdrawal request sent to admin.");
+}
+
+function uploadQR() {
+  const input = document.getElementById("qrInput");
+  const file = input.files[0];
+  if (!file) return alert("Select image");
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const qrData = e.target.result;
+    document.getElementById("qrImg").src = qrData;
+    document.getElementById("qrStatus").innerText = "QR updated (preview only)";
+  };
+  reader.readAsDataURL(file);
+}
+
+setInterval(updatePeriodAndTimer, 1000);
+</script>
+</body>
+  </html>
