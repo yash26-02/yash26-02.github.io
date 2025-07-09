@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YGWIN - Wingo 1 Minute Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #0f0f0f, #1e1e1e);
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 25px;
+      backdrop-filter: blur(10px);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    button {
+      font-weight: bold;
+      background: #6a0dad;
+      color: white;
+      cursor: pointer;
+    }
+    .red { background: #e53935; }
+    .green { background: #43a047; }
+    .qr-img {
+      width: 100%;
+      border-radius: 12px;
+      background: white;
+    }
+    .hide { display: none; }
+    .history {
+      background: rgba(255,255,255,0.05);
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="authCard">
+      <h2>Login / Register</h2>
+      <input type="text" id="phone" placeholder="Enter Phone Number" />
+      <input type="password" id="pass" placeholder="Enter Password" />
+      <input type="password" id="cpass" placeholder="Confirm Password (register only)" />
+      <button onclick="loginOrRegister()">Submit</button>
+    </div><div class="card hide" id="gameCard">
+  <div id="userInfo"></div>
+  <h3 id="period"></h3>
+  <h3 id="timer"></h3>
+  <h3 id="result"></h3>
+  <input type="number" id="betAmt" placeholder="Enter Bet Amount" />
+  <button class="red" onclick="placeBet('RED')">Bet RED</button>
+  <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>
+  <h4>Wallet Balance: ₹<span id="wallet">0.00</span></h4>
+  <div class="history" id="history"></div>
+</div>
+
+<div class="card hide" id="depositCard">
+  <h2>Deposit</h2>
+  <img id="qrImage" class="qr-img" src="" alt="QR Code for Payment" />
+  <p>UPI ID: yashgolani26@fam</p>
+  <input type="number" id="depAmt" placeholder="Enter Amount" />
+  <input type="text" id="depUTR" placeholder="Enter 12-digit UTR" />
+  <button onclick="submitDeposit()">Submit for Approval</button>
+</div>
+
+<div class="card hide" id="withdrawCard">
+  <h2>Withdraw</h2>
+  <input type="number" id="withAmt" placeholder="Enter Amount" />
+  <input type="text" id="withUPI" placeholder="Enter Your UPI ID" />
+  <button onclick="submitWithdraw()">Request Withdrawal</button>
+</div>
+
+<button onclick="toggleSection('depositCard')">Deposit</button>
+<button onclick="toggleSection('withdrawCard')">Withdraw</button>
+<button onclick="logout()">Logout</button>
+
+  </div>  <script>
+    let currentUser = null;
+    let balance = 0;
+    let currentBet = null;
+
+    function loginOrRegister() {
+      const phone = document.getElementById("phone").value;
+      const pass = document.getElementById("pass").value;
+      const cpass = document.getElementById("cpass").value;
+      if (!phone || !pass) return alert("Fill all fields");
+      let users = JSON.parse(localStorage.getItem("users") || '{}');
+      if (!users[phone]) {
+        if (!cpass || cpass !== pass) return alert("Passwords do not match");
+        users[phone] = { password: pass, balance: 0 };
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+      if (users[phone].password !== pass) return alert("Wrong password");
+      currentUser = phone;
+      balance = users[phone].balance;
+      document.getElementById("authCard").classList.add("hide");
+      document.getElementById("gameCard").classList.remove("hide");
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("wallet").innerText = balance.toFixed(2);
+      document.getElementById("userInfo").innerText = `Welcome, ${currentUser}`;
+      document.getElementById("depositCard").classList.add("hide");
+      document.getElementById("withdrawCard").classList.add("hide");
+      loadQR();
+      loadHistory();
+    }
+
+    function getPeriod(offset = 0) {
+      const now = new Date();
+      const mins = now.getUTCHours() * 60 + now.getUTCMinutes() + offset;
+      return now.getUTCFullYear().toString() +
+        String(now.getUTCMonth() + 1).padStart(2, '0') +
+        String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+    }
+
+    function placeBet(color) {
+      const amt = parseFloat(document.getElementById("betAmt").value);
+      if (!amt || amt > balance) return alert("Invalid Amount");
+      currentBet = { color, amt, period: getPeriod() };
+      balance -= amt;
+      saveUserData();
+      updateUI();
+      alert("Bet Placed on " + color);
+    }
+
+    function saveUserData() {
+      let users = JSON.parse(localStorage.getItem("users") || '{}');
+      users[currentUser].balance = balance;
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function toggleSection(id) {
+      document.getElementById("depositCard").classList.add("hide");
+      document.getElementById("withdrawCard").classList.add("hide");
+      document.getElementById(id).classList.remove("hide");
+    }
+
+    function logout() {
+      location.reload();
+    }
+
+    function submitDeposit() {
+      const amt = parseFloat(document.getElementById("depAmt").value);
+      const utr = document.getElementById("depUTR").value;
+      if (!amt || !utr || utr.length !== 12) return alert("Invalid Details");
+      let reqs = JSON.parse(localStorage.getItem("depositRequests") || '[]');
+      reqs.push({ user: currentUser, amt, utr });
+      localStorage.setItem("depositRequests", JSON.stringify(reqs));
+      alert("Deposit Request Submitted");
+      document.getElementById("depAmt").value = "";
+      document.getElementById("depUTR").value = "";
+    }
+
+    function submitWithdraw() {
+      const amt = parseFloat(document.getElementById("withAmt").value);
+      const upi = document.getElementById("withUPI").value;
+      if (!amt || amt > balance || !upi) return alert("Invalid Withdrawal");
+      let reqs = JSON.parse(localStorage.getItem("withdrawRequests") || '[]');
+      reqs.push({ user: currentUser, amt, upi });
+      localStorage.setItem("withdrawRequests", JSON.stringify(reqs));
+      alert("Withdrawal Request Submitted");
+      document.getElementById("withAmt").value = "";
+      document.getElementById("withUPI").value = "";
+    }
+
+    function loadQR() {
+      const qr = localStorage.getItem("qrImg") || "https://raw.githubusercontent.com/yash26-02/yash26-02.github.io/main/qr.jpg";
+      document.getElementById("qrImage").src = qr;
+    }
+
+    function loadHistory() {
+      const h = JSON.parse(localStorage.getItem("gameHistory") || '[]');
+      document.getElementById("history").innerHTML = h.slice(-20).reverse().map(x => `<div>${x}</div>`).join('');
+    }
+
+    function updatePeriodAndTimer() {
+      const now = new Date();
+      const sec = now.getUTCSeconds();
+      const rem = 60 - sec;
+      const currentPeriod = getPeriod();
+      const prevPeriod = getPeriod(-1);
+      document.getElementById("period").innerText = "Period: " + currentPeriod;
+      document.getElementById("timer").innerText = "Timer: 00:" + String(rem).padStart(2, '0');
+      let results = JSON.parse(localStorage.getItem("manualResults") || '{}');
+      let res = results[prevPeriod] || (Math.random() > 0.5 ? "RED" : "GREEN");
+      if (sec === 0) {
+        document.getElementById("result").innerText = "Result: " + res;
+        if (currentBet && currentBet.period === prevPeriod) {
+          if (currentBet.color === res) {
+            const win = currentBet.amt + currentBet.amt * 0.96;
+            balance += win;
+            alert("You WON ₹" + win.toFixed(2));
+          } else {
+            alert("You LOST ₹" + currentBet.amt);
+          }
+          currentBet = null;
+          saveUserData();
+        }
+        let hist = JSON.parse(localStorage.getItem("gameHistory") || '[]');
+        hist.push(`${prevPeriod} = ${res}`);
+        localStorage.setItem("gameHistory", JSON.stringify(hist));
+        loadHistory();
+      }
+    }
+    setInterval(updatePeriodAndTimer, 1000);
+  </script></body>
+  </html>
