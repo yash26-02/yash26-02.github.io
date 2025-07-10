@@ -1,0 +1,206 @@
+<!DOCTYPE html><html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - YGWIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #121212; color: white; padding: 20px; }
+    .card { background: #1e1e1e; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    input, button, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
+    button { background: #6a0dad; color: white; cursor: pointer; font-weight: bold; }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+    .qr-img { width: 100%; border-radius: 10px; background: #fff; padding: 5px; }
+    .flex { display: flex; justify-content: space-between; gap: 10px; }
+  </style>
+</head>
+<body><div class="card" id="loginBox">
+  <h2>Admin Login</h2>
+  <input id="adminNumber" placeholder="Enter Phone Number">
+  <input id="adminPass" type="password" placeholder="Enter Password">
+  <button onclick="adminLogin()">Login</button>
+</div><div id="panel" style="display:none">
+  <h2>Welcome Admin</h2>  <div class="card">
+    <div class="section-title">Update QR Code</div>
+    <input type="file" id="qrInput">
+    <button onclick="uploadQR()">Upload QR</button>
+    <img id="qrPreview" class="qr-img" src="" />
+  </div>  <div class="card">
+    <div class="section-title">Set Result</div>
+    <div>Current Period: <span id="currentPeriod"></span></div>
+    <select id="manualResult">
+      <option value="">Select Result</option>
+      <option value="RED">RED</option>
+      <option value="GREEN">GREEN</option>
+    </select>
+    <button onclick="setResult()">Submit Result</button>
+  </div>  <div class="card">
+    <div class="section-title">Red/Green Total Bet</div>
+    RED Total: ₹<span id="redTotal">0</span><br>
+    GREEN Total: ₹<span id="greenTotal">0</span>
+  </div>  <div class="card">
+    <div class="section-title">Deposit Requests</div>
+    <div id="depositList"></div>
+  </div>  <div class="card">
+    <div class="section-title">Withdrawal Requests</div>
+    <div id="withdrawList"></div>
+  </div>  <div class="card">
+    <div class="section-title">All Users</div>
+    <div id="usersList"></div>
+  </div>
+</div><script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+    authDomain: "yash-first-64655.firebaseapp.com",
+    projectId: "yash-first-64655",
+    databaseURL: "https://yash-first-64655-default-rtdb.firebaseio.com",
+    storageBucket: "yash-first-64655.appspot.com",
+    messagingSenderId: "610242949077",
+    appId: "1:610242949077:web:216a0905cf9850969f175c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const adminNumber = "9770528555";
+  const adminPassword = "myselfyg26";
+
+  function adminLogin() {
+    const num = document.getElementById("adminNumber").value;
+    const pass = document.getElementById("adminPass").value;
+    db.ref("admins/" + num).once("value", snap => {
+      if (snap.exists() && snap.val().password === pass) {
+        localStorage.setItem("admin", num);
+        showPanel();
+      } else {
+        alert("Invalid credentials");
+      }
+    });
+  }
+
+  function showPanel() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+    updatePeriod();
+    fetchQR();
+    loadBets();
+    loadDeposit();
+    loadWithdraw();
+    loadUsers();
+  }
+
+  function updatePeriod() {
+    const now = new Date();
+    const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+    const period = now.getUTCFullYear().toString() + String(now.getUTCMonth()+1).padStart(2,'0') + String(now.getUTCDate()).padStart(2,'0') + "1000" + (10001 + mins);
+    document.getElementById("currentPeriod").innerText = period;
+  }
+
+  function setResult() {
+    const result = document.getElementById("manualResult").value;
+    const period = document.getElementById("currentPeriod").innerText;
+    if (!result) return alert("Select result first");
+    db.ref("manualResults/" + period).set(result);
+    alert("Result set for " + period);
+  }
+
+  function loadBets() {
+    db.ref("currentBets").once("value", snap => {
+      let red = 0, green = 0;
+      snap.forEach(child => {
+        const b = child.val();
+        if (b.color === "RED") red += b.amount;
+        if (b.color === "GREEN") green += b.amount;
+      });
+      document.getElementById("redTotal").innerText = red;
+      document.getElementById("greenTotal").innerText = green;
+    });
+  }
+
+  function loadDeposit() {
+    db.ref("deposits").on("value", snap => {
+      let html = "";
+      snap.forEach(child => {
+        const d = child.val();
+        if (!d.status) {
+          html += `<div>
+            ${d.phone} wants to deposit ₹${d.amount} (UTR: ${d.utr})
+            <button onclick="approveDeposit('${child.key}', ${d.amount}, '${d.phone}')">Approve</button>
+            <button onclick="rejectDeposit('${child.key}')">Reject</button>
+          </div>`;
+        }
+      });
+      document.getElementById("depositList").innerHTML = html;
+    });
+  }
+
+  function approveDeposit(id, amt, phone) {
+    db.ref("users/" + phone + "/balance").transaction(b => (b||0)+amt);
+    db.ref("deposits/" + id + "/status").set("approved");
+  }
+  function rejectDeposit(id) {
+    db.ref("deposits/" + id + "/status").set("rejected");
+  }
+
+  function loadWithdraw() {
+    db.ref("withdrawals").on("value", snap => {
+      let html = "";
+      snap.forEach(child => {
+        const w = child.val();
+        if (!w.status) {
+          html += `<div>
+            ${w.phone} requests ₹${w.amount} withdrawal (UPI: ${w.upi})
+            <button onclick="approveWithdraw('${child.key}', ${w.amount}, '${w.phone}')">Approve</button>
+            <button onclick="rejectWithdraw('${child.key}')">Reject</button>
+          </div>`;
+        }
+      });
+      document.getElementById("withdrawList").innerHTML = html;
+    });
+  }
+
+  function approveWithdraw(id, amt, phone) {
+    db.ref("users/" + phone + "/balance").transaction(b => (b||0)-amt);
+    db.ref("withdrawals/" + id + "/status").set("approved");
+  }
+  function rejectWithdraw(id) {
+    db.ref("withdrawals/" + id + "/status").set("rejected");
+  }
+
+  function loadUsers() {
+    db.ref("users").once("value", snap => {
+      let html = "";
+      snap.forEach(child => {
+        const u = child.val();
+        html += `<div>${child.key} - ₹${u.balance || 0} - ${u.password}</div>`;
+      });
+      document.getElementById("usersList").innerHTML = html;
+    });
+  }
+
+  function fetchQR() {
+    db.ref("qr").once("value", snap => {
+      if (snap.exists()) {
+        document.getElementById("qrPreview").src = snap.val();
+      }
+    });
+  }
+
+  function uploadQR() {
+    const file = document.getElementById("qrInput").files[0];
+    if (!file) return alert("Choose QR image first");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      db.ref("qr").set(e.target.result);
+      alert("QR updated");
+      document.getElementById("qrPreview").src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+
+  window.onload = function() {
+    const ad = localStorage.getItem("admin");
+    if (ad) showPanel();
+  }
+</script></body>
+    </html>
