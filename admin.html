@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+    }
+    .header {
+      background: #0d47a1;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .menu-btn {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background: #1565c0;
+      color: white;
+      transition: left 0.3s ease;
+      padding-top: 60px;
+    }
+    .drawer a {
+      display: block;
+      padding: 15px;
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px solid #0d47a1;
+    }
+    .drawer.open {
+      left: 0;
+    }
+    .content {
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px;
+      margin-top: 10px;
+      background: #0d47a1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    input {
+      padding: 10px;
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>YGWIN Admin Panel</div>
+  <div class="menu-btn" onclick="toggleDrawer()">☰</div>
+</div>
+
+<div class="drawer" id="drawer">
+  <a href="#dashboard">Dashboard</a>
+  <a href="#deposit">Approve/Reject Deposit</a>
+  <a href="#withdraw">Approve/Reject Withdraw</a>
+  <a href="#users">Manage Admins</a>
+  <a href="#qr">Update QR Code</a>
+  <a href="#bets">Bet Amount Summary</a>
+</div>
+
+<div class="content" id="dashboard">
+  <div class="card">
+    <h3>Result Control</h3>
+    <p id="currentPeriod">Current Period: Loading...</p>
+    <select id="resultSelect">
+      <option value="RED">RED</option>
+      <option value="GREEN">GREEN</option>
+    </select>
+    <button onclick="setResult()">Set Result</button>
+    <p id="setResultMsg" style="color: green;"></p>
+  </div>
+</div>
+
+<div class="content" id="deposit">
+  <div class="card">
+    <h3>Pending Deposits</h3>
+    <div id="depositList">Loading...</div>
+  </div>
+</div>
+
+<div class="content" id="withdraw">
+  <div class="card">
+    <h3>Pending Withdrawals</h3>
+    <div id="withdrawList">Loading...</div>
+  </div>
+</div>
+
+<div class="content" id="users">
+  <div class="card">
+    <h3>Add Admin Account</h3>
+    <input type="text" id="newAdminNumber" placeholder="Enter Mobile Number">
+    <input type="password" id="newAdminPass" placeholder="Enter Password">
+    <button onclick="addAdmin()">Add Admin</button>
+    <p id="adminMsg" style="color: green;"></p>
+  </div>
+</div>
+
+<div class="content" id="qr">
+  <div class="card">
+    <h3>Update Deposit QR</h3>
+    <input type="file" id="qrImage">
+    <button onclick="uploadQR()">Upload QR</button>
+    <p id="qrMsg" style="color: green;"></p>
+  </div>
+</div>
+
+<div class="content" id="bets">
+  <div class="card">
+    <h3>Bet Amount Summary</h3>
+    <p>Red: ₹<span id="redBet">0</span></p>
+    <p>Green: ₹<span id="greenBet">0</span></p>
+  </div>
+</div>
+
+<script>
+  function toggleDrawer() {
+    const drawer = document.getElementById("drawer");
+    drawer.classList.toggle("open");
+  }
+
+  function setResult() {
+    const result = document.getElementById("resultSelect").value;
+    const period = getPeriod();
+    localStorage.setItem("manualResult_" + period, result);
+    document.getElementById("setResultMsg").innerText = "Result set to " + result + " for " + period;
+  }
+
+  function getPeriod() {
+    const now = new Date();
+    const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+    return now.getUTCFullYear().toString() +
+      String(now.getUTCMonth() + 1).padStart(2, '0') +
+      String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+  }
+
+  function uploadQR() {
+    const qrInput = document.getElementById("qrImage");
+    const file = qrInput.files[0];
+    if (!file) return alert("Please select a file!");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      localStorage.setItem("depositQR", e.target.result);
+      document.getElementById("qrMsg").innerText = "QR Code updated!";
+    }
+    reader.readAsDataURL(file);
+  }
+
+  function addAdmin() {
+    const num = document.getElementById("newAdminNumber").value;
+    const pass = document.getElementById("newAdminPass").value;
+    if (!num || !pass) return alert("Both fields required");
+    const admins = JSON.parse(localStorage.getItem("admins") || "{}");
+    admins[num] = pass;
+    localStorage.setItem("admins", JSON.stringify(admins));
+    document.getElementById("adminMsg").innerText = "Admin added!";
+  }
+
+  document.getElementById("currentPeriod").innerText = "Current Period: " + getPeriod();
+
+  // Dummy bet amounts for demo
+  document.getElementById("redBet").innerText = "12600";
+  document.getElementById("greenBet").innerText = "14200";
+
+  // Dummy deposit/withdraw list
+  document.getElementById("depositList").innerHTML = "<p>UPI: yash@upi | ₹500 | <button>Approve</button> <button>Reject</button></p>";
+  document.getElementById("withdrawList").innerHTML = "<p>UPI: yash@upi | ₹800 | <button>Approve</button> <button>Reject</button></p>";
+</script>
+
+</body>
+  </html>
