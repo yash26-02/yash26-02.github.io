@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YGWIN - Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { background: #111; color: white; font-family: Arial; padding: 15px; }
+    .card { background: #222; padding: 15px; margin: 10px 0; border-radius: 8px; }
+    input, button {
+      padding: 10px;
+      width: 100%;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+    }
+    button { background: #6a0dad; color: white; font-weight: bold; }
+    .red { background: red; color: white; }
+    .green { background: green; color: white; }
+    .hide { display: none; }
+    .history { font-size: 14px; margin-top: 10px; }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div id="authSection">
+  <div id="register">
+    <h2>Register</h2>
+    <input type="text" id="regNumber" placeholder="Phone Number" />
+    <input type="password" id="regPass" placeholder="Password" />
+    <input type="password" id="regConfirm" placeholder="Confirm Password" />
+    <button onclick="register()">Register</button>
+    <p onclick="toggleAuth()">Already have account? Login</p>
+  </div>
+
+  <div id="login" class="hide">
+    <h2>Login</h2>
+    <input type="text" id="logNumber" placeholder="Phone Number" />
+    <input type="password" id="logPass" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p onclick="toggleAuth()">Don't have account? Register</p>
+  </div>
+</div>
+
+<div id="gameSection" class="hide">
+  <h2>Welcome: <span id="userNum"></span></h2>
+  <button onclick="logout()">Logout</button>
+  <p>Wallet: ₹<span id="wallet">0.00</span></p>
+  <p id="period">Period: Loading...</p>
+  <p id="timer">Timer: 00</p>
+
+  <input type="number" id="betAmt" placeholder="Enter Bet Amount" />
+  <button class="red" onclick="placeBet('RED')">Bet RED</button>
+  <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>
+
+  <div class="card">
+    <h3>Last Result: <span id="lastResult">--</span></h3>
+    <div id="history" class="history"></div>
+  </div>
+
+  <div class="card">
+    <h3>Deposit</h3>
+    <img id="qrImg" src="" width="100%" />
+    <p>UPI: yashgolani26@fam</p>
+    <input type="text" id="utr" placeholder="Enter UTR" />
+    <input type="number" id="depAmt" placeholder="Enter Amount" />
+    <button onclick="deposit()">Submit Deposit</button>
+  </div>
+
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input type="text" id="upiId" placeholder="Enter UPI ID" />
+    <input type="number" id="wdAmt" placeholder="Enter Amount" />
+    <button onclick="withdraw()">Submit Withdraw</button>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+  authDomain: "yash-first-64655.firebaseapp.com",
+  databaseURL: "https://yash-first-64655-default-rtdb.firebaseio.com",
+  projectId: "yash-first-64655",
+  storageBucket: "yash-first-64655.appspot.com",
+  messagingSenderId: "610242949077",
+  appId: "1:610242949077:web:216a0905cf9850969f175c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let currentUser = localStorage.getItem("user");
+if (currentUser) {
+  document.getElementById("authSection").style.display = "none";
+  document.getElementById("gameSection").style.display = "block";
+  document.getElementById("userNum").innerText = currentUser;
+  loadData();
+}
+
+// Auth toggle
+function toggleAuth() {
+  document.getElementById("register").classList.toggle("hide");
+  document.getElementById("login").classList.toggle("hide");
+}
+
+// Register
+function register() {
+  let n = regNumber.value;
+  let p = regPass.value;
+  let c = regConfirm.value;
+  if (p !== c) return alert("Password not match");
+  db.ref("users/" + n).once("value", snap => {
+    if (snap.exists()) return alert("User already exists");
+    db.ref("users/" + n).set({ pass: p });
+    db.ref("wallets/" + n).set(0);
+    localStorage.setItem("user", n);
+    location.reload();
+  });
+}
+
+// Login
+function login() {
+  let n = logNumber.value;
+  let p = logPass.value;
+  db.ref("users/" + n).once("value", snap => {
+    if (!snap.exists()) return alert("User not found");
+    if (snap.val().pass !== p) return alert("Wrong password");
+    localStorage.setItem("user", n);
+    location.reload();
+  });
+}
+
+// Logout
+function logout() {
+  localStorage.removeItem("user");
+  location.reload();
+}
+
+// Game Logic
+function getPeriod() {
+  const now = new Date();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  return now.getUTCFullYear().toString() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+}
+
+function updatePeriod() {
+  let now = new Date();
+  let sec = now.getUTCSeconds();
+  let rem = 60 - sec;
+  let period = getPeriod();
+  document.getElementById("period").innerText = "Period: " + period;
+  document.getElementById("timer").innerText = "Timer: 00:" + String(rem).padStart(2, '0');
+
+  if (rem === 60) showResult();
+}
+setInterval(updatePeriod, 1000);
+
+// Place Bet
+function placeBet(color) {
+  let amt = parseFloat(betAmt.value);
+  if (isNaN(amt) || amt <= 0) return alert("Invalid amount");
+  db.ref("wallets/" + currentUser).once("value", snap => {
+    let bal = snap.val();
+    if (bal < amt) return alert("Insufficient balance");
+    db.ref("wallets/" + currentUser).set(bal - amt);
+    db.ref("bets/" + getPeriod() + "/" + currentUser).set({ amount: amt, color });
+    alert("Bet placed!");
+  });
+}
+
+// Result
+function showResult() {
+  let prev = getPeriod(-1);
+  db.ref("manualResults/" + prev).once("value", snap => {
+    let result = snap.exists() ? snap.val() : (Math.random() > 0.5 ? "RED" : "GREEN");
+    document.getElementById("lastResult").innerText = result;
+    updateHistory(prev, result);
+
+    db.ref("bets/" + prev).once("value", snap => {
+      if (!snap.exists()) return;
+      snap.forEach(child => {
+        let bet = child.val();
+        if (bet.color === result) {
+          db.ref("wallets/" + child.key).once("value", w => {
+            let win = bet.amount + bet.amount * 0.96;
+            db.ref("wallets/" + child.key).set(w.val() + win);
+          });
+        }
+      });
+    });
+  });
+}
+
+// Deposit
+function deposit() {
+  let utr = document.getElementById("utr").value;
+  let amt = parseFloat(depAmt.value);
+  if (!utr || isNaN(amt)) return alert("Fill all");
+  db.ref("depositRequests").push({ number: currentUser, utr, amount: amt, status: "pending" });
+  alert("Deposit request submitted");
+}
+
+// Withdraw
+function withdraw() {
+  let upi = document.getElementById("upiId").value;
+  let amt = parseFloat(wdAmt.value);
+  if (!upi || isNaN(amt)) return alert("Fill all");
+  db.ref("wallets/" + currentUser).once("value", snap => {
+    if (snap.val() < amt) return alert("Insufficient balance");
+    db.ref("wallets/" + currentUser).set(snap.val() - amt);
+    db.ref("withdrawRequests").push({ number: currentUser, upi, amount: amt, status: "pending" });
+    alert("Withdraw request submitted");
+  });
+}
+
+// Wallet + QR + History
+function loadData() {
+  db.ref("wallets/" + currentUser).on("value", snap => {
+    document.getElementById("wallet").innerText = parseFloat(snap.val()).toFixed(2);
+  });
+  db.ref("qr").on("value", snap => {
+    document.getElementById("qrImg").src = snap.val();
+  });
+  db.ref("results").limitToLast(10).on("value", snap => {
+    let html = "";
+    snap.forEach(child => {
+      html += child.key + " = " + child.val() + "<br>";
+    });
+    document.getElementById("history").innerHTML = html;
+  });
+}
+
+function updateHistory(p, r) {
+  db.ref("results/" + p).set(r);
+}
+</script>
+</body>
+  </html>
