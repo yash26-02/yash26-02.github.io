@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YGWIN - Wingo Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #111; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; }
+    .card { background: #222; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 500px; }
+    input, button { width: 100%; padding: 10px; font-size: 16px; margin: 10px 0; border-radius: 6px; border: none; }
+    button { cursor: pointer; font-weight: bold; }
+    .red { background: #e53935; color: white; }
+    .green { background: #43a047; color: white; }
+    .hide { display: none; }
+    .qr-img { width: 100%; border-radius: 8px; background: white; }
+    .history-box { background: #333; border-radius: 8px; padding: 10px; margin-top: 10px; max-height: 300px; overflow-y: auto; }
+  </style>
+</head>
+<body><div class="card" id="gameBox" style="display:none">
+  <h3 id="period"></h3>
+  <h3 id="timer"></h3>
+  <h3 id="balance">Balance: ₹0</h3>  <input id="betAmount" type="number" placeholder="Enter Bet Amount">
+  <button class="red" onclick="placeBet('RED')">Bet RED</button>
+  <button class="green" onclick="placeBet('GREEN')">Bet GREEN</button>  <h3 id="result">Result: </h3>
+  <div class="history-box" id="history"></div>  <h3>Deposit</h3>
+  <img id="qrImg" class="qr-img" src="" alt="QR Code" />
+  <p>UPI: yashgolani26@fam</p>
+  <input id="depAmt" type="number" placeholder="Enter Amount">
+  <input id="utr" placeholder="Enter 12-digit UTR">
+  <button onclick="submitDeposit()">Submit Deposit</button>  <h3>Withdraw</h3>
+  <input id="withAmt" type="number" placeholder="Enter Amount">
+  <input id="upi" placeholder="Enter Your UPI ID">
+  <button onclick="submitWithdraw()">Submit Withdraw</button><button onclick="logout()">Logout</button>
+
+</div><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+  authDomain: "yash-first-64655.firebaseapp.com",
+  projectId: "yash-first-64655",
+  storageBucket: "yash-first-64655.appspot.com",
+  messagingSenderId: "610242949077",
+  appId: "1:610242949077:web:216a0905cf9850969f175c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let user = localStorage.getItem("loggedInUser");
+let balance = parseFloat(localStorage.getItem("wallet")) || 0;
+let currentBet = JSON.parse(localStorage.getItem("currentBet")) || null;
+let currentPeriod = "";
+
+if (user) {
+  document.getElementById("gameBox").style.display = 'block';
+  updateUI();
+  loadQR();
+  loadHistory();
+}
+
+function getPeriod(offset = 0) {
+  const now = new Date();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes() + offset;
+  return now.getUTCFullYear() + ("0"+(now.getUTCMonth()+1)).slice(-2) + ("0"+now.getUTCDate()).slice(-2) + "1000" + (10001 + mins);
+}
+
+function updatePeriodAndTimer() {
+  const now = new Date();
+  const sec = now.getUTCSeconds();
+  const rem = 60 - sec;
+  currentPeriod = getPeriod();
+  document.getElementById("period").innerText = "Period: " + currentPeriod;
+  document.getElementById("timer").innerText = "Timer: 00:" + String(rem).padStart(2,'0');
+
+  if (sec === 0) {
+    const prevPeriod = getPeriod(-1);
+    db.ref("results/" + prevPeriod).once("value", snap => {
+      let result = snap.exists() ? snap.val() : (Math.random() > 0.5 ? "RED" : "GREEN");
+      document.getElementById("result").innerText = "Result: " + result;
+      if (currentBet && currentBet.period === prevPeriod) {
+        if (currentBet.color === result) {
+          const win = currentBet.amount + currentBet.amount * 0.96;
+          balance += win;
+          alert("You WON ₹" + win.toFixed(2));
+        } else {
+          alert("You LOST ₹" + currentBet.amount);
+        }
+        currentBet = null;
+        saveUserData();
+      }
+    });
+  }
+}
+setInterval(updatePeriodAndTimer, 1000);
+
+function updateUI() {
+  document.getElementById("balance").innerText = "Balance: ₹" + balance.toFixed(2);
+}
+
+function placeBet(color) {
+  const amt = parseFloat(betAmount.value);
+  if (!amt || amt <= 0) return alert("Invalid amount");
+  if (balance < amt) return alert("Insufficient balance");
+  balance -= amt;
+  currentBet = { color, amount: amt, period: currentPeriod };
+  db.ref("bets/" + currentPeriod + "/" + user).set(currentBet);
+  saveUserData();
+  updateUI();
+  alert("Bet placed on " + color);
+}
+
+function saveUserData() {
+  if (user) {
+    db.ref("users/"+user+"/balance").set(balance);
+    localStorage.setItem("wallet", balance);
+    localStorage.setItem("currentBet", JSON.stringify(currentBet));
+  }
+}
+
+function loadHistory() {
+  db.ref("results").limitToLast(10).on("value", snap => {
+    let html = "";
+    snap.forEach(c => {
+      html = `<div>${c.key} = ${c.val()}</div>` + html;
+    });
+    document.getElementById("history").innerHTML = html;
+  });
+}
+
+function submitDeposit() {
+  const amt = parseFloat(depAmt.value), utr = utr.value;
+  if (!amt || !utr || utr.length != 12) return alert("Invalid deposit info");
+  db.ref("requests/deposit").push({ number: user, amount: amt, utr: utr, status: "pending" });
+  alert("Deposit submitted");
+}
+
+function submitWithdraw() {
+  const amt = parseFloat(withAmt.value), u = upi.value;
+  if (!amt || !u) return alert("Invalid withdraw info");
+  db.ref("requests/withdraw").push({ number: user, amount: amt, upi: u, status: "pending" });
+  alert("Withdraw submitted");
+}
+
+function loadQR() {
+  db.ref("qr").once("value", snap => {
+    if (snap.exists()) document.getElementById("qrImg").src = snap.val();
+  });
+}
+
+function logout() {
+  localStorage.clear();
+  location.href = 'login.html';
+}
+</script></body>
+    </html>
