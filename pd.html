@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ASHURA AI Predictor</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      padding: 20px;
+    }
+    .glow-box {
+      border: 2px solid #0f0;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      box-shadow: 0 0 20px #0f0;
+      max-width: 400px;
+    }
+    .title {
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+    .prediction {
+      font-size: 48px;
+      font-weight: bold;
+      color: lime;
+      text-shadow: 0 0 10px lime;
+    }
+    .button {
+      background-color: #111;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 10px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: 0.3s;
+    }
+    .button:hover {
+      background-color: #0f0;
+      color: #000;
+    }
+    select {
+      background: #111;
+      color: #0f0;
+      padding: 8px;
+      margin: 10px;
+      border: 1px solid #0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-box">
+    <div class="title">ASHURA AI Prediction</div>
+    <div>Period: <span id="period">0000</span></div>
+    <div class="prediction" id="prediction">WAITING</div>
+    <button class="button" onclick="getPrediction()">Predict</button>
+  </div>
+
+  <div class="glow-box">
+    <div class="title">Analysis Dashboard</div>
+    <div>Wins: <span id="wins">0</span></div>
+    <div>Losses: <span id="losses">0</span></div>
+    <div>Win Rate: <span id="rate">0%</span></div>
+    <div>Logic: ASHURA AI</div>
+  </div>
+
+  <div class="glow-box">
+    <div class="title">Select Game</div>
+    <select>
+      <option>OKWIN (1ZR MODE)</option>
+      <option>Tiranga (1ZR MODE)</option>
+      <option>DMWIN (1ZR MODE)</option>
+      <option>91 Club (1ZR MODE)</option>
+    </select>
+  </div>
+
+  <script>
+    let wins = 0;
+    let losses = 0;
+    let period = 1000;
+
+    function getPrediction() {
+      period++;
+      document.getElementById('period').innerText = period;
+
+      const prediction = Math.random() > 0.45 ? "BIG" : "SMALL"; // 90% "BIG" tendency
+      document.getElementById('prediction').innerText = prediction;
+
+      const actual = Math.random() > 0.5 ? "BIG" : "SMALL"; // Random actual result
+
+      if (prediction === actual) {
+        wins++;
+      } else {
+        losses++;
+      }
+
+      let rate = ((wins / (wins + losses)) * 100).toFixed(1);
+      document.getElementById('wins').innerText = wins;
+      document.getElementById('losses').innerText = losses;
+      document.getElementById('rate').innerText = isNaN(rate) ? '0%' : `${rate}%`;
+    }
+  </script>
+</body>
+      </html>
