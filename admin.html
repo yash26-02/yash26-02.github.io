@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel - YGWIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #111; color: #fff; font-family: sans-serif; padding: 20px; }
+    input, button, select {
+      width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
+      border: none; font-size: 16px;
+    }
+    button { background: #6a0dad; color: white; font-weight: bold; cursor: pointer; }
+    .card { background: #222; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+<div class="card" id="loginDiv">
+  <input id="adminPhone" type="text" placeholder="Enter Admin Phone">
+  <input id="adminPass" type="password" placeholder="Enter Admin Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div class="card" id="panel" style="display:none">
+  <h3>Welcome Admin</h3>
+  <button onclick="logout()">Logout</button>
+
+  <h4>➕ Add New Admin</h4>
+  <input id="newPhone" placeholder="New Admin Phone">
+  <input id="newPass" placeholder="New Admin Password">
+  <button onclick="addAdmin()">Add Admin</button>
+
+  <h4>🖼️ Update QR Code</h4>
+  <input type="file" id="qrInput">
+  <button onclick="uploadQR()">Upload QR</button>
+  <img id="qrPreview">
+
+  <h4>🎯 Set Game Result</h4>
+  <select id="setResult">
+    <option>RED</option>
+    <option>GREEN</option>
+  </select>
+  <button onclick="setGameResult()">Submit Result</button>
+  <p id="currentPeriod"></p>
+
+  <h4>💰 Deposit Requests</h4>
+  <div id="deposits"></div>
+
+  <h4>🏦 Withdrawal Requests</h4>
+  <div id="withdrawals"></div>
+
+  <h4>📊 Bet Summary</h4>
+  <p id="betStats">Loading...</p>
+
+  <h4>💳 Credit User Wallet</h4>
+  <input id="targetUser" placeholder="User Phone">
+  <input id="addAmount" placeholder="Amount to Add">
+  <button onclick="creditUser()">Credit Balance</button>
+
+  <h4>👥 View All Users</h4>
+  <button onclick="window.open('users.html')">Open Users List</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+  authDomain: "yash-first-64655.firebaseapp.com",
+  databaseURL: "https://yash-first-64655-default-rtdb.firebaseio.com",
+  projectId: "yash-first-64655",
+  storageBucket: "yash-first-64655.appspot.com",
+  messagingSenderId: "610242949077",
+  appId: "1:610242949077:web:216a0905cf9850969f175c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
+
+function login() {
+  const phone = adminPhone.value;
+  const pass = adminPass.value;
+  db.ref("admins/" + phone).get().then(snap => {
+    if (snap.exists() && snap.val().password === pass) {
+      localStorage.setItem("admin", phone);
+      showPanel();
+    } else alert("Invalid credentials");
+  });
+}
+
+function showPanel() {
+  loginDiv.style.display = "none";
+  panel.style.display = "block";
+  loadData();
+  updatePeriod();
+}
+
+function logout() {
+  localStorage.removeItem("admin");
+  location.reload();
+}
+
+function addAdmin() {
+  db.ref("admins/" + newPhone.value).set({
+    password: newPass.value
+  });
+  alert("Admin added");
+}
+
+function uploadQR() {
+  const file = qrInput.files[0];
+  const ref = storage.ref("qr/qr.jpg");
+  ref.put(file).then(() => {
+    alert("QR Uploaded");
+    ref.getDownloadURL().then(url => qrPreview.src = url);
+  });
+}
+
+function setGameResult() {
+  db.ref("manualResult/" + currentPeriod.innerText).set(setResult.value);
+  alert("Result set");
+}
+
+function updatePeriod() {
+  const now = new Date();
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const period = now.getUTCFullYear() + 
+    String(now.getUTCMonth()+1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + "1000" + (10001 + mins);
+  currentPeriod.innerText = period;
+}
+
+function loadData() {
+  db.ref("deposits").on("value", snap => {
+    deposits.innerHTML = "";
+    snap.forEach(child => {
+      const data = child.val();
+      const html = `
+        <div class='card'>
+          ${data.phone} wants ₹${data.amount}<br>UTR: ${data.utr}<br>
+          <button onclick="approveDeposit('${child.key}', '${data.phone}', ${data.amount})">Approve</button>
+          <button onclick="db.ref('deposits/${child.key}').remove()">Reject</button>
+        </div>`;
+      deposits.innerHTML += html;
+    });
+  });
+
+  db.ref("withdrawals").on("value", snap => {
+    withdrawals.innerHTML = "";
+    snap.forEach(child => {
+      const data = child.val();
+      const html = `
+        <div class='card'>
+          ${data.phone} wants to withdraw ₹${data.amount}<br>
+          <button onclick="approveWithdraw('${child.key}', '${data.phone}', ${data.amount})">Approve</button>
+          <button onclick="db.ref('withdrawals/${child.key}').remove()">Reject</button>
+        </div>`;
+      withdrawals.innerHTML += html;
+    });
+  });
+
+  db.ref("bets").on("value", snap => {
+    let red = 0, green = 0;
+    snap.forEach(s => {
+      const bet = s.val();
+      if (bet.color === "RED") red += bet.amount;
+      else if (bet.color === "GREEN") green += bet.amount;
+    });
+    betStats.innerText = `RED: ₹${red} | GREEN: ₹${green}`;
+  });
+
+  storage.ref("qr/qr.jpg").getDownloadURL().then(url => qrPreview.src = url);
+}
+
+function approveDeposit(id, phone, amt) {
+  db.ref("users/" + phone + "/balance").get().then(snap => {
+    let bal = snap.exists() ? snap.val() : 0;
+    db.ref("users/" + phone + "/balance").set(bal + amt);
+    db.ref("deposits/" + id).remove();
+  });
+}
+
+function approveWithdraw(id, phone, amt) {
+  db.ref("users/" + phone + "/balance").get().then(snap => {
+    let bal = snap.exists() ? snap.val() : 0;
+    if (bal >= amt) {
+      db.ref("users/" + phone + "/balance").set(bal - amt);
+      db.ref("withdrawals/" + id).remove();
+    } else {
+      alert("Insufficient balance");
+    }
+  });
+}
+
+function creditUser() {
+  const phone = targetUser.value;
+  const amt = parseInt(addAmount.value);
+  db.ref("users/" + phone + "/balance").get().then(snap => {
+    let bal = snap.exists() ? snap.val() : 0;
+    db.ref("users/" + phone + "/balance").set(bal + amt);
+    alert("Balance added");
+  });
+}
+
+if (localStorage.getItem("admin")) showPanel();
+</script>
+</body>
+  </html>
