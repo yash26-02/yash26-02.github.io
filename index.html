@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH AI Prediction</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #00ff00;
+      font-family: 'Courier New', Courier, monospace;
+      text-align: center;
+      padding: 20px;
+    }
+    .box {
+      border: 2px solid #00ff00;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .big-text {
+      font-size: 40px;
+      font-weight: bold;
+    }
+    .button {
+      background: transparent;
+      border: 1px solid #00ff00;
+      color: #00ff00;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    select {
+      background: transparent;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>  <div class="box">
+    <h2>YASH AI Prediction</h2>
+    <div>Period: <span id="period">Loading...</span></div>
+    <div>Next in: <span id="timer">-- : --</span></div>
+    <div class="big-text" id="prediction">--</div>
+  </div>  <div class="box">
+    <h2>Analysis Dashboard</h2>
+    <div>Win Rate: <span id="rate">--%</span></div>
+    <div>Wins: <span id="wins">0</span> | Losses: <span id="losses">0</span></div>
+    <button class="button" onclick="addWin()">✅ WIN</button>
+    <button class="button" onclick="addLoss()">❌ LOSS</button>
+    <button class="button" onclick="resetCount()">🪰 RESET</button>
+    <div>Logic: API Smart Predictor</div>
+  </div>  <div class="box">
+    <h2>Select Game</h2>
+    <select>
+      <option>BDG GAME</option>
+    </select>
+  </div>  <script>
+    let win = 0, loss = 0;
+
+    function addWin() {
+      win++;
+      updateStats();
+    }
+
+    function addLoss() {
+      loss++;
+      updateStats();
+    }
+
+    function resetCount() {
+      win = 0;
+      loss = 0;
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById("wins").textContent = win;
+      document.getElementById("losses").textContent = loss;
+      const total = win + loss;
+      const rate = total ? ((win / total) * 100).toFixed(1) : "--";
+      document.getElementById("rate").textContent = rate + "%";
+    }
+
+    async function fetchPrediction() {
+      try {
+        // Replace below API URL with your real API
+        const res = await fetch("https://h5.ar.lottery01.co/api/lottery/GetGameList?language=en&regionCode=268&appSign=AR656470695AD6588&signature=89345D0FDED103B6A65470695AD6588&timestamp=1752222704145");
+        const data = await res.json();
+        const latest = data?.data?.[0];
+        const result = parseInt(latest?.openResult);
+        const period = latest?.gameNo;
+
+        const prediction = result >= 5 ? "BIG" : "SMALL";
+
+        document.getElementById("period").textContent = period || "--";
+        document.getElementById("prediction").textContent = prediction;
+      } catch (e) {
+        console.error("API Error", e);
+        document.getElementById("prediction").textContent = "ERROR";
+      }
+    }
+
+    let sec = 60;
+    function startTimer() {
+      setInterval(() => {
+        sec--;
+        if (sec <= 0) {
+          sec = 60;
+          fetchPrediction();
+        }
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        document.getElementById("timer").textContent = `${m} : ${s}`;
+      }, 1000);
+    }
+
+    fetchPrediction();
+    startTimer();
+  </script></body>
+  </html>
