@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH26 BIG/SMALL Predictor</title>
+  <style>
+    body {
+      background-color: black;
+      color: #00ff00;
+      font-family: monospace;
+      text-align: center;
+      padding: 20px;
+    }
+    .box {
+      border: 2px solid #00ff00;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    #prediction {
+      font-size: 28px;
+      font-weight: bold;
+      color: yellow;
+    }
+    #resultBox {
+      color: cyan;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🧠 YASH26 BIG/SMALL Predictor</h2>
+    <div>Period: <span id="period">Loading...</span></div>
+    <div>Next: <span id="timer">00:30</span></div>
+    <div id="prediction">Prediction: Loading...</div>
+  </div>  <script>
+    const periodElem = document.getElementById("period");
+    const timerElem = document.getElementById("timer");
+    const predictionElem = document.getElementById("prediction");
+
+    function getPeriodAndTimer() {
+      const now = new Date();
+      const utcOffset = now.getTimezoneOffset() * 60000;
+      const ist = new Date(now.getTime() + (19800000));
+      const hours = ist.getHours();
+      const minutes = ist.getMinutes();
+      const seconds = ist.getSeconds();
+
+      const totalPeriods = hours * 120 + minutes * 2 + (seconds >= 30 ? 1 : 0) + 1;
+      const period = ist.toISOString().slice(0, 10).replace(/-/g, '') + (10000 + totalPeriods);
+      const remaining = 30 - (seconds % 30);
+
+      periodElem.innerText = period;
+      timerElem.innerText = `00:${remaining < 10 ? "0" + remaining : remaining}`;
+
+      return period;
+    }
+
+    async function fetchPrediction() {
+      try {
+        const res = await fetch("https://h5.ar.lottery01.co/api/lottery/GetHistoryIssue?code=WinGo_30S&pageNo=1&pageSize=1");
+        const data = await res.json();
+        const number = parseInt(data.data.list[0].number);
+
+        const prediction = number >= 5 ? "BIG" : "SMALL";
+        predictionElem.innerHTML = `Prediction: <span style="color:lime">${prediction}</span>`;
+      } catch (e) {
+        predictionElem.innerHTML = `Prediction: <span style="color:orange">Error ⚠️</span>`;
+      }
+    }
+
+    setInterval(() => {
+      getPeriodAndTimer();
+    }, 1000);
+
+    setInterval(() => {
+      fetchPrediction();
+    }, 30000);
+
+    // Initial call
+    getPeriodAndTimer();
+    fetchPrediction();
+  </script></body>
+  </html>
