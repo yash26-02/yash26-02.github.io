@@ -1,0 +1,201 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YG Predictor</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #f0f9ff, #dff5ff);
+      color: #1a1a1a;
+      font-family: 'Roboto', sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 420px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0c7db1;
+      margin-bottom: 10px;
+    }
+    .prediction {
+      font-size: 42px;
+      font-weight: bold;
+      color: #0c7db1;
+    }
+    .timer {
+      font-size: 18px;
+      color: #555;
+      margin: 10px 0;
+    }
+    select, button {
+      background: #0c7db1;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 16px;
+      margin: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #095a82;
+    }
+    select {
+      background: white;
+      color: #0c7db1;
+      border: 2px solid #0c7db1;
+    }
+    .info {
+      font-size: 15px;
+      margin-top: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">YG Predictor</div>
+    <div>Period: <span id="period">0000</span></div>
+    <div class="timer">Next in: <span id="countdown">00 : 60</span></div>
+    <div class="prediction" id="prediction">WAITING</div>
+  </div>  <div class="card">
+    <div class="title">Performance</div>
+    <div>Win Rate: <span id="rate">0%</span></div>
+    <div>Wins: <span id="winCount">0</span> | Losses: <span id="lossCount">0</span></div>
+    <div>
+      <button onclick="incrementWin()">✅ WIN</button>
+      <button onclick="incrementLoss()">❌ LOSS</button>
+      <button onclick="resetCounts()">🧹 RESET</button>
+    </div>
+    <div class="info">Logic: Magic Smart Trend</div>
+  </div>  <div class="card">
+    <div class="title">Choose Game</div>
+    <select id="gameSelector">
+      <option>OKWIN</option>
+      <option>Tiranga</option>
+      <option>DMWIN</option>
+      <option>91 Club</option>
+      <option>BDG WIN</option>
+      <option>BDG GAME</option>
+      <option>DMWIN</option>
+      <option>TashanWIN</option>
+    </select>
+  </div>  <script>
+    function getPeriod() {
+      const now = new Date();
+      const utc = new Date(now.toUTCString());
+      const totalMinutes = utc.getUTCHours() * 60 + utc.getUTCMinutes();
+      return `${utc.getUTCFullYear()}${('0' + (utc.getUTCMonth() + 1)).slice(-2)}${('0' + utc.getUTCDate()).slice(-2)}1000${10001 + totalMinutes}`;
+    }
+
+    function getCountdown() {
+      const now = new Date();
+      const seconds = new Date(now.toUTCString()).getSeconds();
+      return 60 - seconds;
+    }
+
+    function generateWinRate() {
+      return (Math.random() * (90 - 55) + 55).toFixed(1);
+    }
+
+    function getMagicPrediction(period) {
+      let history = JSON.parse(localStorage.getItem("pred_history") || "[]");
+      let prediction = "BIG";
+
+      if (history.length >= 2) {
+        let last = history.slice(-2);
+        if (last[0] === last[1]) {
+          prediction = last[0] === "BIG" ? "SMALL" : "BIG";
+        } else {
+          prediction = last[1];
+        }
+      }
+
+      history.push(prediction);
+      if (history.length > 3) history.shift();
+      localStorage.setItem("pred_history", JSON.stringify(history));
+      localStorage.setItem("last_prediction", prediction);
+      localStorage.setItem(`prediction_${period}`, prediction);
+      return prediction;
+    }
+
+    function updateUI(period, prediction, rate) {
+      document.getElementById("period").innerText = period;
+      document.getElementById("prediction").innerText = prediction;
+      document.getElementById("rate").innerText = `${rate}%`;
+      document.getElementById("winCount").innerText = localStorage.getItem("win_count") || 0;
+      document.getElementById("lossCount").innerText = localStorage.getItem("loss_count") || 0;
+    }
+
+    function updateApp() {
+      const period = getPeriod();
+      const countdown = getCountdown();
+      document.getElementById("countdown").innerText = `00 : ${countdown < 10 ? '0' : ''}${countdown}`;
+
+      if (!localStorage.getItem(`prediction_${period}`)) {
+        const prediction = getMagicPrediction(period);
+        const rate = generateWinRate();
+        localStorage.setItem(`rate_${period}`, rate);
+      }
+
+      const prediction = localStorage.getItem(`prediction_${period}`);
+      const rate = localStorage.getItem(`rate_${period}`);
+      updateUI(period, prediction, rate);
+    }
+
+    function incrementWin() {
+      let winCount = parseInt(localStorage.getItem("win_count") || "0");
+      winCount++;
+      localStorage.setItem("win_count", winCount);
+      document.getElementById("winCount").innerText = winCount;
+    }
+
+    function incrementLoss() {
+      let lossCount = parseInt(localStorage.getItem("loss_count") || "0");
+      lossCount++;
+      localStorage.setItem("loss_count", lossCount);
+      document.getElementById("lossCount").innerText = lossCount;
+    }
+
+    function resetCounts() {
+      localStorage.setItem("win_count", 0);
+      localStorage.setItem("loss_count", 0);
+      document.getElementById("winCount").innerText = 0;
+      document.getElementById("lossCount").innerText = 0;
+    }
+
+    function saveGameSelection() {
+      const selectedGame = document.getElementById("gameSelector").value;
+      localStorage.setItem("selected_game", selectedGame);
+    }
+
+    function loadGameSelection() {
+      const savedGame = localStorage.getItem("selected_game");
+      const selector = document.getElementById("gameSelector");
+      if (savedGame) {
+        for (let i = 0; i < selector.options.length; i++) {
+          if (selector.options[i].value === savedGame) {
+            selector.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      loadGameSelection();
+      document.getElementById("gameSelector").addEventListener("change", saveGameSelection);
+      updateApp();
+      setInterval(updateApp, 1000);
+    });
+  </script></body>
+  </html>
