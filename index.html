@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YASH26 BIG/SMALL Predictor</title>
+  <style>
+    body {
+      background-color: #000;
+      font-family: monospace;
+      color: lime;
+      text-align: center;
+      margin: 0;
+    }
+    .box {
+      border: 2px solid lime;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 30px 20px;
+      box-shadow: 0 0 20px lime;
+    }
+    .error {
+      color: orange;
+    }
+    .prediction {
+      font-size: 24px;
+    }
+    .highlight {
+      color: yellow;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .icon {
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon">🧠</div>
+    <h2>YASH26 BIG/SMALL Predictor</h2>
+    <div>Period: <span id="period">Loading...</span></div>
+    <div>Next: <span id="timer">00:30</span></div>
+    <div class="prediction highlight">Prediction: <span id="prediction">Loading...</span></div>
+  </div>  <script>
+    function updatePeriodAndTimer() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes();
+      const hours = now.getHours();
+
+      const totalPeriods = hours * 120 + minutes * 2 + (seconds >= 30 ? 1 : 0) + 1;
+      const period = new Date().toISOString().slice(0,10).replace(/-/g, '') + (10000 + totalPeriods);
+      document.getElementById("period").textContent = period;
+
+      const remain = 30 - (seconds % 30);
+      document.getElementById("timer").textContent = `00:${remain < 10 ? '0' + remain : remain}`;
+
+      return period;
+    }
+
+    async function fetchPrediction(period) {
+      const predictionEl = document.getElementById("prediction");
+      try {
+        const res = await fetch("https://yash26api.onrender.com/getresult?period=" + period);
+        const data = await res.json();
+        if (data && data.prediction) {
+          predictionEl.textContent = data.prediction.toUpperCase();
+          predictionEl.classList.remove("error");
+        } else {
+          predictionEl.textContent = "Error ⚠️";
+          predictionEl.classList.add("error");
+        }
+      } catch (err) {
+        predictionEl.textContent = "Error ⚠️";
+        predictionEl.classList.add("error");
+      }
+    }
+
+    setInterval(() => {
+      const period = updatePeriodAndTimer();
+      fetchPrediction(period);
+    }, 1000);
+  </script></body>
+                                       </html>
