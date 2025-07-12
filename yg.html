@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YASH PRIME - Prediction Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #3b2d4a, #2d2d44);
+      color: white;
+    }
+    header {
+      padding: 20px;
+      background: #1f1b2e;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #2d2644;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #ff5f6d;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .prediction {
+      font-size: 40px;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+      color: #ffa500;
+    }
+    .dashboard {
+      display: flex;
+      justify-content: space-between;
+      text-align: center;
+    }
+    .dashboard div {
+      flex: 1;
+      padding: 10px;
+      background: #3a2e57;
+      border-radius: 10px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body><header>
+  TG - YASH PRIME
+</header><div class="container">
+  <!-- Login Panel -->
+  <div class="card">
+    <div class="title">Login Access</div>
+    <select>
+      <option>Select Game</option>
+      <option>Tiranga</option>
+      <option>OkWin</option>
+      <option>DM Win</option>
+      <option>91 Club</option>
+      <option>Jaiwa Game</option>
+    </select>
+    <input type="text" placeholder="Enter VIP Key">
+    <button>Get Key</button>
+    <button>Login</button>
+  </div>  <!-- Prediction Panel -->  <div class="card">
+    <div class="title">YASH AI</div>
+    <div>AI Prediction</div>
+    <div class="prediction" id="prediction">BIG</div>
+    <div class="dashboard">
+      <div>
+        <div>WINS</div>
+        <div>0</div>
+      </div>
+      <div>
+        <div>LOSSES</div>
+        <div>0</div>
+      </div>
+      <div>
+        <div>WIN RATE</div>
+        <div>0%</div>
+      </div>
+      <div>
+        <div>AI LOGIC</div>
+        <div>ON</div>
+      </div>
+    </div>
+    <button onclick="predictResult()">Get Prediction</button>
+  </div>  <!-- Prediction History -->  <div class="card">
+    <div class="title">Prediction History</div>
+    <ul>
+      <li>Period #0298 - BIG</li>
+      <li>Period #0297 - SMALL</li>
+      <li>Period #0296 - BIG</li>
+    </ul>
+  </div>  <!-- Admin Panel -->  <div class="card">
+    <div class="title">Create VIP Key</div>
+    <input type="text" placeholder="@_YASH-VIP-XYZ">
+    <input type="number" placeholder="Validity (Days)">
+    <button>Create Key</button>
+  </div>  <div class="card">
+    <div class="title">Maintenance Mode</div>
+    <label><input type="checkbox"> Enable Maintenance</label>
+    <input type="text" placeholder="Server is under maintenance">
+    <button>Save Settings</button>
+  </div>  <div class="card">
+    <div class="title">Manage Keys</div>
+    <p>Key: YASH</p>
+    <p>Status: Active</p>
+    <p>Expires: 12/07/2025</p>
+    <p>Device ID: device.rck@1541875</p>
+    <button style="background: #ff9933;">Reset Device</button>
+    <button style="background: #ff4444;">Delete</button>
+  </div>
+</div><script>
+  function predictResult() {
+    const last10 = ["BIG", "BIG", "SMALL", "BIG", "BIG", "SMALL", "SMALL", "SMALL", "SMALL", "BIG"];
+    const index = Math.floor(Math.random() * last10.length);
+    const prediction = last10[index];
+    document.getElementById("prediction").innerText = prediction;
+  }
+</script></body>
+  </html>
