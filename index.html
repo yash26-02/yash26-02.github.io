@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH AI</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      padding: 10px;
+      margin: 0;
+    }
+    .container {
+      border: 2px solid #0f0;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .highlight {
+      color: yellow;
+      font-size: 20px;
+    }
+    .history {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #0f0;
+      padding: 10px;
+      font-size: 14px;
+    }
+    select, .history-entry {
+      width: 100%;
+      margin-top: 10px;
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #0f0;
+      font-size: 16px;
+    }
+    .btn-clear {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      background-color: #111;
+      color: red;
+      border: 1px solid red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="text-align:center; font-size: 22px;">WinGo 1M Predictor</h2>
+    <div><strong>Current Period:</strong> <span id="period">--</span></div>
+    <div><strong>Timer:</strong> <span id="timer">--</span></div>
+    <div><strong>Prediction:</strong> <span class="highlight" id="prediction">--</span></div>
+  </div>  <div class="container">
+    <label><strong>Select Game:</strong></label>
+    <select id="gameSelect">
+      <option>Dmwin</option>
+      <option>Tashanwin</option>
+      <option>Bdg game</option>
+      <option>Bdg win</option>
+      <option>Tiranga</option>
+      <option>Diuwin</option>
+      <option>91 club</option>
+    </select>
+  </div>  <div class="container history">
+    <h3>Prediction History</h3>
+    <div id="historyList"></div>
+    <button class="btn-clear" onclick="clearHistory()">🧹 Clear History</button>
+  </div>  <script>
+    const periodEl = document.getElementById("period");
+    const timerEl = document.getElementById("timer");
+    const predictionEl = document.getElementById("prediction");
+    const historyList = document.getElementById("historyList");
+    const gameSelect = document.getElementById("gameSelect");
+
+    let previousPeriod = localStorage.getItem("lastPeriod") || "";
+
+    function updateTimerAndPeriod() {
+      const now = new Date();
+      const seconds = now.getUTCSeconds();
+      const minutes = now.getUTCMinutes();
+      const hours = now.getUTCHours();
+      const remainingSeconds = 60 - seconds;
+      const totalMinutes = hours * 60 + minutes;
+      const period = `${now.getUTCFullYear()}${("0" + (now.getUTCMonth() + 1)).slice(-2)}${("0" + now.getUTCDate()).slice(-2)}1000${10001 + totalMinutes}`;
+      periodEl.textContent = period;
+      timerEl.textContent = `00:${("0" + remainingSeconds).slice(-2)}`;
+
+      if (period !== previousPeriod) {
+        previousPeriod = period;
+        localStorage.setItem("lastPeriod", period);
+        fetchPrediction(period);
+      }
+    }
+
+    async function fetchPrediction(period) {
+      try {
+        const res = await fetch("https://h5.ar-lottery01.com/api/Lottery/GetGameResultList?gameCode=WinGo_1M&pageNo=1&pageSize=10");
+        const data = await res.json();
+        const nums = data.data.list.map(i => parseInt(i.number));
+        let big = nums.filter(n => n >= 5).length;
+        let small = nums.filter(n => n < 5).length;
+
+        let prediction = "BIG";
+        if (big === small) prediction = nums[0] % 2 === 0 ? "SMALL" : "BIG";
+        else prediction = big > small ? "BIG" : "SMALL";
+
+        predictionEl.textContent = prediction;
+
+        const entry = document.createElement("div");
+        entry.className = `history-entry`;
+        entry.innerText = `Period ${period}: ${prediction}`;
+        historyList.prepend(entry);
+
+      } catch (e) {
+        predictionEl.textContent = "BIG"; // Default fallback
+      }
+    }
+
+    function clearHistory() {
+      historyList.innerHTML = "";
+    }
+
+    function loadGameSelection() {
+      const g = localStorage.getItem("selectedGame");
+      if (g) gameSelect.value = g;
+    }
+
+    gameSelect.addEventListener("change", () => {
+      localStorage.setItem("selectedGame", gameSelect.value);
+    });
+
+    setInterval(() => updateTimerAndPeriod(), 1000);
+    loadGameSelection();
+    updateTimerAndPeriod();
+  </script></body>
+    </html>
