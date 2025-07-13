@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH AI Prediction</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      background-color: black;
+      color: #00ff00;
+      text-align: center;
+    }
+    .glow-box {
+      border: 2px solid #00ff00;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px;
+      box-shadow: 0 0 15px #00ff00;
+    }
+    .btn {
+      background-color: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .dropdown, .input-field {
+      background-color: black;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+    }
+    .hidden { display: none; }
+    .checkbox { margin: 5px; }
+    #predictionBox {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    #waitMsg {
+  Act-size: 14px;
+      color: yellow;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body><div id="loginPage" class="glow-box">
+  <h2>Enter VIP Key</h2>
+  <input type="password" id="vipKey" class="input-field" placeholder="Enter VIP Key">
+  <br>
+  <button class="btn" onclick="checkLogin()">Login</button>
+  <button class="btn" onclick="window.open('https://t.me/+SWbF8ESvH2thYjc1', '_blank')">Get Key</button>
+</div><div id="predictionPage" class="hidden">
+  <div class="glow-box">
+    <h2>YASH AI<br>Prediction</h2>
+    <div>Period: <span id="period"></span></div>
+    <div>Next in: <span id="countdown">00 : 60</span></div>
+    <div id="predictionBox">...</div>
+    <div id="waitMsg"></div>
+    <button class="btn" onclick="predictNow()">Predict</button>
+  </div>  <div class="glow-box">
+    <h2>Analysis Dashboard</h2>
+    <div>Win Rate: <span id="winRate"></span>%</div>
+    <div>Wins: <span id="wins">0</span> | Losses: <span id="losses">0</span></div>
+    <button class="btn checkbox" onclick="addWin()">✅ WIN</button>
+    <button class="btn checkbox" onclick="addLoss()">❌ LOSS</button>
+    <br>
+    <button class="btn" onclick="resetStats()">🧹 RESET</button>
+    <div>Logic: Smart AI Logic</div>
+  </div>
+</div><script>
+  let lastPeriod = "";
+
+  function getPeriod() {
+    const now = new Date();
+    const yyyy = now.getUTCFullYear();
+    const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(now.getUTCDate()).padStart(2, '0');
+    const totalMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+    return `${yyyy}${mm}${dd}1000${10001 + totalMinutes}`;
+  }
+
+  function updatePeriodAndTimer() {
+    const period = getPeriod();
+    const seconds = new Date().getUTCSeconds();
+    const remain = 60 - seconds;
+    document.getElementById("period").innerText = period;
+    document.getElementById("countdown").innerText = `00 : ${String(remain).padStart(2, '0')}`;
+    if (period !== lastPeriod) {
+      lastPeriod = period;
+      localStorage.removeItem("predictedFor");
+      document.getElementById("waitMsg").innerText = "";
+    }
+  }
+
+  function predictNow() {
+    const currentPeriod = getPeriod();
+    if (localStorage.getItem("predictedFor") === currentPeriod) {
+      document.getElementById("waitMsg").innerText = "Wait For Next Period";
+      setTimeout(() => document.getElementById("waitMsg").innerText = "", 3000);
+      return;
+    }
+
+    const prediction = smartPatternPrediction(currentPeriod);
+    document.getElementById("predictionBox").innerText = prediction;
+    localStorage.setItem("predictionBox", prediction);
+    localStorage.setItem("predictedFor", currentPeriod);
+  }
+
+  function smartPatternPrediction(periodStr) {
+    const last4 = periodStr.slice(-4);
+    const digits = last4.split('').map(Number);
+    const sum = digits.reduce((a, b) => a + b, 0);
+    const evenCount = digits.filter(d => d % 2 === 0).length;
+    if ((sum % 3 === 0 && evenCount >= 2) || last4.endsWith("8")) {
+      return "BIG";
+    } else {
+      return "SMALL";
+    }
+  }
+
+  function checkLogin() {
+    const key = document.getElementById("vipKey").value.trim();
+    if (key === "YASH26 WEB") {
+      localStorage.setItem("vipKey", key);
+      loadStats();
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("predictionPage").classList.remove("hidden");
+    } else {
+      alert("Invalid VIP Key!");
+    }
+  }
+
+  function loadStats() {
+    document.getElementById("wins").innerText = localStorage.getItem("wins") || "0";
+    document.getElementById("losses").innerText = localStorage.getItem("losses") || "0";
+    updateWinRate();
+    document.getElementById("predictionBox").innerText = localStorage.getItem("predictionBox") || "...";
+  }
+
+  function addWin() {
+    let wins = parseInt(localStorage.getItem("wins") || "0") + 1;
+    localStorage.setItem("wins", wins);
+    document.getElementById("wins").innerText = wins;
+    updateWinRate();
+  }
+
+  function addLoss() {
+    let losses = parseInt(localStorage.getItem("losses") || "0") + 1;
+    localStorage.setItem("losses", losses);
+    document.getElementById("losses").innerText = losses;
+    updateWinRate();
+  }
+
+  function resetStats() {
+    localStorage.setItem("wins", "0");
+    localStorage.setItem("losses", "0");
+    loadStats();
+  }
+
+  function updateWinRate() {
+    let wins = parseInt(localStorage.getItem("wins") || "0");
+    let losses = parseInt(localStorage.getItem("losses") || "0");
+    let rate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+    document.getElementById("winRate").innerText = rate;
+  }
+
+  window.onload = () => {
+    const key = localStorage.getItem("vipKey");
+    if (key === "YASH26 WEB") {
+      const visibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          // If page was closed and reopened, force logout
+          const lastVisit = localStorage.getItem("lastVisit") || 0;
+          const now = Date.now();
+          if (now - lastVisit > 60000) {
+            localStorage.clear();
+            location.reload();
+          }
+        } else {
+          localStorage.setItem("lastVisit", Date.now());
+        }
+      };
+      document.addEventListener('visibilitychange', visibilityChange);
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("predictionPage").classList.remove("hidden");
+      loadStats();
+    }
+    setInterval(updatePeriodAndTimer, 1000);
+  };
+</script></body>
+  </html>
