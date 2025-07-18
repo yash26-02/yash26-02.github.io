@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Saheli Store</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f2f3f5;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    .product-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: #fff;
+    }
+    img {
+      width: 100px;
+      border-radius: 8px;
+    }
+    .order {
+      background: #f9f9f9;
+      border-left: 5px solid #4CAF50;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Panel</h1>
+    <input type="text" id="name" placeholder="Enter Product Name" />
+    <input type="text" id="price" placeholder="Enter Price" />
+    <input type="file" id="photo" accept="image/*" />
+    <button onclick="addProduct()">Add Product</button><h2>Product List</h2>
+<div id="productList"></div>
+
+<h2>Order Requests</h2>
+<div id="orderList"></div>
+
+  </div>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+      authDomain: "yash-first-64655.firebaseapp.com",
+      projectId: "yash-first-64655",
+      storageBucket: "yash-first-64655.appspot.com",
+      messagingSenderId: "",
+      appId: "",
+      databaseURL: "https://yash-first-64655-default-rtdb.firebaseio.com"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+
+    function addProduct() {
+      const name = document.getElementById("name").value;
+      const price = document.getElementById("price").value;
+      const photo = document.getElementById("photo").files[0];
+      if (!name || !price || !photo) return alert("Please fill all fields");
+      
+      const ref = storage.ref("products/" + Date.now());
+      ref.put(photo).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          const key = db.ref("products").push().key;
+          db.ref("products/" + key).set({ name, price, photo: url });
+          alert("Product added successfully");
+          location.reload();
+        });
+      });
+    }
+
+    function loadProducts() {
+      db.ref("products").on("value", snap => {
+        const data = snap.val();
+        const box = document.getElementById("productList");
+        box.innerHTML = "";
+        for (let id in data) {
+          const item = data[id];
+          box.innerHTML += `
+            <div class='product-card'>
+              <img src="${item.photo}" alt="Product" />
+              <h3>${item.name}</h3>
+              <p>Price: ₹${item.price}</p>
+              <button onclick="deleteProduct('${id}')">Delete</button>
+            </div>
+          `;
+        }
+      });
+    }
+
+    function deleteProduct(id) {
+      if (confirm("Delete this product?")) {
+        db.ref("products/" + id).remove();
+        alert("Deleted");
+      }
+    }
+
+    function loadOrders() {
+      db.ref("orders").on("value", snap => {
+        const data = snap.val();
+        const box = document.getElementById("orderList");
+        box.innerHTML = "";
+        for (let id in data) {
+          const order = data[id];
+          box.innerHTML += `
+            <div class='order'>
+              <p><strong>Name:</strong> ${order.name}</p>
+              <p><strong>Phone:</strong> ${order.phone}</p>
+              <p><strong>Product:</strong> ${order.product}</p>
+              <p><strong>Status:</strong> ${order.status}</p>
+              <button onclick="updateOrder('${id}', '✅ Delivery Done')">✅ Done</button>
+              <button onclick="updateOrder('${id}', '❌ Cancelled')">❌ Cancel</button>
+            </div>
+          `;
+        }
+      });
+    }
+
+    function updateOrder(id, status) {
+      db.ref("orders/" + id + "/status").set(status);
+    }
+
+    loadProducts();
+    loadOrders();
+  </script></body>
+  </html>
