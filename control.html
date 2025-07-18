@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Saheli Admin Panel</title>
+  <style>
+    body { font-family: sans-serif; padding: 10px; background: #f7f7f7; }
+    h2 { margin-top: 20px; }
+    .product { border: 1px solid #ccc; margin: 10px 0; padding: 10px; background: white; border-radius: 10px; }
+    .product img { width: 100px; height: auto; display: block; margin-bottom: 10px; }
+    input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+    .btn-del { background: red; color: white; }
+    .btn-done { background: green; color: white; }
+    .btn-cancel { background: orange; color: white; }
+  </style>
+</head>
+<body>
+
+<h2>Add New Product</h2>
+<input type="file" id="productImage">
+<input type="text" id="productName" placeholder="Enter product name">
+<input type="text" id="productPrice" placeholder="Enter price (₹)">
+<button onclick="addProduct()">Add Product</button>
+
+<h2>All Products</h2>
+<div id="productList"></div>
+
+<script>
+let products = JSON.parse(localStorage.getItem("products")) || [];
+
+function addProduct() {
+  const file = document.getElementById("productImage").files[0];
+  const name = document.getElementById("productName").value;
+  const price = document.getElementById("productPrice").value;
+
+  if (!file || !name || !price) return alert("Fill all fields!");
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    const imgData = reader.result;
+    products.push({ img: imgData, name, price });
+    localStorage.setItem("products", JSON.stringify(products));
+    renderProducts();
+    document.getElementById("productImage").value = '';
+    document.getElementById("productName").value = '';
+    document.getElementById("productPrice").value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function deleteProduct(index) {
+  products.splice(index, 1);
+  localStorage.setItem("products", JSON.stringify(products));
+  renderProducts();
+}
+
+function orderProduct(index) {
+  const name = prompt("Enter your name:");
+  const phone = prompt("Enter your mobile number:");
+  if (!name || !phone) return alert("Name & Number Required!");
+
+  let order = {
+    user: name,
+    phone: phone,
+    product: products[index],
+    status: "Pending"
+  };
+
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  orders.push(order);
+  localStorage.setItem("orders", JSON.stringify(orders));
+  alert("Order Placed Successfully!");
+}
+
+function renderProducts() {
+  let html = "";
+  products.forEach((p, i) => {
+    html += `
+    <div class="product">
+      <img src="${p.img}" alt="">
+      <b>${p.name}</b><br>
+      <b>₹${p.price}</b><br>
+      <button onclick="deleteProduct(${i})" class="btn-del">Delete</button>
+      <button onclick="orderProduct(${i})">Order This</button>
+    </div>`;
+  });
+  document.getElementById("productList").innerHTML = html;
+}
+
+renderProducts();
+</script>
+
+<h2>Order Requests</h2>
+<div id="orderList"></div>
+
+<script>
+function renderOrders() {
+  const orders = JSON.parse(localStorage.getItem("orders")) || [];
+  let html = "";
+  orders.forEach((o, i) => {
+    html += `
+    <div class="product">
+      <img src="${o.product.img}" alt="">
+      <b>${o.product.name}</b> - ₹${o.product.price}<br>
+      <small>Ordered by: ${o.user} (${o.phone})</small><br>
+      <b>Status: ${o.status}</b><br>
+      <button onclick="markDone(${i})" class="btn-done">✅ Delivery Done</button>
+      <button onclick="markCancel(${i})" class="btn-cancel">❌ Cancel</button>
+    </div>`;
+  });
+  document.getElementById("orderList").innerHTML = html;
+}
+
+function markDone(i) {
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  orders[i].status = "✅ Delivered";
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderOrders();
+}
+
+function markCancel(i) {
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  orders[i].status = "❌ Cancelled";
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderOrders();
+}
+
+renderOrders();
+</script>
+
+</body>
+  </html>
