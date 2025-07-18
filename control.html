@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saheli General Store - Admin</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fefefe;
+      color: #222;
+    }
+    header {
+      background: linear-gradient(135deg, #f96161, #ffcbcb);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      font-family: 'Georgia', serif;
+    }
+    main {
+      padding: 1rem;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #f96161;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .product-card, .order-card {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      background: white;
+    }
+    .product-card img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .btn-danger {
+      background: #e74c3c;
+    }
+    .btn-success {
+      background: #2ecc71;
+    }
+    .btn-warning {
+      background: #f1c40f;
+    }
+  </style>
+</head>
+<body>
+  <header>Saheli General Store - Admin Panel</header>
+  <main>
+    <h3>Add New Product</h3>
+    <input type="file" accept="image/*" id="photo" />
+    <input type="text" id="pname" placeholder="Enter Product Name" />
+    <input type="text" id="pprice" placeholder="Enter Product Price" />
+    <button onclick="addProduct()">Add Product</button><h3>All Products</h3>
+<div id="productList"></div>
+
+<h3>Order Requests</h3>
+<div id="orderList"></div>
+
+  </main>  <script>
+    let products = JSON.parse(localStorage.getItem('products') || '[]');
+    let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+
+    function showProducts() {
+      let list = '';
+      products.forEach((p, i) => {
+        list += `<div class='product-card'>
+          <img src="${p.photo}" alt="Product" />
+          <h4>${p.name}</h4>
+          <p>Price: ₹${p.price}</p>
+          <button class='btn-danger' onclick='deleteProduct(${i})'>Delete</button>
+        </div>`;
+      });
+      document.getElementById('productList').innerHTML = list;
+    }
+
+    function addProduct() {
+      const name = document.getElementById('pname').value.trim();
+      const price = document.getElementById('pprice').value.trim();
+      const file = document.getElementById('photo').files[0];
+
+      if (!file || !name || !price) {
+        alert("Enter Full Details");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        products.push({ name, price, photo: reader.result });
+        localStorage.setItem('products', JSON.stringify(products));
+        showProducts();
+        document.getElementById('photo').value = "";
+        document.getElementById('pname').value = "";
+        document.getElementById('pprice').value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteProduct(index) {
+      if (confirm("Delete this product?")) {
+        products.splice(index, 1);
+        localStorage.setItem('products', JSON.stringify(products));
+        showProducts();
+      }
+    }
+
+    function showOrders() {
+      let list = '';
+      orders.forEach((o, i) => {
+        list += `<div class='order-card'>
+          <h4>${o.name}</h4>
+          <p>Mobile: ${o.mobile}</p>
+          <p>PIN: ${o.pin}</p>
+          <p>Address: ${o.address}</p>
+          <p>Product: ${o.product}</p>
+          <button class='btn-success' onclick='markDone(${i})'>Delivered ✅</button>
+          <button class='btn-warning' onclick='markCancel(${i})'>Canceled ❌</button>
+        </div>`;
+      });
+      document.getElementById('orderList').innerHTML = list;
+    }
+
+    function markDone(i) {
+      alert("Order marked Delivered ✅");
+      orders.splice(i, 1);
+      localStorage.setItem('orders', JSON.stringify(orders));
+      showOrders();
+    }
+
+    function markCancel(i) {
+      alert("Order marked Canceled ❌");
+      orders.splice(i, 1);
+      localStorage.setItem('orders', JSON.stringify(orders));
+      showOrders();
+    }
+
+    showProducts();
+    showOrders();
+  </script></body>
+  </html>
