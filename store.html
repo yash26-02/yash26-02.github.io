@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saheli General Store</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #fefefe;
+    }
+    header {
+      background: linear-gradient(45deg, #d4af37, #fff5d7);
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      font-family: 'Georgia', serif;
+      color: #000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .product-box {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 15px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .product-box img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+    .product-box h3 {
+      margin: 10px 0 5px;
+    }
+    .product-box p {
+      margin: 5px 0;
+    }
+    button {
+      margin: 5px 5px 0 0;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .buy-btn {
+      background: #28a745;
+      color: #fff;
+    }
+    .cart-btn {
+      background: #007bff;
+      color: #fff;
+    }
+    .form-popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 999;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .form-popup input {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #999;
+    }
+    .form-popup .submit-btn {
+      background: #000;
+      color: #fff;
+      width: 100%;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 998;
+    }
+    .alert {
+      color: red;
+      font-weight: bold;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>💎 Saheli General Store 💎</header>
+
+  <div class="product-box">
+    <img src="https://via.placeholder.com/300x200.png?text=Product+Image" alt="Product">
+    <h3>Product Name</h3>
+    <p>₹ Price</p>
+    <button class="buy-btn" onclick="openForm()">Buy Now</button>
+    <button class="cart-btn">Add to Cart</button>
+  </div>
+
+  <div class="overlay" onclick="closeForm()"></div>
+
+  <div class="form-popup" id="orderForm">
+    <h3>Enter Delivery Details</h3>
+    <input type="text" id="name" placeholder="Enter Your Full Name" />
+    <input type="text" id="phone" placeholder="Enter Your Real Mobile Number" />
+    <input type="text" id="pincode" placeholder="Enter Your PIN Code" />
+    <input type="text" id="road" placeholder="Road/Street Name" />
+    <input type="text" id="ward" placeholder="Ward Number or Landmark" />
+    <p class="alert" id="alertBox">⚠️ Enter Full Details</p>
+    <button class="submit-btn" onclick="submitOrder()">Submit Order</button>
+  </div>
+
+  <script>
+    function openForm() {
+      document.getElementById("orderForm").style.display = "block";
+      document.querySelector(".overlay").style.display = "block";
+    }
+
+    function closeForm() {
+      document.getElementById("orderForm").style.display = "none";
+      document.querySelector(".overlay").style.display = "none";
+      document.getElementById("alertBox").style.display = "none";
+    }
+
+    function submitOrder() {
+      var name = document.getElementById("name").value.trim();
+      var phone = document.getElementById("phone").value.trim();
+      var pincode = document.getElementById("pincode").value.trim();
+      var road = document.getElementById("road").value.trim();
+      var ward = document.getElementById("ward").value.trim();
+      var alert = document.getElementById("alertBox");
+
+      if (!name || !phone || !pincode || !road || !ward) {
+        alert.innerText = "⚠️ Enter Full Details";
+        alert.style.display = "block";
+        return;
+      }
+
+      if (pincode !== "494669") {
+        alert.innerText = "⚠️ Delivery only available in PIN 494669";
+        alert.style.display = "block";
+        return;
+      }
+
+      // Save order to localStorage (or send to server later)
+      let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      orders.push({ name, phone, pincode, road, ward, product: "Product Name", price: "₹ Price", status: "Pending" });
+      localStorage.setItem("orders", JSON.stringify(orders));
+
+      closeForm();
+      alert("✅ Order Placed Successfully!");
+    }
+  </script>
+
+</body>
+  </html>
