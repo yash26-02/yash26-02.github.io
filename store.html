@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saheli General Store</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      color: #222;
+    }
+    header {
+      background: #6A5ACD;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: 0.2s ease;
+    }
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+    .card .info {
+      padding: 0.8rem;
+    }
+    .card .info h3 {
+      font-size: 1rem;
+      margin: 0 0 0.4rem;
+    }
+    .card .info p {
+      font-size: 0.9rem;
+      color: #444;
+    }
+    .card button {
+      margin: 0.5rem;
+      background: #6A5ACD;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      width: calc(100% - 1rem);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .card button:hover {
+      background: #5b4fc2;
+    }
+  </style>
+</head>
+<body>
+  <header>Saheli General Store</header>
+
+  <div class="products" id="productList"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZFXeJZxc8CJiDz-KBLNKu6JW85LVgYjs",
+      authDomain: "yash-first-64655.firebaseapp.com",
+      databaseURL: "https://yash-first-64655-default-rtdb.firebaseio.com",
+      projectId: "yash-first-64655",
+      storageBucket: "yash-first-64655.appspot.com",
+      messagingSenderId: "610242949077",
+      appId: "1:610242949077:web:216a0905cf9850969f175c",
+      measurementId: "G-YL4KQQ4Z5Y"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const productList = document.getElementById("productList");
+    const productsRef = ref(db, "products");
+
+    onValue(productsRef, (snapshot) => {
+      productList.innerHTML = "";
+      snapshot.forEach((child) => {
+        const data = child.val();
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img src="${data.image}" alt="Product" />
+          <div class="info">
+            <h3>${data.name}</h3>
+            <p>₹${data.price}</p>
+            <button onclick="orderProduct('${child.key}', '${data.name}', '${data.price}')">Order Now</button>
+          </div>
+        `;
+        productList.appendChild(card);
+      });
+    });
+
+    window.orderProduct = function (id, name, price) {
+      const phone = prompt(`Enter your phone number to order:\n📦 ${name} - ₹${price}`);
+      if (phone && phone.length >= 10) {
+        const orderRef = ref(db, "orders/" + Date.now());
+        const order = {
+          productId: id,
+          name: name,
+          price: price,
+          phone: phone
+        };
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js").then(({ set }) => {
+          set(orderRef, order);
+          alert("✅ Order placed! You will be contacted soon.");
+        });
+      } else {
+        alert("❌ Please enter a valid phone number.");
+      }
+    };
+  </script>
+</body>
+  </html>
