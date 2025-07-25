@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YASH SERVER</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: red;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 48px;
+      margin-top: 40px;
+      text-shadow: 0 0 15px red;
+    }
+    #timer, #period, #prediction {
+      font-size: 24px;
+      margin: 15px 0;
+      text-shadow: 0 0 8px red;
+    }
+    .button {
+      margin-top: 30px;
+      background-color: red;
+      color: white;
+      padding: 15px 30px;
+      font-size: 18px;
+      text-decoration: none;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px red;
+    }
+    .particles {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>YASH<br>SERVER</h1>
+  <div id="timer">00:00</div>
+  <div id="period">PERIOD: Loading...</div>
+  <div id="prediction">BET ON: Loading...</div>
+  <a href="https://t.me/+I38W_mh3Yk8zNmM1" class="button" target="_blank">TELEGRAM</a>
+
+  <canvas class="particles" id="particles"></canvas>
+
+  <script>
+    const timerEl = document.getElementById("timer");
+    const periodEl = document.getElementById("period");
+    const predictionEl = document.getElementById("prediction");
+
+    function updateClock() {
+      const now = new Date();
+      const seconds = now.getUTCSeconds();
+      const remaining = 60 - seconds;
+      const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+      // Timer
+      timerEl.textContent = `00:${remaining.toString().padStart(2, '0')}`;
+
+      // Period
+      const dateStr = new Date().toISOString().split("T")[0].replace(/-/g, "");
+      const periodNumber = `PERIOD: ${dateStr}1000${10001 + minutes}`;
+      periodEl.textContent = periodNumber;
+
+      // Prediction change every minute
+      if (seconds === 0) {
+        const result = Math.random() < 0.5 ? "BIG" : "SMALL";
+        predictionEl.textContent = `BET ON: ${result}`;
+      }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Particle background (like yellow dots)
+    const canvas = document.getElementById("particles");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 3 + 1,
+        d: Math.random() * 0.5 + 0.5,
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "yellow";
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      moveParticles();
+    }
+
+    function moveParticles() {
+      particles.forEach(p => {
+        p.y += p.d;
+        if (p.y > canvas.height) {
+          p.y = 0;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+    }
+
+    setInterval(drawParticles, 30);
+  </script>
+</body>
+  </html>
