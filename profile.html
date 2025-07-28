@@ -1,0 +1,127 @@
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile | Wingo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+      color: white;
+      padding: 20px;
+    }
+    .profile-box {
+      background-color: #161616;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.7);
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .info-group {
+      background-color: #242424;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .info-item span:first-child {
+      color: #aaa;
+    }
+    .info-item span:last-child {
+      font-weight: 600;
+      color: #fff;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-deposit {
+      background-color: #00ffe1;
+      color: #000;
+    }
+    .btn-withdraw {
+      background-color: #ff6f61;
+      color: #fff;
+    }
+    .logout-btn {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background-color: #333;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-box">
+    <h2 class="section-title">My Profile</h2>
+    
+    <div class="info-group">
+      <div class="info-item">
+        <span>Mobile Number</span>
+        <span>+91 9876543210</span> <!-- dynamically injected -->
+      </div>
+      <div class="info-item">
+        <span>UID</span>
+        <span>UID726837</span> <!-- dynamically generated -->
+      </div>
+      <div class="info-item">
+        <span>Wallet Balance</span>
+        <span>₹0.00</span> <!-- dynamic wallet -->
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-deposit" onclick="location.href='deposit.html'">Deposit</button>
+      <button class="btn btn-withdraw" onclick="location.href='withdraw.html'">Withdraw</button>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    function logout() {
+      // future: add session clear
+      alert("Logged out");
+      location.href = "login.html";
+    }
+  </script>
+</body>
+  </html>
