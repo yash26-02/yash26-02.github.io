@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile | Wingo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: #0d1b4c; color: white; padding-bottom: 80px; }
+
+    .profile-container {
+      padding: 20px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #fff;
+    }
+
+    .username {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .uid-tag {
+      background-color: #f39c12;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .balance-box {
+      background-color: #1c2e8e;
+      padding: 15px;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+
+    .balance-text {
+      font-size: 16px;
+      color: #bfcfff;
+    }
+
+    .balance-amount {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+
+    .action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      cursor: pointer;
+    }
+
+    .action img {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 5px;
+    }
+
+    .safe-box {
+      background-color: #1c2e8e;
+      margin: 20px 0;
+      border-radius: 15px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .safe-box span {
+      font-size: 14px;
+    }
+
+    .safe-balance {
+      background-color: #f39c12;
+      padding: 5px 10px;
+      border-radius: 10px;
+      color: black;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background-color: #c0392b;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: #0a1440;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .footer-item {
+      text-align: center;
+      color: #bfcfff;
+      font-size: 12px;
+    }
+
+    .footer-item img {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <div class="user-info">
+      <img src="https://i.imgur.com/zYxDCQT.png" alt="Avatar" class="avatar">
+      <div>
+        <div class="username">khfavf</div>
+        <div class="uid-tag">UID 751205</div>
+        <div style="font-size: 12px; color: #bbb;">Last login:</div>
+      </div>
+    </div>
+
+    <div class="balance-box">
+      <div class="balance-text">Total balance</div>
+      <div class="balance-amount">₹0.00</div>
+
+      <div class="action-buttons">
+        <div class="action" onclick="location.href='deposit.html'">
+          <img src="https://img.icons8.com/fluency/48/wallet--v1.png" alt="Deposit">
+          <span>Deposit</span>
+        </div>
+        <div class="action" onclick="location.href='withdraw.html'">
+          <img src="https://img.icons8.com/fluency/48/money.png" alt="Withdraw">
+          <span>Withdraw</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="safe-box">
+      <span>
+        <strong>Safe</strong><br/>
+        The daily interest rate is 0.1%, and income is calculated once every 1 minutes.
+      </span>
+      <div class="safe-balance">₹0.00</div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="footer">
+    <div class="footer-item" onclick="location.href='home.html'">
+      <img src="https://img.icons8.com/fluency/48/home.png" alt="Home">
+      <div>Home</div>
+    </div>
+    <div class="footer-item" onclick="location.href='profile.html'">
+      <img src="https://img.icons8.com/fluency/48/user-male-circle.png" alt="Profile">
+      <div>Profile</div>
+    </div>
+  </div>
+
+  <script>
+    function logout() {
+      localStorage.removeItem("user");
+      alert("Logged out");
+      location.href = "login.html";
+    }
+  </script>
+</body>
+  </html>
