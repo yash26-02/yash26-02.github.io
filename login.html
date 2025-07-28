@@ -1,0 +1,108 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Wingo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .login-box {
+      background-color: #161616;
+      padding: 30px 25px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+    }
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      font-size: 14px;
+      color: #aaa;
+      display: block;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: none;
+      background-color: #242424;
+      color: #fff;
+      font-size: 15px;
+    }
+    input:focus {
+      outline: none;
+      box-shadow: 0 0 5px #00ffe1;
+    }
+    .btn {
+      margin-top: 10px;
+      background-color: #00ffe1;
+      border: none;
+      width: 100%;
+      padding: 12px;
+      color: #000;
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s ease-in-out;
+    }
+    .btn:hover {
+      background-color: #00dac7;
+    }
+    .bottom-text {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 15px;
+      color: #999;
+    }
+    .bottom-text a {
+      color: #00ffe1;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <form>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel" placeholder="Enter registered number" maxlength="10" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="Enter your password" required />
+      </div>
+      <button type="submit" class="btn">Login</button>
+      <p class="bottom-text">
+        Don't have an account? <a href="register.html">Register</a>
+      </p>
+    </form>
+  </div>
+</body>
+  </html>
