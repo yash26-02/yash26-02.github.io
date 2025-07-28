@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>VIRU PVT AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        :root { /* Base Variables */
+            --accent-gradient: linear-gradient(45deg, #3498db, #2980b9);
+            --glow-color: #e67e22; --win-color: #27ae60; --loss-color: #e74c3c;
+            --rate-color: #8e44ad; --logic-color: #f39c12; --info-color: #f39c12;
+        }
+        /* --- Theme Engine --- */
+        body[data-theme="sunset"] { --bg-gradient: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%); --container-bg: rgba(255, 255, 255, 0.3); --card-bg: rgba(255, 255, 255, 0.5); --text-primary: #3d3d3d; --text-secondary: #5e5e5e; --text-on-accent: #ffffff; --accent-gradient: linear-gradient(45deg, #ff7e5f, #feb47b); --shadow: 0 10px 30px rgba(254, 180, 123, 0.3); --layout-stroke-color: rgba(255, 255, 255, 0.8); --font-family: 'Poppins', sans-serif; }
+        body[data-theme="default"] { --bg-gradient: linear-gradient(135deg, #e0e5ec 0%, #f0f2f5 100%); --container-bg: rgba(239, 242, 247, 0.4); --card-bg: rgba(239, 242, 247, 0.6); --text-primary: #34495e; --text-secondary: #7f8c8d; --text-on-accent: #ffffff; --shadow: 0 10px 30px rgba(0, 0, 0, 0.1); --layout-stroke-color: #b2f2bb; --font-family: 'Poppins', sans-serif; }
+        body[data-theme="midnight"] { --bg-gradient: linear-gradient(135deg, #141E30 0%, #243B55 100%); --container-bg: rgba(44, 48, 52, 0.4); --card-bg: rgba(52, 58, 64, 0.5); --text-primary: #ecf0f1; --text-secondary: #bdc3c7; --text-on-accent: #ffffff; --shadow: 0 10px 30px rgba(0, 0, 0, 0.2); --layout-stroke-color: #ff6b6b; --font-family: 'Poppins', sans-serif; }
+        body[data-theme="forest"] { --bg-gradient: linear-gradient(135deg, #3a6186 0%, #89253e 100%); --container-bg: rgba(43, 88, 72, 0.3); --card-bg: rgba(43, 88, 72, 0.5); --text-primary: #f0fff0; --text-secondary: #c1d8c1; --text-on-accent: #ffffff; --accent-gradient: linear-gradient(45deg, #56ab2f, #a8e063); --shadow: 0 10px 30px rgba(0, 0, 0, 0.3); --layout-stroke-color: #a8e063; --font-family: 'Poppins', sans-serif; }
+        body[data-theme="matrix"] { --bg-gradient: linear-gradient(135deg, #000000 0%, #0d1a0d 100%); --container-bg: rgba(0, 255, 71, 0.05); --card-bg: transparent; --text-primary: #00ff47; --text-secondary: #00ff47; --text-on-accent: #000000; --accent-gradient: linear-gradient(45deg, #00ff47, #00ff47); --shadow: 0 0 20px rgba(0, 255, 71, 0.3); --layout-stroke-color: #00ff47; --font-family: 'Roboto Mono', monospace; }
+        body[data-theme="oceanic"] { --bg-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); --container-bg: rgba(255, 255, 255, 0.2); --card-bg: rgba(255, 255, 255, 0.3); --text-primary: #003973; --text-secondary: #00528c; --text-on-accent: #ffffff; --accent-gradient: linear-gradient(45deg, #1d4350, #a43931); --shadow: 0 10px 30px rgba(0, 0, 0, 0.2); --layout-stroke-color: #e5e5e5; --font-family: 'Poppins', sans-serif; }
+        body[data-theme="royal"] { --bg-gradient: linear-gradient(135deg, #480048 0%, #C04848 100%); --container-bg: rgba(255, 255, 255, 0.1); --card-bg: rgba(255, 255, 255, 0.15); --text-primary: #f9f2fa; --text-secondary: #e0cde3; --text-on-accent: #ffffff; --accent-gradient: linear-gradient(45deg, #dd5e89, #f7bb97); --shadow: 0 10px 30px rgba(0, 0, 0, 0.3); --layout-stroke-color: #f7bb97; --font-family: 'Poppins', sans-serif; }
+        body[data-theme="monochrome"] { --bg-gradient: linear-gradient(135deg, #d3d3d3 0%, #f5f5f5 100%); --container-bg: rgba(255, 255, 255, 0.5); --card-bg: #ffffff; --text-primary: #000000; --text-secondary: #555555; --text-on-accent: #ffffff; --accent-gradient: linear-gradient(45deg, #333, #000); --shadow: 0 10px 25px rgba(0, 0, 0, 0.15); --layout-stroke-color: #cccccc; --font-family: 'Poppins', sans-serif; }
+
+        html { font-size: 16px; }
+        body { font-family: var(--font-family); background-image: var(--bg-gradient); color: var(--text-primary); min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; transition: background 0.5s ease, color 0.5s ease; display: flex; align-items: center; justify-content: center; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #login-page { display: none; width: 100%; max-width: 390px; margin: auto; animation: fadeIn 0.5s ease; }
+        #dashboard-page { display: none; width: 100%; max-width: 390px; margin: auto; }
+        .container { width: 100%; background: var(--container-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 25px; box-shadow: var(--shadow); overflow: hidden; position: relative; z-index: 1; border: 1px solid var(--layout-stroke-color); }
+        .login-container { background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0, 123, 255, 0.5); border-radius: 25px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0, 123, 255, 0.3); animation: containerGlow 4s ease-in-out infinite; }
+        @keyframes containerGlow { 50% { box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0, 123, 255, 0.5); } }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h1 { font-family: 'Poppins', sans-serif; font-size: 1.8em; color: white; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.6); margin: 0; transform: skewX(-5deg); }
+        .verified-badge { display: inline-block; width: 24px; height: 24px; background: linear-gradient(45deg, #4e54c8, #8f94fb); border-radius: 50%; position: relative; top: -5px; left: 5px; box-shadow: 0 0 15px rgba(143, 148, 251, 0.8); animation: glow 2s ease-in-out infinite; }
+        @keyframes glow { 50% { box-shadow: 0 0 25px rgba(143, 148, 251, 1); } }
+        .verified-badge i { color: white; font-size: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .login-button, .login-btn, .get-key-btn, .vip-button, #logout-btn { position: relative; overflow: hidden; background: #007bff; color: white; border: none; border-radius: 12px; font-weight: 700; box-shadow: 0 0 20px rgba(0, 123, 255, 0.5); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .login-button:hover, .login-btn:hover, .get-key-btn:hover, .vip-button:hover, #logout-btn:hover { transform: scale(1.03); box-shadow: 0 0 25px rgba(0, 123, 255, 0.7); }
+        .login-button::before, .login-btn::before, .get-key-btn::before, .vip-button::before, #logout-btn::before { content: ""; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent); transition: left 0.6s ease; }
+        .login-button:hover::before, .login-btn:hover::before, .get-key-btn:hover::before, .vip-button:hover::before, #logout-btn:hover::before { left: 100%; }
+        .login-button { width: 100%; padding: 12px; font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        
+        .input-fields > div { position: relative; margin-bottom: 25px; } /* New wrapper for positioning */
+        .input-group { background: #000; border-radius: 12px; padding: 12px 15px; position: relative; display: flex; align-items: center; border: 1px solid #333; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .label-tab { position: absolute; top: -12px; left: 15px; background: #007bff; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.7em; font-weight: bold; z-index: 2; transform: skewX(-5deg); }
+        .input-content, #licence-key-input { color: white; font-size: 1.2em; font-weight: bold; flex-grow: 1; background: none; border: none; font-family: 'Poppins', sans-serif; min-width: 0; position: relative; z-index: 1; transform: skewX(-5deg); }
+        #licence-key-input::placeholder { color: rgba(255,255,255,0.4); font-family: 'Poppins', sans-serif; }
+        .checkmark-icon { width: 24px; height: 24px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; flex-shrink: 0; position: relative; z-index: 1; }
+        
+        .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0; }
+        .login-btn, .get-key-btn { padding: 12px; font-size: 1.1em; }
+        #logout-btn { padding: 12px; font-size: 1.1em; background: var(--loss-color); }
+        .vip-button { width: 100%; padding: 15px; font-size: 1.2em; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        #login-message { text-align: center; color: #ff6b6b; font-weight: 600; margin-top: 15px; min-height: 20px; }
+        #game-mod-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 1001; animation: fadeIn 0.3s ease; }
+        .game-mod-content { background: rgba(30,30,30,0.8); border: 1px solid #007bff; padding: 20px; border-radius: 20px; width: 90%; max-width: 340px; box-shadow: 0 0 25px rgba(0,123,255,0.5); text-align: center; }
+        .game-mod-content h2 { color: white; margin-top: 0; margin-bottom: 20px; font-size: 1.5em; text-shadow: 0 0 5px #007bff; }
+        .game-mod-list { max-height: 60vh; overflow-y: auto; padding-right: 10px; }
+        .game-mod-list::-webkit-scrollbar { width: 4px; }
+        .game-mod-list::-webkit-scrollbar-thumb { background: #007bff; border-radius: 4px; }
+        .game-mod-item { color: white; padding: 15px; border-bottom: 1px solid rgba(0, 123, 255, 0.3); cursor: pointer; font-size: 1.1em; transition: background-color 0.2s ease, transform 0.2s ease; }
+        .game-mod-item:last-child { border-bottom: none; }
+        .game-mod-item:hover { background: rgba(0, 123, 255, 0.2); transform: translateX(5px); }
+        .header { padding: 15px 20px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--layout-stroke-color); }
+        .header-title { font-size: 1.2em; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .theme-selector-btn { background: none; border: none; color: var(--text-primary); font-size: 1.4em; cursor: pointer; padding: 5px; }
+        .main-content { padding: 20px; }
+        .prediction-card { background: var(--card-bg); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 25px; border: 1px solid var(--layout-stroke-color); animation: fadeInUp 0.5s 0.2s both; }
+        .prediction-card .title { font-size: 1em; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .prediction-card .value { font-size: 3.5em; font-weight: 800; margin: 10px 0; animation: pulseGlow 3s ease-in-out infinite; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: var(--glow-color); text-shadow: 0 0 15px var(--glow-color); }
+        body[data-theme="matrix"] .prediction-card .value { text-shadow: 0 0 10px var(--text-primary); }
+        @keyframes pulseGlow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .prediction-card .period-container { display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; color: var(--text-secondary); margin-top: 15px; }
+        .dashboard h2, #history-view > h2, #info-view > h2 { text-align: center; margin-top: 0; margin-bottom: 20px; color: var(--text-primary); font-size: 1.3em; font-weight: 600; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+        .stat-card { background: var(--card-bg); border-radius: 18px; text-align: center; border: 1px solid var(--layout-stroke-color); transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); transform-style: preserve-3d; cursor: pointer; animation: float 5s ease-in-out infinite; display: flex; }
+        .stat-card.wins { animation-delay: 0s; }
+        .stat-card.losses { animation-delay: 1.2s; }
+        .stat-card.rate { animation-delay: 0.6s; }
+        .stat-card.logic { animation-delay: 1.8s; }
+        .stat-card-content { padding: 20px 15px; transform: translateZ(20px); width: 100%; }
+        .stat-card:hover { animation-play-state: paused; transform: perspective(1000px) rotateX(5deg) rotateY(10deg) scale3d(1.1, 1.1, 1.1); }
+        .stat-card .icon-wrapper { font-size: 1.8em; margin-bottom: 10px; }
+        .stat-card .label { font-size: 0.8em; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .stat-card .value { font-size: 1.8em; font-weight: 700; color: var(--text-primary); }
+        body[data-theme="matrix"] .stat-card .value { text-shadow: 0 0 5px var(--text-primary); }
+        .calculating { text-align: center; margin-top: 25px; color: var(--text-secondary); display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 0.9em; }
+        #history-view, #info-view { display: none; }
+        .history-list { display: flex; flex-direction: column; gap: 15px; }
+        .history-item { background: var(--card-bg); border: 1px solid var(--layout-stroke-color); border-radius: 15px; padding: 15px 20px; position: relative; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .history-period-info { font-size: 1em; font-weight: 600; color: var(--text-secondary); }
+        .history-status { padding: 5px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 700; color: #fff; }
+        .history-status.win { background: var(--win-color); }
+        .history-status.loss { background: var(--loss-color); }
+        .history-item hr { border: none; height: 1px; background-color: var(--layout-stroke-color); opacity: 0.5; margin: 0 0 12px 0; }
+        .history-body { display: flex; align-items: center; justify-content: space-around; text-align: center; }
+        .history-detail { display: flex; flex-direction: column; gap: 5px; }
+        .history-detail .label { font-size: 0.9em; color: var(--text-secondary); }
+        .history-detail .value { font-size: 1.4em; font-weight: 700; color: var(--text-primary); }
+        .history-body .arrow-icon { font-size: 1.6em; color: var(--text-secondary); }
+        .info-section { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--layout-stroke-color); }
+        .info-title { font-size: 1.1em; font-weight: 700; color: var(--text-primary); margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }
+        .info-text { font-size: 0.9em; line-height: 1.6; color: var(--text-secondary); margin: 0; }
+        .developer-credit { text-align: center; margin-top: 20px; padding-bottom: 5px; font-size: 1em; font-weight: 600; color: var(--text-secondary); }
+        .navbar { display: flex; justify-content: space-around; background: var(--card-bg); border-top: 1px solid var(--layout-stroke-color); flex-shrink: 0; padding: 5px; }
+        .nav-button { background: transparent; border: none; cursor: pointer; text-align: center; color: var(--text-secondary); font-size: 0.8em; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 5px; flex-basis: 0; flex-grow: 1; transition: color 0.4s ease, background 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1; border-radius: 12px; }
+        .nav-button span { white-space: nowrap; opacity: 0.8; transition: opacity 0.4s ease, font-weight 0.4s ease; }
+        .nav-button i { font-size: 1.5em; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-button.active { color: var(--text-on-accent); background: var(--accent-gradient); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .nav-button.active i { transform: translateY(-3px) scale(1.1); }
+        .nav-button.active span { font-weight: 700; opacity: 1; }
+        #theme-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1001; animation: fadeIn 0.3s ease; }
+        .theme-modal-content { background: var(--card-bg); border: 1px solid var(--layout-stroke-color); padding: 20px; border-radius: 20px; width: 90%; max-width: 340px; box-shadow: var(--shadow); }
+        .theme-modal-content h3 { margin-top: 0; color: var(--text-primary); text-align: center; }
+        .theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .theme-option { background: var(--card-bg); border: 2px solid transparent; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; color: var(--text-secondary); font-weight: 600; transition: border-color 0.3s ease, transform 0.3s ease; }
+        .theme-option:hover { transform: scale(1.05); }
+        .theme-option.active { border-color: var(--glow-color); }
+        .theme-preview { width: 100%; height: 20px; border-radius: 5px; margin-bottom: 8px; }
+        #result-dialog-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1002; pointer-events: none; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease; }
+        #result-dialog-container.active { opacity: 1; pointer-events: all; }
+        #result-dialog { background: var(--card-bg); border: 1px solid var(--layout-stroke-color); border-radius: 20px; box-shadow: var(--shadow); padding: 20px; width: 90%; max-width: 300px; text-align: center; position: relative; overflow: hidden; transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #result-dialog-container.active #result-dialog { transform: scale(1); }
+        #result-icon-wrapper { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 10px auto; display: flex; justify-content: center; align-items: center; transform: scale(0); }
+        #result-dialog-container.active #result-icon-wrapper { animation: popIn 0.5s 0.2s both cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #result-icon-wrapper.win { background: radial-gradient(circle, rgba(39, 174, 96, 0.25) 0%, rgba(39, 174, 96, 0) 70%); }
+        #result-icon-wrapper.loss { background: radial-gradient(circle, rgba(231, 76, 60, 0.25) 0%, rgba(231, 76, 60, 0) 70%); }
+        #result-icon { font-size: 2.2em; }
+        #result-icon.win { color: var(--win-color); }
+        #result-icon.loss { color: var(--loss-color); }
+        #result-dialog h2, #result-dialog .subtitle { transform: translateY(10px); opacity: 0; }
+        #result-dialog-container.active h2 { animation: slideFadeUp 0.5s 0.5s both; }
+        #result-dialog-container.active .subtitle { animation: slideFadeUp 0.5s 0.6s both; }
+        #result-title { margin: 0; font-size: 1.8em; text-transform: uppercase; }
+        #result-dialog.win #result-title { color: var(--win-color); }
+        #result-dialog.loss #result-title { color: var(--loss-color); }
+        .subtitle { font-size: 0.85em; color: var(--text-secondary); margin: 2px 0 12px 0; opacity: 0.8; }
+        #result-dialog .details { display: flex; justify-content: space-around; align-items: center; font-size: 1.1em; opacity: 0; }
+        #result-dialog-container.active .details { animation: slideFadeUp 0.5s 0.7s both; }
+        #result-dialog .detail-item .label { font-size: 0.75em; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+        #result-dialog .detail-item .value { font-weight: 700; font-size: 1.2em; }
+        #result-dialog .details .arrow-icon { font-size: 1.5em; color: var(--text-secondary); }
+        #result-progress { position: absolute; bottom: 0; left: 0; height: 5px; width: 100%; animation: progress 4s linear forwards; }
+        #result-dialog.win #result-progress { background: linear-gradient(90deg, var(--win-color), #60d394); }
+        #result-dialog.loss #result-progress { background: linear-gradient(90deg, var(--loss-color), #f87d70); }
+        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideFadeUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes progress { from { width: 100%; } to { width: 0%; } }
+        #maintenance-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; text-align: center; z-index: 2000; padding: 20px; box-sizing: border-box; animation: fadeIn 0.5s ease; }
+        #maintenance-content { color: white; }
+        #maintenance-content .icon { font-size: 4em; margin-bottom: 20px; color: var(--glow-color); animation: float 3s ease-in-out infinite; }
+        #maintenance-content h2 { font-size: 2em; margin-bottom: 10px; }
+        #maintenance-content p { font-size: 1.1em; max-width: 400px; color: #eee; }
+
+        /* --- Custom Alert Modal --- */
+        #custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 15px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        #custom-alert-box { background: var(--card-bg); border: 1px solid var(--layout-stroke-color); border-radius: 20px; box-shadow: var(--shadow); padding: 25px; width: 100%; max-width: 320px; text-align: center; transform: scale(0.9); opacity: 0; animation: popIn 0.4s 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        #custom-alert-icon { font-size: 2.8em; margin-bottom: 15px; }
+        #custom-alert-icon .fa-sign-out-alt { color: var(--info-color); }
+        #custom-alert-icon .fa-exclamation-triangle { color: var(--loss-color); }
+        #custom-alert-icon .fa-cogs { color: var(--logic-color); }
+        #custom-alert-title { margin: 0 0 8px 0; font-size: 1.5em; font-weight: 700; color: var(--text-primary); }
+        #custom-alert-message { margin: 0 0 25px 0; font-size: 1em; color: var(--text-secondary); line-height: 1.6; }
+        #custom-alert-ok-btn { width: 100%; padding: 12px; font-size: 1.1em; background: var(--accent-gradient); color: var(--text-on-accent); border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        #custom-alert-ok-btn:hover { transform: scale(1.03); }
+    </style>
+</head>
+<body data-theme="sunset">
+    <canvas id="particle-canvas"></canvas>
+    
+    <div id="maintenance-overlay">
+        <div id="maintenance-content">
+            <div class="icon"><i class="fas fa-tools"></i></div>
+            <h2>Under Maintenance</h2>
+            <p id="maintenance-message">The server is currently under maintenance. Please check back later.</p>
+        </div>
+    </div>
+
+    <div id="login-page">
+         <div class="login-container">
+            <div class="login-header"><h1>TG - VIRU X MODS <span class="verified-badge"><i class="fas fa-check"></i></span></h1></div>
+            <button class="login-button" id="search-version-btn">SEARCH VERSION <i class="fas fa-wifi"></i></button>
+            <div class="input-fields">
+                <div><div class="label-tab">GAME NAME</div><div class="input-group"><div class="input-content" id="game-name-display">OkWin</div><div class="checkmark-icon"><i class="fas fa-check"></i></div></div></div>
+                <div><div class="label-tab">LICENCE KEY</div><div class="input-group"><input type="text" id="licence-key-input" placeholder="Enter VIP Key..."></div></div>
+            </div>
+            <p id="login-message"></p>
+            <div class="button-row"><button class="get-key-btn">GET KEY</button><button class="login-btn" id="login-btn">LOGIN</button></div>
+            <button class="vip-button">👑 VIP LOGIN ACCESS 👑</button>
+        </div>
+    </div>
+    
+    <div id="game-mod-modal">
+        <div class="game-mod-content">
+            <h2>SELECT GAME MOD's !</h2>
+            <div class="game-mod-list">
+                <div class="game-mod-item" data-gamename="OkWin">OkWin (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="DG club">DG club (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="Tiranga">Tiranga (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="BDG WIN">BDG WIN (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="91 Club">91 Club (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="DM win">DM win (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="Jalwa Game">Jalwa Game (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="HGZY game">HGZY game (LZR MODE)</div>
+                <div class="game-mod-item" data-gamename="Tashan Win">Tashan Win (LZR MODE)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dashboard-page">
+        <div id="result-dialog-container">
+            <div id="result-dialog">
+                <div id="result-icon-wrapper"><i id="result-icon" class="fa-solid"></i></div>
+                <h2 id="result-title"></h2>
+                <p id="result-subtitle" class="subtitle"></p>
+                <div class="details">
+                    <div class="detail-item"><span class="label"><i class="fas fa-lightbulb"></i> Prediction</span><span id="result-prediction" class="value"></span></div>
+                    <i class="fas fa-long-arrow-alt-right arrow-icon"></i>
+                    <div class="detail-item"><span class="label"><i class="fas fa-flag-checkered"></i> Result</span><span id="result-actual" class="value"></span></div>
+                </div>
+                <div id="result-progress"></div>
+            </div>
+        </div>
+        <div id="theme-modal">
+            <div class="theme-modal-content">
+                <h3>Select a Theme</h3>
+                <div class="theme-options">
+                    <div class="theme-option" data-theme="sunset"><div class="theme-preview" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);"></div>Sunset</div>
+                    <div class="theme-option" data-theme="default"><div class="theme-preview" style="background: linear-gradient(135deg, #e0e5ec 0%, #f0f2f5 100%);"></div>Default</div>
+                    <div class="theme-option" data-theme="midnight"><div class="theme-preview" style="background: linear-gradient(135deg, #141E30 0%, #243B55 100%);"></div>Midnight</div>
+                    <div class="theme-option" data-theme="forest"><div class="theme-preview" style="background: linear-gradient(135deg, #3a6186 0%, #89253e 100%);"></div>Forest</div>
+                    <div class="theme-option" data-theme="oceanic"><div class="theme-preview" style="background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);"></div>Oceanic</div>
+                    <div class="theme-option" data-theme="royal"><div class="theme-preview" style="background: linear-gradient(135deg, #480048 0%, #C04848 100%);"></div>Royal</div>
+                    <div class="theme-option" data-theme="matrix"><div class="theme-preview" style="background: linear-gradient(135deg, #000000 0%, #0d1a0d 100%);"></div>Matrix</div>
+                    <div class="theme-option" data-theme="monochrome"><div class="theme-preview" style="background: linear-gradient(135deg, #d3d3d3 0%, #f5f5f5 100%);"></div>Monochrome</div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="header">
+                 <h2 class="header-title">VIRU AI</h2>
+                 <button id="theme-selector-btn" class="theme-selector-btn" aria-label="Select Theme"><i class="fas fa-palette"></i></button>
+            </div>
+            <div class="main-content">
+                <div id="home-view">
+                    <div class="prediction-card"><div class="title"><i class="fa-solid fa-lightbulb"></i> AI PREDICTION</div><div class="value" id="prediction-value">BIG</div><div class="period-container"><span><i class="fa-solid fa-calendar-days"></i> Period: <span id="period-number">....</span></span><span>Online</span></div></div>
+                    <div class="dashboard">
+                        <h2>Analysis Dashboard</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card wins"><div class="stat-card-content"><div class="icon-wrapper"><i class="fa-solid fa-trophy"></i></div><div class="label">Wins</div><div class="value" id="wins-value">0</div></div></div>
+                            <div class="stat-card losses"><div class="stat-card-content"><div class="icon-wrapper"><i class="fa-solid fa-shield-halved"></i></div><div class="label">Losses</div><div class="value" id="losses-value">0</div></div></div>
+                            <div class="stat-card rate"><div class="stat-card-content"><div class="icon-wrapper"><i class="fa-solid fa-bullseye"></i></div><div class="label">Win Rate</div><div class="value" id="win-rate-value">0%</div></div></div>
+                            <div class="stat-card logic"><div class="stat-card-content"><div class="icon-wrapper"><i class="fa-solid fa-brain"></i></div><div class="label">AI Logic</div><div class="value">VIRU AI</div></div></div>
+                        </div>
+                        <div class="calculating"><i class="fa-solid fa-atom fa-spin"></i> AI is calculating the next move...</div>
+                    </div>
+                </div>
+                <div id="history-view"><h2>Prediction History</h2><div class="history-list" id="history-list"></div></div>
+                <div id="info-view">
+                    <h2>Information</h2>
+                    <div class="info-section"><h3 class="info-title"><i class="fas fa-robot"></i> Description</h3><p class="info-text">VIRU AI is a sophisticated prediction tool designed to analyze patterns and provide insights. Utilizing advanced algorithms, it aims to deliver high-probability predictions to assist users in their decision-making process. The system continuously learns and adapts, striving for greater accuracy with each cycle.</p></div>
+                    <div class="info-section"><h3 class="info-title"><i class="fas fa-gavel"></i> Terms and Policy</h3><p class="info-text">This tool is provided for informational and educational purposes only. The predictions generated by VIRU AI are based on statistical analysis and are not guaranteed to be accurate. Users assume full responsibility for any actions taken based on the information provided by this tool. We are not liable for any financial losses or other damages that may result from its use. By using this service, you agree to these terms. All data is processed locally on your device; we do not collect or store any personal information or usage history.</p></div>
+                    <div class="info-section"><h3 class="info-title"><i class="fas fa-sign-out-alt"></i> Account</h3><button id="logout-btn" style="width: 100%; margin-top: 10px;">Logout</button></div>
+                    <div class="developer-credit">Dev By VIRU BOSS</div>
+                </div>
+            </div>
+            <nav class="navbar">
+                <button class="nav-button active" data-view="home-view"><i class="fas fa-home"></i><span>Home</span></button>
+                <button class="nav-button" data-view="history-view"><i class="fas fa-history"></i><span>History</span></button>
+                <button class="nav-button" data-view="info-view"><i class="fas fa-info-circle"></i><span>Info</span></button>
+            </nav>
+        </div>
+    </div>
+
+    <div id="custom-alert-overlay">
+        <div id="custom-alert-box">
+            <div id="custom-alert-icon"><i class="fas"></i></div>
+            <h3 id="custom-alert-title"></h3>
+            <p id="custom-alert-message"></p>
+            <button id="custom-alert-ok-btn">OK</button>
+        </div>
+    </div>
+
+    <!-- Firebase Core and Database -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        const body = document.body;
+        const loginPage = document.getElementById('login-page');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const loginButton = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        let sessionInterval, periodInterval;
+
+        const firebaseConfig = {
+    apiKey: "AIzaSyA1AEjum-DRfn3R41qDIWYHvgnDE7Y-NaU",
+    authDomain: "viru-web.firebaseapp.com",
+    databaseURL: "https://viru-web-default-rtdb.firebaseio.com",
+    projectId: "viru-web",
+    storageBucket: "viru-web.firebasestorage.app",
+    messagingSenderId: "886041255771",
+    appId: "1:886041255771:web:9256200064e80f1800847e",
+    measurementId: "G-92RVLDT884"
+  };
+        
+        let database;
+
+        function showAlert(title, message, iconClass = 'fa-info-circle') {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('custom-alert-overlay');
+                const alertTitle = document.getElementById('custom-alert-title');
+                const alertMessage = document.getElementById('custom-alert-message');
+                const alertIcon = document.querySelector('#custom-alert-icon i');
+                const okBtn = document.getElementById('custom-alert-ok-btn');
+                alertTitle.textContent = title;
+                alertMessage.textContent = message;
+                alertIcon.className = `fas ${iconClass}`;
+                overlay.style.display = 'flex';
+                function closeAlert() {
+                    overlay.style.display = 'none';
+                    okBtn.removeEventListener('click', closeAlert);
+                    resolve();
+                }
+                okBtn.addEventListener('click', closeAlert);
+            });
+        }
+        
+        const searchVersionBtn = document.getElementById('search-version-btn');
+        const gameModModal = document.getElementById('game-mod-modal');
+        const gameModItems = document.querySelectorAll('.game-mod-item');
+        const gameNameDisplay = document.getElementById('game-name-display');
+        const licenceKeyInput = document.getElementById('licence-key-input');
+        const loginMessage = document.getElementById('login-message');
+        const periodElement = document.getElementById('period-number');
+        const predictionValueElement = document.getElementById('prediction-value');
+        const winsElement = document.getElementById('wins-value');
+        const lossesElement = document.getElementById('losses-value');
+        const winRateElement = document.getElementById('win-rate-value');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const views = document.querySelectorAll('#home-view, #history-view, #info-view');
+        const historyList = document.getElementById('history-list');
+        const themeModal = document.getElementById('theme-modal');
+        const themeSelectorBtn = document.getElementById('theme-selector-btn');
+        const themeOptions = document.querySelectorAll('.theme-option');
+        const particleCanvas = document.getElementById('particle-canvas');
+        const maintenanceOverlay = document.getElementById('maintenance-overlay');
+        const maintenanceMessage = document.getElementById('maintenance-message');
+        let currentPeriod = null;
+
+        function applyTheme(themeName) { body.dataset.theme = themeName; localStorage.setItem('theme', themeName); themeOptions.forEach(opt => opt.classList.toggle('active', opt.dataset.theme === themeName)); }
+        themeSelectorBtn.addEventListener('click', () => { themeModal.style.display = 'flex'; });
+        themeModal.addEventListener('click', (e) => { if (e.target === themeModal) themeModal.style.display = 'none'; });
+        themeOptions.forEach(option => { option.addEventListener('click', () => { applyTheme(option.dataset.theme); themeModal.style.display = 'none'; }); });
+        searchVersionBtn.addEventListener('click', () => { gameModModal.style.display = 'flex'; });
+        gameModModal.addEventListener('click', (e) => { if (e.target === gameModModal) gameModModal.style.display = 'none'; });
+        gameModItems.forEach(item => { item.addEventListener('click', () => { gameNameDisplay.textContent = item.dataset.gamename; gameModModal.style.display = 'none'; }); });
+
+        function showResultDialog(isWin, data) {
+            const resultDialogContainer = document.getElementById('result-dialog-container');
+            const resultDialog = document.getElementById('result-dialog');
+            const resultIconWrapper = document.getElementById('result-icon-wrapper');
+            const resultIcon = document.getElementById('result-icon');
+            const resultTitle = document.getElementById('result-title');
+            const resultSubtitle = document.getElementById('result-subtitle');
+            const resultPrediction = document.getElementById('result-prediction');
+            const resultActual = document.getElementById('result-actual');
+            resultDialog.classList.remove('win', 'loss');
+            resultIconWrapper.classList.remove('win', 'loss');
+            resultIcon.classList.remove('win', 'loss', 'fa-trophy', 'fa-shield-halved');
+            const resultClass = isWin ? 'win' : 'loss';
+            const iconClass = isWin ? 'fa-trophy' : 'fa-shield-halved';
+            resultDialog.classList.add(resultClass);
+            resultIconWrapper.classList.add(resultClass);
+            resultIcon.classList.add(resultClass, 'fa-solid', iconClass);
+            resultTitle.textContent = isWin ? 'Congratulations!' : 'Try Again!';
+            resultSubtitle.textContent = isWin ? 'Prediction was successful.' : 'The AI is recalibrating.';
+            resultPrediction.textContent = data.prediction;
+            resultActual.textContent = data.result;
+            resultDialogContainer.classList.add('active');
+            setTimeout(() => { resultDialogContainer.classList.remove('active'); }, 4000);
+        }
+
+        function addHistoryItem(period, prediction, actualResult, wasWin) { const item = document.createElement('div'); item.className = 'history-item'; const statusClass = wasWin ? 'win' : 'loss'; const statusText = wasWin ? 'Win' : 'Loss'; item.innerHTML = `<div class="history-header"><span class="history-period-info">Period #${period}</span><span class="history-status ${statusClass}">${statusText}</span></div><hr><div class="history-body"><div class="history-detail"><span class="label">Prediction</span><span class="value">${prediction}</span></div><i class="fas fa-long-arrow-alt-right arrow-icon"></i><div class="history-detail"><span class="label">Result</span><span class="value">${actualResult}</span></div></div>`; historyList.prepend(item); }
+        function handlePeriodChange(completedPeriod) { const lastRoundResult = Math.random() < 0.8; let wins = parseInt(winsElement.innerText); let losses = parseInt(lossesElement.innerText); const lastPrediction = predictionValueElement.innerText; let actualResult; if (lastRoundResult) { wins++; actualResult = lastPrediction; } else { losses++; actualResult = lastPrediction === "BIG" ? "SMALL" : "BIG"; } winsElement.innerText = wins; lossesElement.innerText = losses; const total = wins + losses; const rate = total === 0 ? 0 : Math.round((wins / total) * 100); winRateElement.innerText = `${rate}%`; const newPrediction = Math.random() < 0.5 ? "BIG" : "SMALL"; predictionValueElement.innerText = newPrediction; addHistoryItem(completedPeriod, lastPrediction, actualResult, lastRoundResult); showResultDialog(lastRoundResult, { period: completedPeriod, prediction: lastPrediction, result: actualResult }); }
+        function updatePeriodNumber() { if (!periodElement) return; const now = new Date(); const totalMinutesInDay = now.getUTCHours() * 60 + now.getUTCMinutes(); const currentMinutePeriod = totalMinutesInDay.toString().padStart(4, '0'); if (currentPeriod === null) currentPeriod = currentMinutePeriod; if (currentPeriod !== currentMinutePeriod) { handlePeriodChange(currentPeriod); currentPeriod = currentMinutePeriod; } const nextPeriodNumber = totalMinutesInDay + 1; periodElement.innerText = nextPeriodNumber.toString().padStart(4, '0'); }
+        navButtons.forEach(button => { button.addEventListener('click', (e) => { const target = e.currentTarget; const viewName = target.dataset.view; if (!viewName) return; navButtons.forEach(btn => btn.classList.remove('active')); target.classList.add('active'); views.forEach(view => { view.style.display = view.id === viewName ? 'block' : 'none'; }); }); });
+        function getDeviceId() { let deviceId = localStorage.getItem('deviceId'); if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now(); localStorage.setItem('deviceId', deviceId); } return deviceId; }
+
+        logoutBtn.addEventListener('click', () => {
+            clearInterval(sessionInterval);
+            clearInterval(periodInterval);
+            showAlert('Logout', 'You have been successfully logged out.', 'fa-sign-out-alt')
+            .then(() => {
+                sessionStorage.removeItem('loggedInKey');
+                window.location.reload();
+            });
+        });
+
+        function validateSession() {
+            const key = sessionStorage.getItem('loggedInKey');
+            if (!key) return;
+            database.ref('keys/' + key).once('value', (snapshot) => {
+                const data = snapshot.val();
+                let needsLogout = false;
+                let logoutMessage = '';
+                if (!data) { needsLogout = true; logoutMessage = 'Your licence key has been revoked or deleted by the administrator.'; } 
+                else {
+                    const expiryDate = new Date(data.createdAt + (data.validityDays * 24 * 60 * 60 * 1000));
+                    if (Date.now() > expiryDate.getTime()) { needsLogout = true; logoutMessage = 'Your licence key has expired. Please contact the administrator.'; }
+                    const deviceId = getDeviceId();
+                    if (data.deviceId && data.deviceId !== deviceId) { needsLogout = true; logoutMessage = 'This key is active on another device. Logging out to ensure security.'; }
+                }
+                if (needsLogout) {
+                    clearInterval(sessionInterval);
+                    clearInterval(periodInterval);
+                    showAlert('Session Invalid', logoutMessage, 'fa-exclamation-triangle').then(() => { sessionStorage.removeItem('loggedInKey'); window.location.reload(); });
+                }
+            });
+        }
+        
+        function startApp() {
+            dashboardPage.style.animation = 'fadeIn 0.5s ease';
+            updatePeriodNumber(); 
+            periodInterval = setInterval(updatePeriodNumber, 1000);
+            validateSession();
+            sessionInterval = setInterval(validateSession, 30000);
+        }
+
+        loginButton.addEventListener('click', () => {
+            const key = licenceKeyInput.value.trim();
+            if (!key) { loginMessage.textContent = "Please enter a licence key."; return; }
+            loginMessage.textContent = "Validating...";
+            database.ref('keys/' + key).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) { loginMessage.textContent = "Invalid key."; return; }
+                const expiryDate = new Date(data.createdAt + (data.validityDays * 24 * 60 * 60 * 1000));
+                if (Date.now() > expiryDate.getTime()) { loginMessage.textContent = "This key has expired."; return; }
+                const deviceId = getDeviceId();
+                if (data.deviceId && data.deviceId !== deviceId) { loginMessage.textContent = "Key is in use on another device."; return; }
+                const updates = { lastLogin: Date.now() };
+                if (!data.deviceId) { updates.deviceId = deviceId; }
+                database.ref('keys/' + key).update(updates);
+                sessionStorage.setItem('loggedInKey', key);
+                loginMessage.textContent = "Success!";
+                loginPage.style.animation = 'fadeOut 0.5s ease forwards';
+                loginPage.addEventListener('animationend', () => {
+                    loginPage.style.display = 'none';
+                    dashboardPage.style.display = 'block';
+                    startApp();
+                }, { once: true });
+            });
+        });
+        
+        function checkLoginAndMaintenance() {
+            database.ref('maintenance').on('value', (snapshot) => {
+                const data = snapshot.val();
+                maintenanceOverlay.style.display = (data && data.isActive) ? 'flex' : 'none';
+                if (data && data.isActive) maintenanceMessage.textContent = data.message;
+            });
+            if (sessionStorage.getItem('loggedInKey')) {
+                loginPage.style.display = 'none';
+                dashboardPage.style.display = 'block';
+                startApp();
+            } else {
+                loginPage.style.display = 'block';
+                dashboardPage.style.display = 'none';
+            }
+        }
+        
+        const ctx = particleCanvas.getContext('2d');
+        let particles = [];
+        const numParticles = 50;
+        function setupCanvas() { particleCanvas.width = window.innerWidth; particleCanvas.height = window.innerHeight; }
+        class Particle { constructor() { this.x = Math.random() * particleCanvas.width; this.y = Math.random() * particleCanvas.height; this.size = Math.random() * 2 + 1; this.speedX = Math.random() * 1 - 0.5; this.speedY = Math.random() * 1 - 0.5; } update() { if (this.x > particleCanvas.width || this.x < 0) this.speedX = -this.speedX; if (this.y > particleCanvas.height || this.y < 0) this.speedY = -this.speedY; this.x += this.speedX; this.y += this.speedY; } draw() { ctx.fillStyle = 'rgba(0, 123, 255, 0.5)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); } }
+        function initParticles() { particles = []; for (let i = 0; i < numParticles; i++) { particles.push(new Particle()); } }
+        function handleParticles() { if (!ctx) return; ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height); for (let i = 0; i < particles.length; i++) { particles[i].update(); particles[i].draw(); for (let j = i; j < particles.length; j++) { const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const distance = Math.sqrt(dx * dx + dy * dy); if (distance < 100) { ctx.beginPath(); ctx.strokeStyle = `rgba(0, 123, 255, ${1 - distance/100})`; ctx.lineWidth = 0.5; ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke(); } } } }
+        function animateParticles() { if(!ctx) return; handleParticles(); requestAnimationFrame(animateParticles); }
+        window.addEventListener('resize', () => { setupCanvas(); initParticles(); });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'sunset';
+            applyTheme(savedTheme); 
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                checkLoginAndMaintenance();
+            } catch(e) {
+                console.error("CRITICAL FIREBASE ERROR:", e);
+                loginPage.style.display = 'none';
+                showAlert('Configuration Error', 'Could not initialize Firebase. Please check the configuration values in the script.', 'fa-cogs');
+            }
+            if (particleCanvas) { setupCanvas(); initParticles(); animateParticles(); }
+        });
+    </script>
+</body>
+  </html>
