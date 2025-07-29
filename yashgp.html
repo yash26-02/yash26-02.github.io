@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YASH GP TOOL</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --card: #f0f0f0;
+    }
+    body.dark {
+      --bg: #111;
+      --text: #fff;
+      --card: #222;
+    }
+    body.matrix {
+      --bg: #000;
+      --text: #00ff00;
+      --card: #001100;
+    }
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .section {
+      background: var(--card);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px #00000010;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .box {
+      flex: 1 1 45%;
+      margin: 5px;
+      padding: 10px;
+      background: var(--bg);
+      border: 2px solid var(--text);
+      text-align: center;
+      border-radius: 10px;
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      margin: 5px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: bold;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .history-table th, .history-table td {
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+    }
+    select {
+      width: 100%;
+      padding: 6px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>YASH GP TOOL</h1>
+
+  <div class="section">
+    <div class="grid">
+      <div class="box" id="period">Period: </div>
+      <div class="box" id="timer">Timer: </div>
+    </div>
+    <div class="box" id="prediction" style="font-size: 20px; margin-top: 10px;">Prediction: --</div>
+    <div class="box" id="result" style="font-size: 18px;">Result: Waiting</div>
+    <div class="box" id="accuracy">Accuracy: 0%</div>
+  </div>
+
+  <div class="section">
+    <button onclick="setTheme('light')">Light Theme</button>
+    <button onclick="setTheme('dark')">Dark Theme</button>
+    <button onclick="setTheme('matrix')">Matrix Theme</button>
+  </div>
+
+  <div class="section">
+    <h3>History</h3>
+    <table class="history-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Prediction</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <audio id="sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+  <script>
+    let total = 0, wins = 0;
+    let lastPrediction = '';
+    let lastPeriod = '';
+    let resultDelay = 5; // Simulated result after 5 sec
+
+    function predict() {
+      const nums = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+      const sum = nums.reduce((a, b) => a + b, 0);
+      return sum % 2 === 0 ? 'BIG' : 'SMALL';
+    }
+
+    function setTheme(theme) {
+      document.body.className = theme;
+    }
+
+    function updatePeriodAndTimer() {
+      const now = new Date();
+      const utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+      const seconds = utc.getSeconds();
+      const remaining = 60 - seconds;
+
+      const year = utc.getFullYear();
+      const month = String(utc.getMonth() + 1).padStart(2, '0');
+      const day = String(utc.getDate()).padStart(2, '0');
+      const minutes = utc.getHours() * 60 + utc.getMinutes();
+      const period = `${year}${month}${day}1000${10001 + minutes}`;
+
+      document.getElementById("period").innerText = `Period: ${period}`;
+      document.getElementById("timer").innerText = `Timer: 00 : ${String(remaining).padStart(2, '0')}`;
+
+      if (lastPeriod !== period) {
+        lastPeriod = period;
+        const prediction = predict();
+        lastPrediction = prediction;
+        document.getElementById("prediction").innerText = `Prediction: ${prediction}`;
+        document.getElementById("result").innerText = "Result: Waiting...";
+        document.getElementById("sound").play();
+
+        setTimeout(() => {
+          const isWin = Math.random() < 0.9; // 90% chance
+          const result = isWin ? prediction : (prediction === 'BIG' ? 'SMALL' : 'BIG');
+          document.getElementById("result").innerText = `Result: ${result}`;
+          updateHistory(period, prediction, result);
+        }, resultDelay * 1000);
+      }
+    }
+
+    function updateHistory(period, prediction, result) {
+      const win = prediction === result;
+      total++;
+      if (win) wins++;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${period}</td>
+        <td>${prediction}</td>
+        <td style="color:${win ? 'green' : 'red'}">${win ? 'WIN ✅' : 'LOSE ❌'}</td>
+      `;
+      document.querySelector("#historyTable tbody").prepend(row);
+
+      const accuracy = ((wins / total) * 100).toFixed(2);
+      document.getElementById("accuracy").innerText = `Accuracy: ${accuracy}%`;
+    }
+
+    setInterval(updatePeriodAndTimer, 1000);
+    setTheme('light'); // default
+  </script>
+</body>
+    </html>
