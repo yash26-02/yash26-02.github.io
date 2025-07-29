@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH Predictor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #111827;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #22d3ee;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #period, #timer {
+      font-size: 1.2rem;
+      margin: 4px 0;
+    }
+
+    .prediction {
+      margin-top: 1.2rem;
+      padding: 1rem 2rem;
+      border-radius: 15px;
+      background: #1f2937;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .big { color: #f87171; }
+    .small { color: #34d399; }
+
+    .stats {
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 1.2rem;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 12px;
+      background: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .history {
+      margin-top: 1.5rem;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      background-color: #374151;
+    }
+
+    .tag.win { background-color: #10b981; color: white; }
+    .tag.loss { background-color: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+  <h1>YASH AI Predictor</h1>
+  <div id="period">Period: --</div>
+  <div id="timer">Timer: --</div>
+  <div class="prediction" id="prediction">Waiting...</div>
+
+  <div class="stats" id="stats">Win: 0 | Loss: 0 | Win %: 0%</div>
+  <button onclick="clearHistory()">Clear History</button>
+
+  <div class="history" id="history"></div>
+
+  <audio id="sound">
+    <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    let wins = 0, losses = 0;
+    const predictionEl = document.getElementById("prediction");
+    const timerEl = document.getElementById("timer");
+    const periodEl = document.getElementById("period");
+    const statsEl = document.getElementById("stats");
+    const historyEl = document.getElementById("history");
+    const sound = document.getElementById("sound");
+
+    function getCurrentPeriod() {
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0].replace(/-/g, '');
+      const totalMinutes = now.getHours() * 60 + now.getMinutes();
+      return `${dateStr}1000${10001 + totalMinutes}`;
+    }
+
+    function getRemainingSeconds() {
+      const now = new Date();
+      return 60 - now.getSeconds();
+    }
+
+    function getTrendPrediction() {
+      const last = JSON.parse(localStorage.getItem("lastPrediction") || "[]");
+      const lastSize = last.length > 0 ? last[last.length - 1] : null;
+
+      let prediction;
+      const rand = Math.random();
+      if (lastSize === "Big") {
+        prediction = rand < 0.7 ? "Big" : "Small";
+      } else {
+        prediction = rand < 0.7 ? "Small" : "Big";
+      }
+
+      localStorage.setItem("currentPrediction", prediction);
+      return prediction;
+    }
+
+    function updatePrediction() {
+      const pred = getTrendPrediction();
+      predictionEl.innerText = pred;
+      predictionEl.className = "prediction " + pred.toLowerCase();
+      sound.play();
+    }
+
+    function simulateResult() {
+      const current = localStorage.getItem("currentPrediction");
+      const win = Math.random() < 0.8;
+      if (win) {
+        wins++;
+        addHistory("win", current);
+      } else {
+        losses++;
+        addHistory("loss", current === "Big" ? "Small" : "Big");
+      }
+      updateStats();
+    }
+
+    function updateStats() {
+      const percent = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+      statsEl.innerText = `Win: ${wins} | Loss: ${losses} | Win %: ${percent}%`;
+    }
+
+    function addHistory(type, value) {
+      const tag = document.createElement("div");
+      tag.className = `tag ${type}`;
+      tag.innerText = value;
+      historyEl.prepend(tag);
+
+      const history = JSON.parse(localStorage.getItem("history") || "[]");
+      history.unshift({ type, value });
+      if (history.length > 30) history.pop();
+      localStorage.setItem("history", JSON.stringify(history));
+    }
+
+    function restoreHistory() {
+      const prediction = localStorage.getItem("currentPrediction");
+      if (prediction) {
+        predictionEl.innerText = prediction;
+        predictionEl.className = "prediction " + prediction.toLowerCase();
+      }
+
+      const history = JSON.parse(localStorage.getItem("history") || "[]");
+      historyEl.innerHTML = "";
+      history.forEach(({ type, value }) => {
+        const tag = document.createElement("div");
+        tag.className = `tag ${type}`;
+        tag.innerText = value;
+        historyEl.appendChild(tag);
+        if (type === "win") wins++;
+        else losses++;
+      });
+      updateStats();
+    }
+
+    function clearHistory() {
+      localStorage.clear();
+      historyEl.innerHTML = "";
+      predictionEl.innerText = "Waiting...";
+      predictionEl.className = "prediction";
+      wins = 0;
+      losses = 0;
+      updateStats();
+    }
+
+    function tickTimer() {
+      const remaining = getRemainingSeconds();
+      timerEl.innerText = `⏱️ ${String(remaining).padStart(2, '0')} sec`;
+      periodEl.innerText = `Period: ${getCurrentPeriod()}`;
+
+      if (remaining === 59) {
+        updatePrediction();
+        setTimeout(simulateResult, 3000);
+      }
+    }
+
+    restoreHistory();
+    setInterval(tickTimer, 1000);
+  </script>
+</body>
+  </html>
