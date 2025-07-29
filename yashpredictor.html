@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YASH Predictor - WinGo 1M</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      background: #0b0f1a;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header {
+      font-size: 26px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #00d4ff, #0084ff);
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .card {
+      background-color: #1c2333;
+      padding: 25px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #00cfff55;
+    }
+
+    .label {
+      font-size: 14px;
+      color: #aaa;
+      margin-top: 10px;
+    }
+
+    .value {
+      font-size: 20px;
+      margin: 5px 0 10px 0;
+    }
+
+    .prediction {
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .green {
+      color: #00ff8a;
+    }
+
+    .red {
+      color: #ff5e5e;
+    }
+
+    .blue-glow {
+      border: 2px solid #00c3ff;
+      padding: 5px 15px;
+      border-radius: 10px;
+      display: inline-block;
+      margin: 10px 0;
+      background-color: #101828;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">YASH Predictor - WinGo 1M</div>
+
+  <div class="card">
+    <div class="label">PERIOD NUMBER</div>
+    <div class="value" id="period1m">Loading...</div>
+
+    <div class="label">TIMER</div>
+    <div class="value blue-glow" id="timer1m">-- : --</div>
+
+    <div class="label">PREDICTED RESULT</div>
+    <div class="prediction" id="prediction">Waiting...</div>
+  </div>
+
+  <script>
+    let lastPredictionPeriod = "";
+
+    function updateTimerAndPeriod() {
+      const now = new Date();
+      const utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+
+      const seconds = utc.getUTCSeconds();
+      const remainingSeconds = 60 - seconds;
+      const minutes = utc.getUTCMinutes();
+      const hours = utc.getUTCHours();
+      const totalMinutes = hours * 60 + minutes;
+
+      const yyyyMMdd = utc.toISOString().slice(0, 10).replace(/-/g, '');
+      const periodNumber = yyyyMMdd + "1000" + (10001 + totalMinutes);
+
+      document.getElementById("period1m").innerText = periodNumber;
+      const formattedTimer = `00 : ${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+      document.getElementById("timer1m").innerText = formattedTimer;
+
+      // Only predict when new period
+      if (lastPredictionPeriod !== periodNumber && seconds === 0) {
+        lastPredictionPeriod = periodNumber;
+        runPrediction();
+      }
+    }
+
+    // Smart Prediction Logic (for demo only)
+    function runPrediction() {
+      // Real API logic can be added here
+      const results = [1, 8, 3, 6, 2, 7, 5]; // Example numbers
+      const last = results.slice(-3);
+      const avg = (last[0] + last[1] + last[2]) / 3;
+      const predicted = Math.round(avg);
+      const result = predicted >= 5 ? "BIG" : "SMALL";
+
+      document.getElementById("prediction").innerHTML = `🔮 ${result}`;
+      document.getElementById("prediction").className = "prediction " + (result === "BIG" ? "green" : "red");
+    }
+
+    // Start the interval
+    setInterval(updateTimerAndPeriod, 1000);
+  </script>
+</body>
+  </html>
