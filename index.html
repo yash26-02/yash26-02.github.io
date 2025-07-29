@@ -1,0 +1,202 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>𝐘𝐀𝐒𝐇 𝐒𝐌𝐀𝐑𝐓 𝐓𝐎𝐎𝐋</title>
+  <style>
+    :root {
+      --bg-light: #f9f9f9;
+      --bg-dark: #1a1a1a;
+      --text-light: #1a1a1a;
+      --text-dark: #f9f9f9;
+      --primary: #007bff;
+      --success: #28a745;
+      --danger: #dc3545;
+    }body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+body.dark {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
+  padding: 1rem;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background-color: #fff;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+body.dark .card {
+  background-color: #2b2b2b;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+
+.badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+}
+
+.big {
+  background-color: var(--primary);
+}
+
+.small {
+  background-color: orange;
+}
+
+.win {
+  color: var(--success);
+}
+
+.loss {
+  color: var(--danger);
+}
+
+.timer {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.history {
+  margin-top: 1rem;
+}
+
+.theme-toggle {
+  float: right;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      𝐘𝐀𝐒𝐇 𝐒𝐌𝐀𝐑𝐓 𝐓𝐎𝐎𝐋
+      <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
+    </h1><div class="card">
+  <div class="row">
+    <span>Period</span>
+    <span id="period"></span>
+  </div>
+  <div class="row">
+    <span>Prediction</span>
+    <span id="prediction" class="badge"></span>
+  </div>
+  <div class="row">
+    <span>Result</span>
+    <span id="result"></span>
+  </div>
+  <div class="timer" id="timer">--:--</div>
+</div>
+
+<div class="card history">
+  <h3>History</h3>
+  <div id="history"></div>
+</div>
+
+  </div>  <script>
+    let period = '';
+    let theme = localStorage.getItem('theme') || 'light';
+    let history = JSON.parse(localStorage.getItem('history') || '[]');
+    let prediction = '';
+    let timerSeconds = 30;
+
+    function toggleTheme() {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      document.body.className = theme;
+      localStorage.setItem('theme', theme);
+    }
+
+    function predict(period) {
+      const num = parseInt(period.slice(-4));
+      return (num % 3 === 0 || num % 5 === 0) ? 'BIG' : 'SMALL';
+    }
+
+    function updatePeriodAndTimer() {
+      const now = new Date();
+      const current = Math.floor(now.getTime() / 30000);
+      const newPeriod = 'P' + current;
+
+      if (newPeriod !== period) {
+        if (period !== '') {
+          const result = Math.random() < 0.5 ? 'BIG' : 'SMALL';
+          const win = prediction === result;
+          history.unshift({ period, prediction, result, win });
+          if (history.length > 10) history.pop();
+          localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        period = newPeriod;
+        prediction = predict(period);
+        timerSeconds = 30;
+      }
+
+      document.getElementById('period').textContent = period;
+      document.getElementById('prediction').textContent = prediction;
+      document.getElementById('prediction').className = 'badge ' + prediction.toLowerCase();
+
+      const timer = document.getElementById('timer');
+      timer.textContent = `00:${timerSeconds < 10 ? '0' : ''}${timerSeconds}`;
+
+      const resultSpan = document.getElementById('result');
+      const last = history[0];
+      if (last && last.period === period) {
+        resultSpan.innerHTML = `${last.result} <span class="${last.win ? 'win' : 'loss'}">${last.win ? 'Win' : 'Loss'}</span>`;
+      } else {
+        resultSpan.textContent = '--';
+      }
+
+      const historyDiv = document.getElementById('history');
+      historyDiv.innerHTML = history
+        .map(
+          (h) => `<div class="row">
+            <span>${h.period}</span>
+            <span>${h.prediction} ➜ ${h.result} <span class="${h.win ? 'win' : 'loss'}">${h.win ? 'Win' : 'Loss'}</span></span>
+          </div>`
+        )
+        .join('');
+    }
+
+    setInterval(() => {
+      timerSeconds--;
+      if (timerSeconds < 0) {
+        updatePeriodAndTimer();
+      } else {
+        const timer = document.getElementById('timer');
+        timer.textContent = `00:${timerSeconds < 10 ? '0' : ''}${timerSeconds}`;
+      }
+    }, 1000);
+
+    document.body.className = theme;
+    updatePeriodAndTimer();
+  </script></body>
+    </html>
