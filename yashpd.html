@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YASH PREDICTION</title>
+  <style>
+    :root {
+      --bg-color: #1e1e1e;
+      --text-color: #ffffff;
+      --box-bg: #2a2a2a;
+      --accent: #4caf50;
+    }[data-theme="matrix"] {
+  --bg-color: #000000;
+  --text-color: #00ff00;
+  --box-bg: #002200;
+  --accent: #00ff00;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.container {
+  padding: 10px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.theme-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.theme-switcher button {
+  background: var(--box-bg);
+  color: var(--text-color);
+  border: 1px solid var(--accent);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.box {
+  background-color: var(--box-bg);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.label {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.value {
+  font-size: 20px;
+  color: var(--accent);
+  margin-top: 5px;
+}
+
+.history-log {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 14px;
+  background-color: var(--box-bg);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.win { color: limegreen; }
+.loss { color: red; }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>YASH PREDICTION</h1><div class="theme-switcher">
+  <button onclick="setTheme('default')">Dark Grey Theme</button>
+  <button onclick="setTheme('matrix')">Matrix Theme</button>
+</div>
+
+<div class="box">
+  <div class="label">Period:</div>
+  <div class="value" id="period1m">Loading...</div>
+  <div class="label">Timer:</div>
+  <div class="value" id="timer1m">00 : 00</div>
+  <div class="label">Result:</div>
+  <div class="value" id="result">Waiting...</div>
+</div>
+
+<div class="box">
+  <div class="label">Winning %:</div>
+  <div class="value" id="percent">--%</div>
+  <div class="label">Win Count:</div>
+  <div class="value" id="winCount">0</div>
+  <div class="label">Loss Count:</div>
+  <div class="value" id="lossCount">0</div>
+  <button onclick="clearHistory()" style="margin-top:10px">Clear History</button>
+</div>
+
+<div class="box">
+  <div class="label">History (after result only):</div>
+  <div class="history-log" id="history"></div>
+</div>
+
+  </div>  <script>
+    function setTheme(name) {
+      document.documentElement.setAttribute('data-theme', name === 'matrix' ? 'matrix' : 'default');
+      localStorage.setItem('theme', name);
+    }
+
+    if (localStorage.getItem('theme')) {
+      setTheme(localStorage.getItem('theme'));
+    }
+
+    let win = 0, loss = 0;
+
+    function updateUI(period, timeLeft) {
+      document.getElementById('period1m').innerText = period;
+      document.getElementById('timer1m').innerText = `   00  :  ${timeLeft.toString().padStart(2, '0')}`;
+    }
+
+    function logResult(period, result, isWin) {
+      const logBox = document.getElementById("history");
+      const entry = document.createElement("div");
+      entry.innerHTML = `<b>${period}</b> → ${result} <span class="${isWin ? 'win' : 'loss'}">${isWin ? 'WIN' : 'LOSS'}</span>`;
+      logBox.prepend(entry);
+      if (isWin) win++; else loss++;
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = win + loss;
+      const percent = total === 0 ? 0 : Math.round((win / total) * 100);
+      document.getElementById("winCount").innerText = win;
+      document.getElementById("lossCount").innerText = loss;
+      document.getElementById("percent").innerText = percent + "%";
+    }
+
+    function clearHistory() {
+      document.getElementById("history").innerHTML = "";
+      win = 0; loss = 0;
+      updateStats();
+    }
+
+    setInterval(() => {
+      const now = new Date();
+      const utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+      const seconds = utc.getUTCSeconds();
+      const remaining = 60 - seconds;
+      const minutes = utc.getUTCHours() * 60 + utc.getUTCMinutes();
+      const period = utc.toISOString().slice(0,10).replace(/-/g, '') + "1000" + (10001 + minutes);
+      updateUI(period, remaining);
+
+      // Auto simulate result every minute end
+      if (seconds === 59) {
+        const randomResult = Math.floor(Math.random() * 10);
+        const isWin = randomResult % 2 === 0; // Even = Win, Odd = Loss (for example)
+        document.getElementById("result").innerText = randomResult;
+        logResult(period, randomResult, isWin);
+      }
+    }, 1000);
+  </script></body>
+  </html>
