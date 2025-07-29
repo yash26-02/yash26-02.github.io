@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YASH AI TOOL</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #1a1a1a, #000000);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .card {
+      background: #222;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #00ffd5;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ffd5;
+    }
+    .prediction {
+      margin: 20px 0;
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .big { color: #ff4b5c; }
+    .small { color: #4cd137; }
+    .period {
+      font-size: 14px;
+      margin-top: -10px;
+      color: #aaa;
+    }
+    .history {
+      background: #111;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 14px;
+      width: 100%;
+    }
+    .history-entry {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+      border-bottom: 1px solid #333;
+      padding-bottom: 4px;
+    }
+    .win { color: #4cd137; }
+    .loss { color: #ff4b5c; }
+    button {
+      margin-top: 12px;
+      padding: 8px 14px;
+      background: #00ffd5;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00c3a5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">YASH AI TOOL</div>
+    <div class="period" id="period">Period: </div>
+    <div class="prediction" id="prediction">Predicting...</div>
+    <div class="history" id="historyBox"></div>
+    <button onclick="clearHistory()">🧹 Clear History</button>
+  </div>
+
+  <script>
+    function getPeriod() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      const h = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(now.getMilliseconds()).padStart(3, '0').slice(0, 2);
+      return `${y}${m}${d}${h}${min}${s}${ms}`;
+    }
+
+    function predictUsingTrend(lastResults) {
+      if (lastResults.length === 0) return Math.random() > 0.5 ? "Big" : "Small";
+      let bigCount = lastResults.filter(r => r.pred === "Big").length;
+      let smallCount = lastResults.length - bigCount;
+      return bigCount >= smallCount ? "Small" : "Big";
+    }
+
+    function getResult(prediction) {
+      return Math.random() < 0.7 ? prediction : (prediction === "Big" ? "Small" : "Big");
+    }
+
+    function saveToHistory(period, prediction, result) {
+      let history = JSON.parse(localStorage.getItem("history") || "[]");
+      const winLoss = prediction === result ? "Win" : "Loss";
+      history.unshift({ period, pred: prediction, result, winLoss });
+      if (history.length > 100) history.pop();
+      localStorage.setItem("history", JSON.stringify(history));
+      return history;
+    }
+
+    function updateUI() {
+      const period = getPeriod();
+      document.getElementById("period").innerText = "Period: " + period;
+
+      const oldHistory = JSON.parse(localStorage.getItem("history") || "[]");
+      const prediction = predictUsingTrend(oldHistory.slice(0, 5));
+      const result = getResult(prediction);
+
+      document.getElementById("prediction").innerHTML =
+        `<span class="${prediction.toLowerCase()}">${prediction}</span>`;
+
+      const updatedHistory = saveToHistory(period, prediction, result);
+      renderHistory(updatedHistory);
+    }
+
+    function renderHistory(history) {
+      const box = document.getElementById("historyBox");
+      box.innerHTML = "";
+      history.forEach(h => {
+        const div = document.createElement("div");
+        div.className = "history-entry";
+        div.innerHTML = `
+          <span>${h.period}</span>
+          <span>${h.pred} / ${h.result} <span class="${h.winLoss.toLowerCase()}">${h.winLoss}</span></span>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("history");
+      location.reload();
+    }
+
+    updateUI();
+  </script>
+</body>
+  </html>
