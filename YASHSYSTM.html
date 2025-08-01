@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YASH PVT Predictor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;700&display=swap');
+
+    :root {
+      --bg: #111;
+      --text: #fff;
+      --card: #222;
+      --accent: yellow;
+    }
+
+    body {
+      font-family: 'El Messiri', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 15px;
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .info-box {
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    .history-box {
+      background: #444;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .history-box table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .history-box th, .history-box td {
+      border-bottom: 1px solid gray;
+      padding: 5px;
+    }
+
+    .history-box th {
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .history-box td {
+      font-size: 14px;
+    }
+
+    select {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .RESULT {
+      font-size: 20px;
+      font-weight: bold;
+      color: limegreen;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>YASH PVT Predictor</h2>
+
+    <div class="info-box">
+      <p>Period: <span id="issueNumber"></span></p>
+      <p>Time Left: <span id="timer"></span></p>
+    </div>
+
+    <p class="RESULT"> RESULT: <span id="predicted"></span> (<span id="bigSmall"></span>)</p>
+
+    <select id="themeSelector">
+      <option value="dark">🌑 Dark</option>
+      <option value="light">☀️ Light</option>
+      <option value="royal">👑 Royal Gold</option>
+      <option value="metrix">🧠 Metrix</option>
+    </select>
+
+    <div class="history-box">
+      <p style="color: var(--accent); font-size: 18px; font-weight: bold;">Previous Results</p>
+      <table>
+        <tr>
+          <th>Issue</th>
+          <th>Number</th>
+          <th>Result</th>
+        </tr>
+        <tbody id="history"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let lastResults = [];
+
+    function generatePeriodNumber() {
+      let now = new Date();
+      let utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+      let year = utc.getFullYear();
+      let month = String(utc.getMonth() + 1).padStart(2, '0');
+      let day = String(utc.getDate()).padStart(2, '0');
+      let minutes = utc.getHours() * 60 + utc.getMinutes();
+      return `${year}${month}${day}1000${10001 + minutes}`;
+    }
+
+    function getSmartPrediction() {
+      let bigSet = ["5", "6", "7", "8"];
+      let smallSet = ["2", "3", "4"];
+      let bigCount = 0, smallCount = 0;
+
+      for (let result of lastResults) {
+        if (bigSet.includes(result)) bigCount++;
+        if (smallSet.includes(result)) smallCount++;
+      }
+
+      let numberPool = [];
+      if (bigCount > smallCount) {
+        numberPool = smallSet;
+      } else if (smallCount > bigCount) {
+        numberPool = bigSet;
+      } else {
+        numberPool = Math.random() > 0.5 ? bigSet : smallSet;
+      }
+
+      let number = numberPool[Math.floor(Math.random() * numberPool.length)];
+      let bigSmall = bigSet.includes(number) ? "BIG" : "SMALL";
+      lastResults.unshift(number);
+      if (lastResults.length > 10) lastResults.pop();
+      return { number, bigSmall };
+    }
+
+    function startTimer() {
+      setInterval(() => {
+        let now = new Date();
+        let seconds = now.getSeconds();
+        let remainingSeconds = 60 - seconds;
+        document.getElementById("timer").textContent = `00 : ${String(remainingSeconds).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function updatePeriodAndResult() {
+      let currentPeriod = "";
+      setInterval(() => {
+        let newPeriod = generatePeriodNumber();
+        if (newPeriod !== currentPeriod) {
+          currentPeriod = newPeriod;
+          document.getElementById("issueNumber").textContent = currentPeriod;
+
+          let { number, bigSmall } = getSmartPrediction();
+          document.getElementById("predicted").textContent = number;
+          document.getElementById("bigSmall").textContent = bigSmall;
+
+          let historyTable = document.getElementById("history");
+          let newRow = `<tr><td>${currentPeriod}</td><td>${number}</td><td>${bigSmall}</td></tr>`;
+          historyTable.innerHTML = newRow + historyTable.innerHTML;
+        }
+      }, 1000);
+    }
+
+    function applyTheme(theme) {
+      let root = document.documentElement;
+
+      if (theme === "dark") {
+        root.style.setProperty('--bg', '#111');
+        root.style.setProperty('--text', '#fff');
+        root.style.setProperty('--card', '#222');
+        root.style.setProperty('--accent', 'yellow');
+      } else if (theme === "light") {
+        root.style.setProperty('--bg', '#f0f0f0');
+        root.style.setProperty('--text', '#111');
+        root.style.setProperty('--card', '#fff');
+        root.style.setProperty('--accent', '#007BFF');
+      } else if (theme === "royal") {
+        root.style.setProperty('--bg', '#1a1a1a');
+        root.style.setProperty('--text', '#FFD700');
+        root.style.setProperty('--card', '#333');
+        root.style.setProperty('--accent', '#FFD700');
+      } else if (theme === "metrix") {
+        root.style.setProperty('--bg', '#000');
+        root.style.setProperty('--text', '#00FF00');
+        root.style.setProperty('--card', '#111');
+        root.style.setProperty('--accent', '#00FF00');
+      }
+    }
+
+    document.getElementById("themeSelector").addEventListener("change", function () {
+      applyTheme(this.value);
+    });
+
+    window.onload = function () {
+      applyTheme("dark");
+      startTimer();
+      updatePeriodAndResult();
+    };
+  </script>
+
+</body>
+  </html>
