@@ -1,0 +1,1075 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>YASH X AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --soft-black: #1a1a1a;
+      --light-black: #2d2d2d;
+      --light-gray: #d1d5db;
+      --purple: #7b3fe4;
+      --blue: #4361ee;
+      --win-green: #28a745;
+      --loss-red: #dc3545;
+      --neon-blue: #00f2ff;
+      --modal-bg: #f0f4f8;
+      --cyan: #00bcd4;
+      --primary-color: #4361ee;
+      --secondary-color: #7b3fe4;
+      --accent-color: #00f2ff;
+      --card-bg: #2d2d2d;
+      --text-color: #ffffff;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--soft-black);
+      color: var(--text-color);
+      transition: background-color 0.5s ease;
+    }
+
+    /* Theme colors */
+    body.sunset {
+      --primary-color: #FF6B6B;
+      --secondary-color: #FF8E53;
+      --accent-color: #FFD166;
+      --card-bg: #3a2d39;
+    }
+    
+    body.ocean {
+      --primary-color: #4361ee;
+      --secondary-color: #3a0ca3;
+      --accent-color: #4cc9f0;
+      --card-bg: #1d3557;
+    }
+    
+    body.forest {
+      --primary-color: #2a9d8f;
+      --secondary-color: #264653;
+      --accent-color: #e9c46a;
+      --card-bg: #1e3d33;
+    }
+    
+    body.neon {
+      --primary-color: #ff00cc;
+      --secondary-color: #00ffff;
+      --accent-color: #ff0066;
+      --card-bg: #1a1a1a;
+    }
+    
+    body.lavender {
+      --primary-color: #9b5de5;
+      --secondary-color: #f15bb5;
+      --accent-color: #fee440;
+      --card-bg: #2d2747;
+    }
+    
+    body.pastel {
+      --primary-color: #a0e7e5;
+      --secondary-color: #b4f8c8;
+      --accent-color: #fbe7c6;
+      --card-bg: #3a3a5c;
+    }
+    
+    body.green {
+      --primary-color: #06d6a0;
+      --secondary-color: #118ab2;
+      --accent-color: #ffd166;
+      --card-bg: #1d3e35;
+    }
+    
+    body.purple {
+      --primary-color: #8338ec;
+      --secondary-color: #3a0ca3;
+      --accent-color: #f72585;
+      --card-bg: #2d2747;
+    }
+    
+    body.pink {
+      --primary-color: #ff006e;
+      --secondary-color: #8338ec;
+      --accent-color: #fb5607;
+      --card-bg: #3a1d36;
+    }
+    
+    body.blue {
+      --primary-color: #3a86ff;
+      --secondary-color: #003566;
+      --accent-color: #ff006e;
+      --card-bg: #1d3557;
+    }
+    
+    body.yellow {
+      --primary-color: #ffd60a;
+      --secondary-color: #ffc300;
+      --accent-color: #ff006e;
+      --card-bg: #3d3a1d;
+    }
+
+    /* Custom animations */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    @keyframes dash {
+      0% { stroke-dashoffset: 500; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes win-bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    @keyframes loss-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+    }
+
+    @keyframes letter-glow {
+      0%, 100% { text-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color), 0 0 15px var(--accent-color); }
+      50% { text-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color), 0 0 30px var(--accent-color); }
+    }
+
+    @keyframes title-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    @keyframes toast-slide {
+      0% { bottom: -50px; opacity: 0; }
+      10% { bottom: 20px; opacity: 1; }
+      90% { bottom: 20px; opacity: 1; }
+      100% { bottom: -50px; opacity: 0; }
+    }
+
+    @keyframes button-glow {
+      0%, 100% { box-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color); }
+      50% { box-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color); }
+    }
+
+    @keyframes modal-fade-in {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .win-animation {
+      animation: win-bounce 0.6s ease-in-out infinite;
+    }
+
+    .loss-animation {
+      animation: loss-shake 0.5s ease-in-out infinite;
+    }
+
+    .title-animation {
+      animation: title-pulse 2s ease-in-out infinite;
+    }
+
+    .letter-glow {
+      animation: letter-glow 1.5s ease-in-out infinite;
+    }
+
+    .button-glow {
+      animation: button-glow 1.5s ease-in-out infinite;
+    }
+
+    .modal-fade-in {
+      animation: modal-fade-in 0.3s ease-in-out;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ffffff;
+      color: #000000;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      animation: toast-slide 3s ease-in-out forwards;
+    }
+
+    .last-result-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .result-circle {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: var(--modal-bg);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      border: 2px solid #d1e8ff;
+      text-align: center;
+      max-width: 90%;
+      width: 300px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+      color: #1e88e5;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .modal-message {
+      color: #37474f;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 1rem;
+    }
+
+    .modal-button {
+      padding: 0.5rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-button.yes {
+      background-color: var(--cyan);
+      color: white;
+    }
+
+    .modal-button.yes:hover {
+      background-color: #00acc1;
+    }
+
+    .modal-button.no {
+      background-color: #b0bec5;
+      color: white;
+    }
+
+    .modal-button.no:hover {
+      background-color: #90a4ae;
+    }
+    
+    /* New styles for navigation and views */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .app-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      animation: float 4s ease-in-out infinite;
+    }
+    
+    .nav-tabs {
+      display: flex;
+      justify-content: space-around;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #aaa;
+    }
+    
+    .nav-item.active {
+      background-color: var(--primary-color);
+      color: white;
+      transform: translateY(-5px);
+    }
+    
+    .nav-item i {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    
+    .nav-item span {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .view {
+      display: none;
+      padding: 20px;
+      padding-bottom: 70px;
+    }
+    
+    .view.active {
+      display: block;
+    }
+    
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .theme-option {
+      height: 80px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .theme-option:hover {
+      transform: translateY(-5px);
+    }
+    
+    .theme-option.active {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px var(--accent-color);
+    }
+    
+    .theme-option i {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    
+    .settings-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .settings-option:last-child {
+      border-bottom: none;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .history-only .card:not(.history-card) {
+      display: none;
+    }
+    
+    .history-only .history-card {
+      width: 100%;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .stat-box {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 5px;
+      color: var(--accent-color);
+    }
+    
+    .win-badge {
+      background-color: var(--win-green);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+    
+    .loss-badge {
+      background-color: var(--loss-red);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="app-title">
+        <div class="app-logo">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h1 class="text-xl font-bold">YASH AI</h1>
+      </div>
+    </header>
+
+    <!-- Home View -->
+    <div id="home-view" class="view active">
+      <div class="container mx-auto max-w-md">
+        <!-- Period & Prediction Card -->
+        <div class="card mb-5 shadow-lg animate-[float_6s_infinite_ease-in-out]">
+          <div class="section-title animate-[pulse_3s_infinite_ease-in-out]"><i class="fas fa-brain"></i> Period & Prediction</div>
+          <div class="period-label text-gray-400 font-bold mb-2 flex items-center"><i class="fas fa-calendar-days mr-2" style="color: var(--secondary-color);"></i> Period</div>
+          <input type="text" id="periodDisplay" value="-" readonly class="w-full p-3 mb-2 border-2 rounded-lg bg-gray-800 text-center text-white" style="border-color: var(--secondary-color);" />
+          <div class="result-box relative text-center p-4 rounded-lg bg-gray-800 mb-2" style="border-color: var(--primary-color); border-width: 1px;">
+            <div class="text-gray-400 mb-2">Result: <span id="">-</span></div>
+            <div class="text-2xl font-bold" style="color: var(--accent-color);" id="predictionDisplay">-</div>
+            <div class="text-gray-400 mt-2">Opposite Number: <span id="oppositeNumberDisplay">-</span></div>
+          </div>
+          <div class="progress-container mt-4">
+            <div class="progress-bar h-3 bg-gray-700 rounded-full overflow-hidden">
+              <div id="progressBarFill" class="progress-bar-fill h-full rounded-full animate-[shimmer_2s_linear_infinite]" style="background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));"></div>
+            </div>
+            <p class="text-center text-gray-400 mt-2">Win rate: <span id="confidenceDisplay">CHECK</span></p>
+          </div>
+        </div>
+
+        <!-- Analysis Dashboard Card -->
+        <div class="card mb-5 shadow-lg animate-[float_6s_infinite_ease-in-out]">
+          <div class="section-title animate-[pulse_3s_infinite_ease-in-out]"><i class="fas fa-tachometer-alt"></i> Analysis Dashboard</div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Wins<span id="wins" class="block mt-2 text-xl font-bold" style="color: var(--win-green);">0</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Losses<span id="losses" class="block mt-2 text-xl font-bold" style="color: var(--loss-red);">0</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Win Rate<span id="accuracy" class="block mt-2 text-xl font-bold" style="color: var(--accent-color);">0%</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Server Status<span class="block mt-2 text-xl font-bold" style="color: var(--win-green);">Connected</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="card mb-5 shadow-lg animate-[float_6s_infinite_ease-in-out]">
+          <div class="section-title animate-[pulse_3s_infinite_ease-in-out]"><i class="fas fa-chart-line"></i> Statistics</div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Total Wins<span id="totalWins" class="block mt-2 text-xl font-bold" style="color: var(--win-green);">0</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Total Losses<span id="totalLosses" class="block mt-2 text-xl font-bold" style="color: var(--loss-red);">0</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Win Rate<span id="totalAccuracy" class="block mt-2 text-xl font-bold" style="color: var(--accent-color);">0%</span>
+            </div>
+            <div class="box rounded-lg p-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+              Current Streak<span id="streak" class="block mt-2 text-xl font-bold" style="color: var(--secondary-color);">0</span>
+            </div>
+          </div>
+          <div class="box rounded-lg p-4 mt-4 text-center text-gray-300 shadow-md" style="background-color: rgba(0, 0, 0, 0.3);">
+            Last 3 Results
+            <div id="lastResults" class="last-result-box mt-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History View -->
+    <div id="history-view" class="view">
+      <div class="container mx-auto max-w-md">
+        <div class="card history-card mb-5">
+          <div class="section-title"><i class="fas fa-history"></i> Prediction History</div>
+          <div id="historyContainer" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2"></div>
+          <button class="delete-btn mt-4 w-full py-2 text-white rounded-lg transition-all button-glow" style="background-color: var(--loss-red);" onclick="showClearHistoryModal()">
+            <i class="fas fa-trash-alt mr-2"></i> Clear All History
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Themes View -->
+    <div id="themes-view" class="view">
+      <div class="container mx-auto max-w-md">
+        <div class="card mb-5">
+          <div class="section-title"><i class="fas fa-palette"></i> Select Theme</div>
+          <div class="theme-grid">
+            <div class="theme-option" data-theme="sunset" style="background: linear-gradient(135deg, #FF6B6B, #FF8E53);">
+              <i class="fas fa-sun"></i>
+              <span>Sunset</span>
+            </div>
+            <div class="theme-option" data-theme="ocean" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+              <i class="fas fa-water"></i>
+              <span>Ocean</span>
+            </div>
+            <div class="theme-option" data-theme="forest" style="background: linear-gradient(135deg, #2a9d8f, #264653);">
+              <i class="fas fa-tree"></i>
+              <span>Forest</span>
+            </div>
+            <div class="theme-option" data-theme="neon" style="background: linear-gradient(135deg, #ff00cc, #00ffff);">
+              <i class="fas fa-lightbulb"></i>
+              <span>Neon</span>
+            </div>
+            <div class="theme-option" data-theme="lavender" style="background: linear-gradient(135deg, #9b5de5, #f15bb5);">
+              <i class="fas fa-moon"></i>
+              <span>Lavender</span>
+            </div>
+            <div class="theme-option" data-theme="pastel" style="background: linear-gradient(135deg, #a0e7e5, #b4f8c8); color: #333;">
+              <i class="fas fa-cloud"></i>
+              <span>Pastel</span>
+            </div>
+            <div class="theme-option" data-theme="green" style="background: linear-gradient(135deg, #06d6a0, #118ab2);">
+              <i class="fas fa-leaf"></i>
+              <span>Green</span>
+            </div>
+            <div class="theme-option" data-theme="purple" style="background: linear-gradient(135deg, #8338ec, #3a0ca3);">
+              <i class="fas fa-gem"></i>
+              <span>Purple</span>
+            </div>
+            <div class="theme-option" data-theme="pink" style="background: linear-gradient(135deg, #ff006e, #8338ec);">
+              <i class="fas fa-heart"></i>
+              <span>Pink</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settings-view" class="view">
+      <div class="container mx-auto max-w-md">
+        <div class="card mb-5">
+          <div class="section-title"><i class="fas fa-cog"></i> Settings</div>
+          
+          <div class="settings-option">
+            <div>
+              <i class="fas fa-bell mr-2"></i> Win Notifications
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="winNotifications" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="settings-option">
+            <div>
+              <i class="fas fa-bell-slash mr-2"></i> Loss Notifications
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="lossNotifications" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="settings-option">
+            <div>
+              <i class="fas fa-chart-bar mr-2"></i> Show Statistics
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="showStatistics" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="stats-grid mt-5">
+            <div class="stat-box">
+              <div>Total Wins</div>
+              <div class="stat-value" id="settingsWins">0</div>
+            </div>
+            <div class="stat-box">
+              <div>Total Losses</div>
+              <div class="stat-value" id="settingsLosses">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer text-center text-gray-400 font-bold text-sm mt-6">Dev By YASH</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-tabs">
+    <div class="nav-item active" data-view="home-view">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" data-view="history-view">
+      <i class="fas fa-history"></i>
+      <span>History</span>
+    </div>
+    <div class="nav-item" data-view="themes-view">
+      <i class="fas fa-palette"></i>
+      <span>Themes</span>
+    </div>
+    <div class="nav-item" data-view="settings-view">
+      <i class="fas fa-cog"></i>
+      <span>Settings</span>
+    </div>
+  </nav>
+
+  <!-- Clear History Modal -->
+  <div id="clearHistoryModal" class="modal-overlay hidden">
+    <div class="modal-content modal-fade-in">
+      <div class="modal-title">Confirm Clear History</div>
+      <div class="modal-message">Are you sure you want to clear all prediction history?</div>
+      <div class="modal-buttons">
+        <button class="modal-button yes" onclick="confirmClearHistory()">Yes</button>
+        <button class="modal-button no" onclick="hideClearHistoryModal()">No</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let historyData = [];
+    let lastFetchedPeriod = null;
+    let lastResult = null;
+    let lastPrediction = null;
+    let lastStatus = null;
+    let lastOppositeNumber = null;
+    let globalPrediction = null;
+    let streak = 0;
+    let winLevel = 0;
+    const MAX_WIN_LEVEL = 3;
+    let currentTheme = 'ocean';
+    let winNotifications = true;
+    let lossNotifications = true;
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default theme
+      document.body.classList.add(currentTheme);
+      
+      // Navigation event listeners
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          // Update active nav item
+          document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Show the selected view
+          const viewId = this.getAttribute('data-view');
+          document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+          document.getElementById(viewId).classList.add('active');
+        });
+      });
+      
+      // Theme selection event listeners
+      document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function() {
+          // Update active theme
+          document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Apply the selected theme
+          const theme = this.getAttribute('data-theme');
+          document.body.classList.remove(...document.body.classList);
+          document.body.classList.add(theme);
+          currentTheme = theme;
+        });
+      });
+      
+      // Set default active theme
+      document.querySelector(`.theme-option[data-theme="${currentTheme}"]`).classList.add('active');
+      
+      // Settings toggles
+      document.getElementById('winNotifications').addEventListener('change', function() {
+        winNotifications = this.checked;
+      });
+      
+      document.getElementById('lossNotifications').addEventListener('change', function() {
+        lossNotifications = this.checked;
+      });
+      
+      // Initialize UI
+      updateHistory();
+      updateStats();
+      setInterval(updatePrediction, 5000);
+    });
+
+    function getOppositeNumber(prediction) {
+      const small = [0, 1, 2, 3, 4];
+      const big = [5, 6, 7, 8, 9];
+      let arr = prediction === "BIG" ? small : big;
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function ultraAIPredict(history) {
+      if (history.length < 3) {
+        return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 0.35 + Math.random() * (1 - 0.35) };
+      }
+
+      let recentResults = history.filter(h => h.result !== "-").slice(0, 3);
+      let bigCount = 0;
+      let smallCount = 0;
+      let weight = 1;
+
+      for (let i = recentResults.length - 1; i >= 0; i--) {
+        let result = recentResults[i];
+        if (result.result >= 5) {
+          bigCount += weight;
+        } else {
+          smallCount += weight;
+        }
+        weight *= 1.2;
+      }
+
+      let prediction = bigCount > smallCount ? "BIG" : "SMALL";
+      let confidence = Math.min((Math.abs(bigCount - smallCount) / (bigCount + smallCount)) + 0.35, 1);
+
+      if (winLevel >= MAX_WIN_LEVEL) {
+        prediction = prediction === "BIG" ? "SMALL" : "BIG";
+        confidence = 0.35;
+        winLevel = 0;
+      }
+
+      return { prediction, confidence };
+    }
+
+    function updateLastStatus(actualNumber) {
+      const match = actualNumber == lastOppositeNumber || (actualNumber >= 5 ? 'BIG' : 'SMALL') === lastPrediction;
+      lastResult = actualNumber >= 5 ? 'BIG' : 'SMALL';
+      lastStatus = match ? 'WIN' : 'LOSS';
+
+      if (match) {
+        winLevel = Math.min(winLevel + 1, MAX_WIN_LEVEL);
+        streak = streak + 1;
+        if (winNotifications) {
+          showToast(`WIN! Prediction was correct!`);
+        }
+      } else {
+        winLevel = 0;
+        streak = 0;
+        if (lossNotifications) {
+          showToast(`LOSS! Prediction was incorrect.`);
+        }
+      }
+
+      return lastStatus;
+    }
+
+    async function fetchGameResult() {
+      try {
+        let response = await fetch("https://api.bdg88zf.com/api/webapi/GetNoaverageEmerdList", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageSize: 10,
+            pageNo: 1,
+            typeId: 1,
+            language: 0,
+            random: "4a0522c6ecd8410496260e686be2a57c",
+            signature: "334B5E70A0C9B8918B0B15E517E2069C",
+            timestamp: Math.floor(Date.now() / 1000)
+          })
+        });
+        let data = await response.json();
+        return data?.data?.list?.[0] || null;
+      } catch (e) {
+        console.error("API Error", e);
+        return null;
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerText = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function updatePrediction() {
+      let result = await fetchGameResult();
+      if (!result || result.issueNumber === lastFetchedPeriod) return;
+
+      if (historyData.length > 0 && historyData[0].resultStatus === "Pending") {
+        const actualNumber = Number(result.number);
+        const status = updateLastStatus(actualNumber);
+        const resultType = actualNumber >= 5 ? "BIG" : "SMALL";
+
+        historyData[0].result = actualNumber;
+        historyData[0].resultStatus = status;
+        historyData[0].resultType = resultType;
+        historyData[0].calculation = `Number ${actualNumber} (${resultType})`;
+
+        updateLastResults();
+        updateHistory();
+        updateStats();
+      }
+
+      const aiDecision = ultraAIPredict(historyData);
+      lastPrediction = aiDecision.prediction;
+      lastOppositeNumber = getOppositeNumber(lastPrediction);
+      globalPrediction = lastPrediction;
+
+      let nextPeriodFull = (BigInt(result.issueNumber) + 1n).toString();
+      let nextPeriod = nextPeriodFull.slice(-4);
+
+      document.getElementById("periodDisplay").value = nextPeriod;
+      document.getElementById("predictionDisplay").innerText = globalPrediction;
+      document.getElementById("oppositeNumberDisplay").innerText = lastOppositeNumber;
+      const confidencePercent = Math.round(aiDecision.confidence * 100);
+      document.getElementById("confidenceDisplay").innerText = `${confidencePercent}%`;
+      document.getElementById("progressBarFill").style.width = `${confidencePercent}%`;
+
+      historyData.unshift({
+        period: nextPeriod,
+        prediction: globalPrediction,
+        oppositeNumber: lastOppositeNumber,
+        result: "-",
+        resultStatus: "Pending",
+        resultType: "-",
+        calculation: "-"
+      });
+
+      updateHistory();
+      updateStats();
+      lastFetchedPeriod = result.issueNumber;
+    }
+
+    function updateLastResults() {
+      const lastResultsContainer = document.getElementById("lastResults");
+      const recentResults = historyData.filter(h => h.result !== "-").slice(0, 3);
+
+      if (recentResults.length === 0) {
+        lastResultsContainer.innerHTML = '<span class="text-gray-400">-</span>';
+        return;
+      }
+
+      lastResultsContainer.innerHTML = recentResults.map(result => {
+        const isWin = result.resultStatus === "WIN";
+        const bgColor = isWin ? "bg-green-500" : "bg-red-500";
+        return `
+          <div class="result-circle ${bgColor} text-white">
+            ${result.resultType}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function updateHistory() {
+      const container = document.getElementById("historyContainer");
+      container.innerHTML = historyData.map((item, index) => {
+        let borderColor = item.resultStatus === "WIN" ? "border-green-500" : 
+                         item.resultStatus === "LOSS" ? "border-red-500" : "border-yellow-500";
+        let iconClass = item.resultStatus === "WIN" ? "fas fa-check-circle text-green-500 win-animation" :
+                       item.resultStatus === "LOSS" ? "fas fa-xmark-circle text-red-500 loss-animation" :
+                       "fas fa-spinner text-yellow-500 animate-spin";
+        return `
+          <div class="history-card flex justify-between items-center p-4 bg-gray-800 rounded-lg border-l-4 ${borderColor} shadow-md">
+            <div class="flex-1">
+              <div class="text-gray-400 text-sm"><i class="fas fa-calendar mr-2"></i>P-${item.period}</div>
+              <div class="text-white"><i class="fas fa-chart-bar mr-2"></i>Prediction: ${item.prediction}</div>
+              <div class="text-gray-400"><i class="fas fa-retweet mr-2"></i>Opposite Number: ${item.oppositeNumber}</div>
+              <div class="text-white"><i class="fas fa-dice mr-2"></i>Result: ${item.result !== "-" ? item.result : "Waiting..."}</div>
+              <div class="text-gray-400"><i class="fas fa-calculator mr-2"></i>Calculation: ${item.calculation}</div>
+              <div class="text-white"><i class="fas fa-trophy mr-2"></i>Status: ${item.resultStatus} 
+                ${item.resultStatus === 'WIN' ? '<span class="win-badge">WIN</span>' : 
+                item.resultStatus === 'LOSS' ? '<span class="loss-badge">LOSS</span>' : ''}
+              </div>
+            </div>
+            <div class="history-actions flex items-center gap-3">
+              <i class="${iconClass} text-lg"></i>
+              <i class="fas fa-trash-alt text-red-500 cursor-pointer" onclick="deleteHistory(${index})"></i>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function updateStats() {
+      const wins = historyData.filter(item => item.resultStatus === "WIN").length;
+      const losses = historyData.filter(item => item.resultStatus === "LOSS").length;
+      const total = wins + losses;
+      const accuracy = total > 0 ? ((wins / total) * 100).toFixed(2) : 0;
+
+      document.getElementById("wins").textContent = wins;
+      document.getElementById("losses").textContent = losses;
+      document.getElementById("accuracy").textContent = `${accuracy}%`;
+      document.getElementById("totalWins").textContent = wins;
+      document.getElementById("totalLosses").textContent = losses;
+      document.getElementById("totalAccuracy").textContent = `${accuracy}%`;
+      document.getElementById("streak").textContent = streak;
+      document.getElementById("settingsWins").textContent = wins;
+      document.getElementById("settingsLosses").textContent = losses;
+
+      updateLastResults();
+    }
+
+    function deleteHistory(index) {
+      historyData.splice(index, 1);
+      showToast("History entry deleted successfully");
+      updateHistory();
+      updateStats();
+    }
+
+    function showClearHistoryModal() {
+      document.getElementById("clearHistoryModal").classList.remove("hidden");
+    }
+
+    function hideClearHistoryModal() {
+      document.getElementById("clearHistoryModal").classList.add("hidden");
+    }
+
+    function confirmClearHistory() {
+      clearHistory();
+      showToast("All history deleted successfully");
+      hideClearHistoryModal();
+    }
+
+    function clearHistory() {
+      historyData = [];
+      streak = 0;
+      winLevel = 0;
+      document.getElementById("lastResults").innerHTML = '<span class="text-gray-400">-</span>';
+      updateHistory();
+      updateStats();
+    }
+  </script>
+</body>
+  </html>
