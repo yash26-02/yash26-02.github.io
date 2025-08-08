@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YASH AI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f0f;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      text-align: center;
+      padding: 1rem;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      font-size: 1.4rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .chat {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .message {
+      display: flex;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+    .message.user {
+      justify-content: flex-end;
+    }
+    .message.ai {
+      justify-content: flex-start;
+    }
+    .bubble {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 1rem;
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+    .user .bubble {
+      background: #2575fc;
+      color: #fff;
+      border-bottom-right-radius: 0;
+    }
+    .ai .bubble {
+      background: #222;
+      color: #eee;
+      border-bottom-left-radius: 0;
+    }
+    .input-area {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    select {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: #333;
+      color: #eee;
+      font-size: 1rem;
+    }
+    button {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    }
+    .confidence {
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>YASH AI</header>
+  <div class="container">
+    <div class="chat" id="chat"></div>
+  </div>
+  <div class="input-area">
+    <select id="r1">
+      <option value="">Latest Result</option>
+      <option value="BIG">BIG</option>
+      <option value="SMALL">SMALL</option>
+    </select>
+    <select id="r2">
+      <option value="">2nd Result</option>
+      <option value="BIG">BIG</option>
+      <option value="SMALL">SMALL</option>
+    </select>
+    <select id="r3">
+      <option value="">3rd Result</option>
+      <option value="BIG">BIG</option>
+      <option value="SMALL">SMALL</option>
+    </select>
+    <button onclick="getPrediction()">GET SIGNAL</button>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+
+    function appendMessage(sender, text, confidence) {
+      const msg = document.createElement('div');
+      msg.className = 'message ' + sender;
+      let html = `<div class="bubble">${text}`;
+      if (confidence) {
+        html += `<div class="confidence">Confidence: ${confidence}%</div>`;
+      }
+      html += '</div>';
+      msg.innerHTML = html;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function getPrediction() {
+      const r1 = document.getElementById('r1').value;
+      const r2 = document.getElementById('r2').value;
+      const r3 = document.getElementById('r3').value;
+
+      if (!r1 || !r2 || !r3) {
+        alert('Please select all 3 results.');
+        return;
+      }
+
+      appendMessage('user', `Last 3 results: ${r1}, ${r2}, ${r3}`);
+
+      // Smart logic:
+      let counts = {BIG:0, SMALL:0};
+      [r1,r2,r3].forEach(r => counts[r]++);
+      let suggestion;
+      
+      if (counts.BIG === 3) {
+        suggestion = "SMALL";
+      } else if (counts.SMALL === 3) {
+        suggestion = "BIG";
+      } else if (counts.BIG === 2) {
+        suggestion = "SMALL";
+      } else if (counts.SMALL === 2) {
+        suggestion = "BIG";
+      } else {
+        // All different or balanced, pick default BIG with 10% chance SMALL
+        suggestion = Math.random() < 0.1 ? "SMALL" : "BIG";
+      }
+
+      // Random confidence between 90 and 99
+      const confidence = (90 + Math.floor(Math.random() * 10)).toString();
+
+      setTimeout(() => {
+        appendMessage('ai', `My prediction: <strong>${suggestion}</strong>`, confidence);
+      }, 600);
+    }
+  </script>
+</body>
+    </html>
