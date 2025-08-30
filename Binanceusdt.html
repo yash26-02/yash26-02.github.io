@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click & Earn USDT</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #111;
+      padding: 20px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.05);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .balance {
+      font-size: 1.3rem;
+      margin: 15px 0;
+      font-weight: bold;
+    }
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: 0.3s;
+    }
+    .click-btn {
+      background: #00c853;
+      color: white;
+    }
+    .click-btn:hover {
+      background: #00e676;
+    }
+    .withdraw-btn {
+      background: #ff3d00;
+      color: white;
+      width: 100%;
+    }
+    .withdraw-btn:hover {
+      background: #ff5722;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+    .log {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      text-align: left;
+      background: rgba(255,255,255,0.08);
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>🚀 Click & Earn USDT</header>
+
+<div class="container">
+  <h2>Welcome, Start Earning</h2>
+  <div class="balance">Balance: <span id="balance">0</span> USDT</div>
+  <div>Total Clicks: <span id="clicks">0</span></div>
+  
+  <button class="click-btn" onclick="doClick()">Click to Earn</button>
+
+  <h3>Withdraw USDT</h3>
+  <input type="text" id="wallet" placeholder="Enter Binance Wallet Address">
+  <button class="withdraw-btn" onclick="withdraw()">Withdraw</button>
+
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+  // Load saved data from localStorage
+  let clicks = parseInt(localStorage.getItem("clicks")) || 0;
+  let balance = parseFloat(localStorage.getItem("balance")) || 0;
+
+  document.getElementById("clicks").innerText = clicks;
+  document.getElementById("balance").innerText = balance.toFixed(2);
+
+  function doClick() {
+    clicks++;
+    balance += 0.10;
+
+    // Save data in localStorage
+    localStorage.setItem("clicks", clicks);
+    localStorage.setItem("balance", balance);
+
+    document.getElementById("clicks").innerText = clicks;
+    document.getElementById("balance").innerText = balance.toFixed(2);
+    log("🖱️ Click registered! +0.10 USDT");
+  }
+
+  function withdraw() {
+    let wallet = document.getElementById("wallet").value.trim();
+    if (!wallet) {
+      alert("Please enter your Binance Wallet Address!");
+      return;
+    }
+    if (balance <= 0) {
+      alert("Insufficient balance to withdraw!");
+      return;
+    }
+
+    log("📤 Withdraw request submitted: " + balance.toFixed(2) + " USDT → " + wallet);
+    alert("Your withdraw request has been submitted.\nUSDT will arrive in your Binance within 1 hour.");
+
+    // Reset after withdraw
+    balance = 0;
+    localStorage.setItem("balance", balance);
+    document.getElementById("balance").innerText = balance.toFixed(2);
+  }
+
+  function log(msg) {
+    let logBox = document.getElementById("log");
+    let time = new Date().toLocaleTimeString();
+    logBox.innerHTML = `[${time}] ${msg}<br>` + logBox.innerHTML;
+  }
+</script>
+
+</body>
+  </html>
