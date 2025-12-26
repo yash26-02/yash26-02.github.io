@@ -1,0 +1,193 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YASH AI TRADING</title>  <!-- Google Fonts -->  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">  <style>
+    :root {
+      --bg: #0b0b0b;
+      --card: #121212;
+      --text: #ffffff;
+      --accent: #00ff9c;
+      --border: rgba(255,255,255,0.1);
+      --font-main: 'Poppins', sans-serif;
+      --font-title: 'Cinzel', serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-main);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-family: var(--font-title);
+      font-size: 26px;
+      letter-spacing: 2px;
+      margin: 0;
+      color: var(--accent);
+    }
+
+    header p {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 6px;
+    }
+
+    .upload-box {
+      border: 2px dashed var(--accent);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .upload-box:hover {
+      background: rgba(0,255,156,0.05);
+    }
+
+    .upload-box span {
+      display: block;
+      font-size: 14px;
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .signal {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      display: none;
+    }
+
+    .long {
+      background: linear-gradient(135deg, #00ff9c, #00c97a);
+      color: #001a10;
+    }
+
+    .short {
+      background: linear-gradient(135deg, #ff4d4d, #c90000);
+      color: #fff;
+    }
+
+    .themes {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 8px;
+    }
+
+    .themes button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .dark-btn { background: #111; color: #fff; }
+    .light-btn { background: #f2f2f2; color: #000; }
+    .matrix-btn { background: #000; color: #00ff9c; font-family: 'Orbitron', sans-serif; }
+
+    footer {
+      text-align: center;
+      font-size: 10px;
+      margin-top: 16px;
+      opacity: 0.6;
+    }
+  </style></head>
+<body>  <div class="container">
+    <header>
+      <h1>YASH AI TRADING</h1>
+      <p>Premium Image Based Signal</p>
+    </header><label class="upload-box">
+  📸 Upload Chart Image (Premium)
+  <span>Camera / Gallery Supported</span>
+  <input type="file" accept="image/*" capture="environment" id="imageInput" />
+</label>
+
+<div id="signalBox" class="signal"></div>
+
+<div class="themes">
+  <button class="dark-btn" onclick="setDark()">Dark</button>
+  <button class="light-btn" onclick="setLight()">Light</button>
+  <button class="matrix-btn" onclick="setMatrix()">Matrix</button>
+</div>
+
+<footer>
+  Educational purpose only • AI Momentum Demo
+</footer>
+
+  </div>  <script>
+    const input = document.getElementById('imageInput');
+    const signalBox = document.getElementById('signalBox');
+
+    input.addEventListener('change', () => {
+      if (!input.files.length) return;
+
+      // Fake AI momentum logic (demo)
+      const signal = Math.random() > 0.5 ? 'LONG' : 'SHORT';
+
+      signalBox.style.display = 'block';
+      signalBox.className = 'signal ' + (signal === 'LONG' ? 'long' : 'short');
+      signalBox.innerText = 'SIGNAL : ' + signal;
+    });
+
+    function setDark() {
+      document.documentElement.style.setProperty('--bg', '#0b0b0b');
+      document.documentElement.style.setProperty('--card', '#121212');
+      document.documentElement.style.setProperty('--text', '#ffffff');
+      document.documentElement.style.setProperty('--accent', '#00ff9c');
+      document.documentElement.style.setProperty('--font-main', "'Poppins', sans-serif");
+      document.documentElement.style.setProperty('--font-title', "'Cinzel', serif");
+    }
+
+    function setLight() {
+      document.documentElement.style.setProperty('--bg', '#f5f5f5');
+      document.documentElement.style.setProperty('--card', '#ffffff');
+      document.documentElement.style.setProperty('--text', '#000000');
+      document.documentElement.style.setProperty('--accent', '#6a00ff');
+      document.documentElement.style.setProperty('--font-main', "'Poppins', sans-serif");
+      document.documentElement.style.setProperty('--font-title', "'Cinzel', serif");
+    }
+
+    function setMatrix() {
+      document.documentElement.style.setProperty('--bg', '#000000');
+      document.documentElement.style.setProperty('--card', '#050505');
+      document.documentElement.style.setProperty('--text', '#00ff9c');
+      document.documentElement.style.setProperty('--accent', '#00ff9c');
+      document.documentElement.style.setProperty('--font-main', "'Orbitron', sans-serif");
+      document.documentElement.style.setProperty('--font-title', "'Orbitron', sans-serif");
+    }
+  </script></body>
+</html>
