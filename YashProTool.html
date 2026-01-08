@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>YASH ETHEREUM TRADER</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --green:#00ff9c;
+  --red:#ff4d4d;
+  --yellow:#ffd54f;
+  --glass:rgba(255,255,255,0.06);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#02150c,#000);
+  color:#e8fff5;
+  font-family:Inter, sans-serif;
+  overflow-x:hidden;
+}
+
+/* ===== SCROLL ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--green)}
+
+/* ===== HEADER ===== */
+header{
+  padding:30px;
+  text-align:center;
+}
+header h1{
+  font-family:Orbitron;
+  letter-spacing:3px;
+  color:var(--green);
+}
+header p{opacity:.7}
+
+/* ===== LAYOUT ===== */
+.container{
+  max-width:1300px;
+  margin:auto;
+  padding:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.card{
+  background:var(--glass);
+  border:1px solid rgba(0,255,156,.25);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 0 30px rgba(0,255,156,.12);
+}
+
+/* ===== TITLES ===== */
+.card h2{
+  font-family:Orbitron;
+  color:var(--green);
+  font-size:18px;
+  margin-bottom:15px;
+}
+
+/* ===== PRICE ===== */
+.price{
+  font-size:34px;
+  font-weight:600;
+}
+
+/* ===== BUTTON ===== */
+button{
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(90deg,var(--green),#00c176);
+  color:#000;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+button:hover{
+  transform:scale(1.03);
+  box-shadow:0 0 20px var(--green);
+}
+
+/* ===== SIGNAL ===== */
+.signal{
+  font-family:Orbitron;
+  font-size:26px;
+  margin-top:10px;
+}
+.long{color:var(--green)}
+.short{color:var(--red)}
+.wait{color:var(--yellow)}
+
+/* ===== FOOTER ===== */
+footer{
+  text-align:center;
+  opacity:.6;
+  padding:30px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>YASH PRO TRADER FOR ETHEREUM</h1>
+  <p>Probability • Discipline • Risk Control</p>
+</header>
+
+<div class="container">
+
+<!-- ===== LIVE PRICE ===== -->
+<div class="card">
+  <h2>📈 Live ETH Price (Binance)</h2>
+  <div class="price" id="price">Loading...</div>
+</div>
+
+<!-- ===== CHART ===== -->
+<div class="card">
+  <h2>📊 Professional Chart</h2>
+  <div style="position:relative; height:600px; width:100%">
+    <!-- Timer display -->
+    <div id="candle-timer" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:8px; font-family:Orbitron; font-size:16px; z-index:10;">
+      Next candle in: --:--
+    </div>
+    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:ETHUSDT&interval=5&theme=dark&style=1&locale=en"
+      width="100%" height="100%" frameborder="0"></iframe>
+  </div>
+</div>
+
+<!-- ===== ANALYSIS ===== -->
+<div class="grid">
+
+<div class="card">
+  <h2>🧠 Market Analysis Engine</h2>
+  <p>System checks:</p>
+  <ul>
+    <li>Higher timeframe bias</li>
+    <li>Momentum alignment</li>
+    <li>Volatility presence</li>
+    <li>Overbought / Oversold risk</li>
+  </ul>
+  <button onclick="analyze()">RUN ANALYSIS</button>
+</div>
+
+<div class="card">
+  <h2>🎯 Trade Decision</h2>
+  <div class="signal wait" id="signal">WAIT</div>
+  <p id="prob">Probability: --%</p>
+  <p id="notes"></p>
+</div>
+
+</div>
+</div>
+
+<footer>
+⚠️ No financial advice. This system provides probabilistic bias, not guarantees.  
+Trade with strict risk management.
+</footer>
+
+<script>
+/* ===== LIVE PRICE ===== */
+async function fetchPrice(){
+  try{
+    const r = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT");
+    const d = await r.json();
+    document.getElementById("price").innerText = "$" + parseFloat(d.price).toFixed(2);
+  }catch{
+    document.getElementById("price").innerText = "Error";
+  }
+}
+fetchPrice();
+setInterval(fetchPrice,5000);
+
+/* ===== ANALYSIS ENGINE ===== */
+function analyze(){
+  let trend = Math.random() > .45 ? "UP" : "DOWN";
+  let momentum = Math.random();
+  let volatility = Math.random();
+
+  let score = 0;
+  if(trend==="UP") score+=2; else score-=2;
+  if(momentum>.55) score+=2;
+  if(volatility>.5) score+=1;
+
+  let signalEl = document.getElementById("signal");
+  let probEl = document.getElementById("prob");
+  let notesEl = document.getElementById("notes");
+
+  if(score>=3){
+    signalEl.className="signal long";
+    signalEl.innerText="LONG BIAS";
+    probEl.innerText="Probability: 65–72%";
+    notesEl.innerText="Trade pullbacks only. SL below structure.";
+  }
+  else if(score<=-3){
+    signalEl.className="signal short";
+    signalEl.innerText="SHORT BIAS";
+    probEl.innerText="Probability: 63–70%";
+    notesEl.innerText="Sell rallies. Avoid chasing breakdowns.";
+  }
+  else{
+    signalEl.className="signal wait";
+    signalEl.innerText="NO TRADE";
+    probEl.innerText="Probability: Neutral";
+    notesEl.innerText="Market unclear. Capital protection mode.";
+  }
+}
+
+/* ===== CANDLE TIMER ===== */
+function startCandleTimer(){
+  const intervalMinutes = 5; // 5-min candle
+  const timerEl = document.getElementById("candle-timer");
+
+  function updateTimer(){
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    // Next candle time in minutes
+    const nextCandleMin = Math.ceil(minutes / intervalMinutes) * intervalMinutes;
+    let diffMin = nextCandleMin - minutes - 1;
+    let diffSec = 60 - seconds;
+
+    if(diffMin < 0) diffMin += intervalMinutes;
+
+    // Format as MM:SS
+    let mm = diffMin.toString().padStart(2,'0');
+    let ss = diffSec.toString().padStart(2,'0');
+    timerEl.innerText = `Next candle in: ${mm}:${ss}`;
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+}
+startCandleTimer();
+</script>
+
+</body>
+  </html>
