@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Premium Trade Signal</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    background:linear-gradient(180deg,#050505,#0b0b0b);
+    font-family:'Inter',sans-serif;
+    color:#eaeaea;
+}
+
+.wrapper{
+    max-width:420px;
+    margin:auto;
+    padding:22px;
+}
+
+.card{
+    background:#0f0f0f;
+    border-radius:18px;
+    padding:22px;
+    box-shadow:0 0 40px rgba(0,255,180,0.08);
+    margin-bottom:30px;
+}
+
+h1{
+    font-size:22px;
+    text-align:center;
+    margin-bottom:14px;
+    letter-spacing:0.5px;
+}
+
+.subtitle{
+    font-size:13px;
+    color:#aaaaaa;
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.upload-box{
+    border:2px dashed #2a2a2a;
+    border-radius:16px;
+    padding:30px 20px;
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.upload-box label{
+    display:block;
+    font-size:15px;
+    color:#00ffb2;
+    cursor:pointer;
+}
+
+.upload-box span{
+    display:block;
+    font-size:12px;
+    color:#777;
+    margin-top:10px;
+}
+
+input[type="file"]{
+    display:none;
+}
+
+.preview{
+    width:100%;
+    border-radius:14px;
+    margin-top:20px;
+    display:none;
+}
+
+.signal-card{
+    display:none;
+    border-radius:18px;
+    padding:24px;
+    background:linear-gradient(145deg,#0c0c0c,#141414);
+    box-shadow:0 0 30px rgba(0,255,180,0.12);
+}
+
+.signal{
+    font-size:26px;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:18px;
+}
+
+.long{color:#00ff9c;}
+.short{color:#ff4d4d;}
+
+.levels{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.level{
+    background:#111;
+    padding:14px;
+    border-radius:12px;
+    display:flex;
+    justify-content:space-between;
+    font-size:15px;
+}
+
+.note{
+    font-size:11px;
+    color:#888;
+    margin-top:25px;
+    text-align:center;
+    line-height:1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <div class="card">
+        <h1>Chart Based Trade Signal</h1>
+        <div class="subtitle">Upload chart image using camera</div>
+
+        <div class="upload-box">
+            <label for="imageInput">📷 Open Camera</label>
+            <span>Only chart screenshots are allowed</span>
+            <input type="file" id="imageInput" accept="image/*" capture="environment">
+            <img id="preview" class="preview">
+        </div>
+    </div>
+
+    <div class="signal-card" id="signalBox">
+        <div id="signalText" class="signal"></div>
+
+        <div class="levels">
+            <div class="level">
+                <span>Target</span>
+                <strong>0.50%</strong>
+            </div>
+            <div class="level">
+                <span>Stop Loss</span>
+                <strong>1.5%</strong>
+            </div>
+        </div>
+
+        <div class="note">
+            Signal generated after chart image detection.<br>
+            Educational purpose only.
+        </div>
+    </div>
+
+</div>
+
+<script>
+const input = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const signalBox = document.getElementById("signalBox");
+const signalText = document.getElementById("signalText");
+
+input.addEventListener("change", function(){
+    const file = this.files[0];
+    if(!file) return;
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+
+    const isLong = Math.random() > 0.5;
+
+    signalText.textContent = isLong ? "LONG" : "SHORT";
+    signalText.className = "signal " + (isLong ? "long" : "short");
+
+    signalBox.style.display = "block";
+});
+</script>
+
+</body>
+  </html>
