@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGWIN | BEAST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #1a237e; color: white; font-family: 'Segoe UI', sans-serif; user-select: none; }
+        .bg-card { background: #303f9f; border: 1px solid rgba(255,255,255,0.1); }
+        .input-box { background: #3949ab !important; border: none !important; color: white !important; }
+        .hidden { display: none !important; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .history-table th { color: #9fa8da; padding: 12px; border-bottom: 1px solid #3f51b5; text-align: left; }
+        .history-table td { padding: 15px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .custom-scroll::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-10">
+
+    <div id="auth-section" class="w-full max-w-md px-6 pt-10">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black italic tracking-tighter text-white">YG<span class="text-blue-400">WIN</span></h1>
+        </div>
+        <div id="register-box" class="space-y-6">
+            <h2 class="text-xl font-bold">Register</h2>
+            <div class="space-y-4">
+                <div class="bg-card p-1 rounded-2xl flex items-center">
+                    <span class="px-4 text-slate-300 border-r border-white/10">+91</span>
+                    <input type="number" id="reg-phone" placeholder="Phone number" class="w-full p-4 bg-transparent outline-none">
+                </div>
+                <input type="password" id="reg-pass" placeholder="Password" class="w-full p-4 rounded-2xl input-box outline-none">
+                <input type="password" id="reg-cpass" placeholder="Confirm password" class="w-full p-4 rounded-2xl input-box outline-none">
+                <button onclick="handleRegister()" class="w-full bg-blue-500 text-white font-bold py-4 rounded-full shadow-lg">Register</button>
+                <button onclick="toggleAuth('login')" class="w-full border border-blue-500 text-blue-400 font-bold py-4 rounded-full">Login</button>
+            </div>
+        </div>
+        <div id="login-box" class="space-y-6 hidden">
+            <h2 class="text-xl font-bold">Log in</h2>
+            <div class="space-y-4">
+                <div class="bg-card p-1 rounded-2xl flex items-center">
+                    <span class="px-4 text-slate-300 border-r border-white/10">+91</span>
+                    <input type="number" id="log-phone" placeholder="Phone number" class="w-full p-4 bg-transparent outline-none">
+                </div>
+                <input type="password" id="log-pass" placeholder="Password" class="w-full p-4 rounded-2xl input-box outline-none">
+                <button onclick="handleLogin()" class="w-full bg-slate-600 text-white font-bold py-4 rounded-full shadow-lg">Log in</button>
+                <button onclick="toggleAuth('register')" class="w-full border border-blue-500 text-blue-400 font-bold py-4 rounded-full">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-section" class="w-full max-w-md hidden px-4">
+        <div class="flex justify-between items-center py-4">
+            <h1 class="text-2xl font-black italic">YGWIN</h1>
+            <button onclick="handleLogout()" class="text-xs text-slate-300">Logout</button>
+        </div>
+        <div class="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 rounded-3xl mb-4 shadow-xl">
+            <p class="text-sm opacity-80 mb-1">₹ <span id="bal">0.00</span> <span class="text-[10px] bg-white/20 px-2 rounded-full ml-2">Wallet balance</span></p>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <button onclick="openModal('wit')" class="bg-red-500 py-3 rounded-full font-bold">Withdraw</button>
+                <button onclick="openModal('dep')" class="bg-green-500 py-3 rounded-full font-bold">Deposit</button>
+            </div>
+        </div>
+        <div class="bg-card p-4 rounded-3xl mb-4 text-center">
+            <div class="flex justify-between items-center mb-6 text-left">
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold">WinGo 1 Min</p>
+                    <p id="period" class="text-sm font-mono text-white">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold">Time remaining</p>
+                    <div id="timer" class="text-3xl font-black text-white" style="font-family:'Orbitron'">00:00</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="placeBet('Big')" class="bg-orange-400 h-16 rounded-xl text-xl font-black shadow-lg">Big</button>
+                <button onclick="placeBet('Small')" class="bg-blue-400 h-16 rounded-xl text-xl font-black shadow-lg">Small</button>
+            </div>
+        </div>
+        <div class="bg-card rounded-t-3xl overflow-hidden">
+            <div class="py-4 text-center border-b border-white/10 bg-blue-500 text-sm font-bold">Game history</div>
+            <div class="max-h-[500px] overflow-y-auto custom-scroll">
+                <table class="history-table">
+                    <thead><tr><th>Period Number</th><th class="text-right">Result</th></tr></thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6">
+        <div id="dep-modal" class="bg-card w-full max-w-sm p-8 rounded-3xl hidden">
+            <h2 class="text-xl font-bold mb-4 text-green-400">DEPOSIT</h2>
+            <div id="qr-display" class="bg-white p-2 rounded-xl w-48 h-48 mx-auto mb-6 flex items-center justify-center text-black font-bold text-[10px]">QR LOADING...</div>
+            <input type="number" id="dep-amt" placeholder="Amount" class="w-full p-4 rounded-xl mb-3 input-box outline-none">
+            <input type="number" id="dep-utr" placeholder="12 Digit UTR" class="w-full p-4 rounded-xl mb-6 input-box outline-none">
+            <button onclick="submitDeposit()" class="w-full bg-green-600 py-4 rounded-full font-bold">SUBMIT</button>
+            <button onclick="closeModal()" class="mt-4 text-slate-400 text-xs block w-full text-center">Close</button>
+        </div>
+        <div id="wit-modal" class="bg-card w-full max-w-sm p-8 rounded-3xl hidden text-center">
+            <h2 class="text-xl font-bold mb-6 text-red-400">WITHDRAWAL</h2>
+            <input type="text" id="wit-upi" placeholder="UPI ID" class="w-full p-4 rounded-xl mb-3 input-box outline-none">
+            <input type="text" id="wit-name" placeholder="Full Name" class="w-full p-4 rounded-xl mb-3 input-box outline-none">
+            <input type="number" id="wit-amt" placeholder="Amount" class="w-full p-4 rounded-xl mb-6 input-box outline-none">
+            <button onclick="submitWithdraw()" class="w-full bg-red-600 py-4 rounded-full font-bold">WITHDRAW NOW</button>
+            <button onclick="closeModal()" class="mt-4 text-slate-400 text-xs block w-full">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA", databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com", projectId: "yggame-23e85", appId: "1:805643944561:web:e445cb4d236b3e731c51d0" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let userData = JSON.parse(localStorage.getItem('yg_session'));
+        let activeBet = null;
+        let lastProcessedPeriod = "";
+
+        window.onload = () => { if(userData) startSession(userData); };
+
+        function toggleAuth(t) {
+            document.getElementById('register-box').classList.toggle('hidden', t === 'login');
+            document.getElementById('login-box').classList.toggle('hidden', t === 'register');
+        }
+
+        function handleRegister() {
+            let ph = document.getElementById('reg-phone').value, p1 = document.getElementById('reg-pass').value;
+            if(ph.length < 10) return alert("Enter valid number");
+            db.ref('users/'+ph).set({phone:ph, pass:p1, wallet:0}).then(() => { alert("Success! Login now."); toggleAuth('login'); });
+        }
+
+        function handleLogin() {
+            let ph = document.getElementById('log-phone').value, ps = document.getElementById('log-pass').value;
+            db.ref('users/'+ph).once('value', s => {
+                if(s.exists() && s.val().pass === ps) startSession(s.val());
+                else alert("Check details!");
+            });
+        }
+
+        function startSession(data) {
+            userData = data; localStorage.setItem('yg_session', JSON.stringify(userData));
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            db.ref('users/'+userData.phone+'/wallet').on('value', s => {
+                userData.wallet = s.val() || 0;
+                document.getElementById('bal').innerText = userData.wallet.toFixed(2);
+            });
+        }
+
+        function handleLogout() { localStorage.removeItem('yg_session'); location.reload(); }
+
+        function updateEngine() {
+            const now = new Date(); 
+            const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const sec = ist.getSeconds();
+            const rem = 60 - sec;
+            const pId = ist.toISOString().slice(0,10).replace(/-/g,"") + "1000" + (10001 + (ist.getHours()*60+ist.getMinutes()) - 330);
+            
+            document.getElementById('period').innerText = pId;
+            document.getElementById('timer').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+
+            // Logic trigger at exactly 00:00 (when rem is 60 or 1)
+            if(rem === 60 && lastProcessedPeriod !== pId) {
+                lastProcessedPeriod = pId;
+                processResult(pId);
+            }
+        }
+
+        function processResult(periodId) {
+            db.ref('control/force').once('value', s => {
+                let forceVal = s.val();
+                let finalRes = (forceVal && forceVal !== 'Random') ? forceVal : (Math.random() > 0.5 ? 'Big' : 'Small');
+                
+                // 1. Process Bet Result
+                if(activeBet) {
+                    if(activeBet.type === finalRes) {
+                        let winAmt = activeBet.amt * 1.96;
+                        db.ref('users/'+userData.phone+'/wallet').set(userData.wallet + winAmt);
+                        alert("🎉 WIN! Result: " + finalRes);
+                    } else {
+                        alert("❌ LOSS! Result: " + finalRes);
+                    }
+                    activeBet = null;
+                    db.ref('live_bets/'+userData.phone).remove();
+                }
+
+                // 2. Save to History
+                saveToHistory(periodId, finalRes);
+            });
+        }
+
+        function saveToHistory(p, r) {
+            db.ref('history').once('value', s => {
+                let h = s.val() || [];
+                // Check if this period already exists in history to avoid duplicates
+                if(h.length > 0 && h[0].p === p) return;
+                
+                h.unshift({p, r});
+                if(h.length > 20) h.pop();
+                db.ref('history').set(h);
+            });
+        }
+
+        // Real-time history listener
+        db.ref('history').on('value', s => {
+            let h = s.val() || [];
+            let html = h.map(x => `
+                <tr>
+                    <td class="font-mono text-slate-400">${x.p}</td>
+                    <td class="text-right font-bold ${x.r === 'Big' ? 'text-orange-400' : 'text-blue-400'}">${x.r.toUpperCase()}</td>
+                </tr>
+            `).join('');
+            document.getElementById('history-list').innerHTML = html;
+        });
+
+        setInterval(updateEngine, 1000);
+
+        function placeBet(t) {
+            let amt = parseFloat(prompt(`Bet on ${t} (Min ₹1):`, "10"));
+            if(amt >= 1 && userData.wallet >= amt) {
+                db.ref('users/'+userData.phone+'/wallet').set(userData.wallet - amt);
+                activeBet = { type: t, amt: amt };
+                db.ref('live_bets/'+userData.phone).set({ type: t, amt: amt });
+                alert("Bet Locked!");
+            } else { alert("Insufficient Balance!"); }
+        }
+
+        db.ref('control/qr').on('value', s => { if(s.val()) document.getElementById('qr-display').innerHTML = `<img src="${s.val()}" class="w-full h-full object-contain">`; });
+        function openModal(t) { document.getElementById('modal-overlay').classList.remove('hidden'); document.getElementById('dep-modal').classList.toggle('hidden', t !== 'dep'); document.getElementById('wit-modal').classList.toggle('hidden', t !== 'wit'); }
+        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+        function submitDeposit() { let a = document.getElementById('dep-amt').value, u = document.getElementById('dep-utr').value; if(a>=10 && u.length===12) { db.ref('deposits').push({phone:userData.phone, amt:parseFloat(a), utr:u, status:'Pending'}); closeModal(); alert("Deposit Request Sent!"); } }
+        function submitWithdraw() { let u = document.getElementById('wit-upi').value, n = document.getElementById('wit-name').value, a = document.getElementById('wit-amt').value; if(a<=userData.wallet && a >= 10) { db.ref('withdraws').push({phone:userData.phone, upi:u, name:n, amt:parseFloat(a), status:'Pending'}); db.ref('users/'+userData.phone+'/wallet').set(userData.wallet - a); closeModal(); alert("Withdrawal Request Sent!"); } }
+    </script>
+</body>
+</html>
