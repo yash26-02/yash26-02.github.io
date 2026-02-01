@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGWIN | PREMIER 30S</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-deep: #0a1128;
+            --card-glass: rgba(20, 30, 70, 0.85);
+            --gold: #facc15;
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Complex Glassmorphism Effects */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .glass-panel {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #facc15, #eab308);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Animations */
+        @keyframes pulse-timer {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .timer-active {
+            animation: pulse-timer 1s infinite;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Betting Buttons */
+        .btn-big { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .btn-small { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        .history-row {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <div id="auth-section" class="w-full max-w-md">
+        
+        <div id="register-box" class="glass-panel p-10 rounded-[3rem] mt-10">
+            <h1 class="text-6xl font-black italic tracking-tighter text-center gradient-text mb-4">YGWIN</h1>
+            <h2 class="text-center text-slate-400 text-xs uppercase tracking-widest mb-10">Secure Registration</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] ml-4 font-bold text-slate-500 uppercase">Mobile Number</label>
+                    <input type="number" id="reg-phone" placeholder="Enter Number" class="w-full p-5 rounded-2xl outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] ml-4 font-bold text-slate-500 uppercase">Create Password</label>
+                    <input type="password" id="reg-pass" placeholder="Enter Password" class="w-full p-5 rounded-2xl outline-none mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] ml-4 font-bold text-slate-500 uppercase">Confirm Password</label>
+                    <input type="password" id="reg-cpass" placeholder="Re-type Password" class="w-full p-5 rounded-2xl outline-none mt-1">
+                </div>
+                
+                <button onclick="handleRegistration()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl text-lg shadow-2xl hover:bg-yellow-400 active:scale-95 transition">CREATE ACCOUNT</button>
+                
+                <div class="text-center mt-6">
+                    <p class="text-slate-400 text-sm">Already a member? 
+                        <button onclick="switchAuth('login')" class="text-yellow-500 font-bold underline">Login here</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="login-box" class="glass-panel p-10 rounded-[3rem] mt-10 hidden">
+            <h1 class="text-6xl font-black italic tracking-tighter text-center text-blue-500 mb-4">YGWIN</h1>
+            <h2 class="text-center text-slate-400 text-xs uppercase tracking-widest mb-10">User Login</h2>
+            
+            <div class="space-y-6">
+                <input type="number" id="log-phone" placeholder="Phone Number" class="w-full p-5 rounded-2xl outline-none">
+                <input type="password" id="log-pass" placeholder="Password" class="w-full p-5 rounded-2xl outline-none">
+                
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl text-lg shadow-2xl active:scale-95 transition">ACCESS ACCOUNT</button>
+                
+                <div class="text-center mt-6">
+                    <p class="text-slate-400 text-sm">New to YGWIN? 
+                        <button onclick="switchAuth('register')" class="text-blue-500 font-bold underline">Register Now</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-section" class="w-full max-w-md hidden">
+        
+        <div class="flex justify-between items-center py-4 px-4 w-full">
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live: <span id="u-display" class="text-white">---</span></span>
+            </div>
+            <button onclick="processLogout()" class="text-[10px] bg-red-600/20 text-red-500 border border-red-500 px-4 py-2 rounded-full font-black uppercase">Logout</button>
+        </div>
+
+        <div class="glass-panel p-8 rounded-[2.5rem] mb-6 relative overflow-hidden">
+            <div class="relative z-10 flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Available Balance</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl font-bold text-yellow-500">₹</span>
+                        <h2 id="wallet-bal" class="text-4xl font-black tracking-tighter">0.00</h2>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <button onclick="triggerModal('deposit')" class="bg-red-600 px-6 py-2 rounded-xl text-[10px] font-black italic tracking-widest shadow-lg">DEPOSIT</button>
+                    <button onclick="triggerModal('withdraw')" class="bg-yellow-500 text-black px-6 py-2 rounded-xl text-[10px] font-black italic tracking-widest shadow-lg">WITHDRAW</button>
+                </div>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="glass-panel p-10 rounded-[3rem] text-center mb-6 border-b-4 border-yellow-500/20">
+            <div class="flex justify-between items-center mb-6">
+                <div class="text-left">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Wingo 30s</p>
+                    <p id="period-num" class="text-xs font-mono text-yellow-500 font-bold">202600000000</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Countdown</p>
+                    <div id="main-timer" class="text-4xl font-orbitron font-black italic tracking-widest text-white">00:30</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mt-10">
+                <button onclick="handleBetPlacement('Big')" class="btn-big h-32 rounded-[2.5rem] text-4xl font-black italic shadow-2xl active:scale-95 transition transform hover:rotate-1">BIG</button>
+                <button onclick="handleBetPlacement('Small')" class="btn-small h-32 rounded-[2.5rem] text-4xl font-black italic shadow-2xl active:scale-95 transition transform hover:-rotate-1">SMALL</button>
+            </div>
+        </div>
+
+        <div class="glass-panel p-6 rounded-[2.5rem] mb-10">
+            <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 text-center">Game Result History</h3>
+            <div class="overflow-hidden rounded-2xl">
+                <table class="history-table">
+                    <tbody id="history-box">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-screen" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6">
+        
+        <div id="modal-deposit" class="glass-panel w-full max-w-sm p-8 rounded-[3rem] hidden">
+            <h2 class="text-2xl font-black text-red-500 text-center mb-6 italic">RECHARGE WALLET</h2>
+            <div id="admin-qr-box" class="bg-white p-3 rounded-2xl w-52 h-52 mx-auto mb-8 flex items-center justify-center shadow-inner overflow-hidden">
+                <span class="text-black text-[10px] font-bold">SCANNING QR...</span>
+            </div>
+            <div class="space-y-4">
+                <input type="number" id="dep-amount" placeholder="Deposit Amount (Min ₹10)" class="w-full p-4 rounded-2xl outline-none">
+                <input type="number" id="dep-utr-code" placeholder="12 Digit UTR Number" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="submitDepositRequest()" class="w-full bg-red-600 py-5 rounded-2xl font-black text-lg shadow-xl">SUBMIT PAYMENT</button>
+                <button onclick="closeActiveModal()" class="w-full text-slate-500 text-xs font-bold uppercase tracking-widest">Back to Game</button>
+            </div>
+        </div>
+
+        <div id="modal-withdraw" class="glass-panel w-full max-w-sm p-8 rounded-[3rem] hidden">
+            <h2 class="text-2xl font-black text-yellow-500 text-center mb-8 italic">CASH WITHDRAWAL</h2>
+            <div class="space-y-4">
+                <input type="text" id="wit-upi-id" placeholder="Your UPI ID" class="w-full p-4 rounded-2xl outline-none">
+                <input type="text" id="wit-full-name" placeholder="Account Holder Name" class="w-full p-4 rounded-2xl outline-none">
+                <input type="number" id="wit-amount" placeholder="Withdraw Amount" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="submitWithdrawRequest()" class="w-full bg-yellow-500 text-black py-5 rounded-2xl font-black text-lg shadow-xl">REQUEST PAYOUT</button>
+                <button onclick="closeActiveModal()" class="w-full text-slate-500 text-xs font-bold uppercase tracking-widest">Cancel</button>
+            </div>
+        </div>
+
+        <div id="modal-bet" class="glass-panel w-full max-w-sm p-10 rounded-[3rem] hidden text-center">
+            <h2 id="bet-type-label" class="text-5xl font-black mb-4 italic">BIG</h2>
+            <p class="text-slate-400 text-xs uppercase mb-8">Enter Bet Amount</p>
+            <input type="number" id="bet-amount-input" value="10" class="w-full p-5 rounded-2xl text-center text-3xl font-black mb-8 outline-none">
+            <button onclick="finalizeBetting()" class="w-full bg-blue-600 py-5 rounded-2xl font-black text-xl shadow-2xl">CONFIRM BET</button>
+            <button onclick="closeActiveModal()" class="mt-4 text-slate-500 text-xs uppercase">Cancel</button>
+        </div>
+
+        <div id="modal-result" class="glass-panel w-full max-w-sm p-12 rounded-[4rem] hidden text-center animate-bounce">
+            <div id="res-icon" class="text-8xl mb-4">🏆</div>
+            <h2 id="res-status" class="text-4xl font-black mb-2 italic uppercase">WINNER!</h2>
+            <p id="res-amount-text" class="text-2xl font-bold text-yellow-500">+ ₹0.00</p>
+            <button onclick="closeActiveModal()" class="mt-10 bg-white text-black px-12 py-3 rounded-full font-black">CONTINUE</button>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // --- 1. FIREBASE CORE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+        databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+        projectId: "yggame-23e85",
+        appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- 2. GLOBAL STATES ---
+    let currentUser = JSON.parse(localStorage.getItem('yg_session'));
+    let activeStake = null;
+    let serverTimeOffset = 0;
+
+    // --- 3. SESSION MANAGEMENT ---
+    window.onload = function() {
+        if(currentUser) {
+            setupUserSession(currentUser);
+        }
+    };
+
+    function switchAuth(type) {
+        document.getElementById('register-box').classList.toggle('hidden', type === 'login');
+        document.getElementById('login-box').classList.toggle('hidden', type === 'register');
+    }
+
+    // --- 4. REGISTRATION LOGIC ---
+    function handleRegistration() {
+        const ph = document.getElementById('reg-phone').value;
+        const p1 = document.getElementById('reg-pass').value;
+        const p2 = document.getElementById('reg-cpass').value;
+
+        if(!ph || ph.length < 10) return alert("❌ Invalid Mobile Number!");
+        if(p1 !== p2) return alert("❌ Passwords do not match!");
+        if(p1.length < 4) return alert("❌ Password too weak!");
+
+        db.ref('users/' + ph).once('value', snapshot => {
+            if(snapshot.exists()) {
+                alert("⚠️ Number already registered!");
+            } else {
+                db.ref('users/' + ph).set({
+                    phone: ph,
+                    pass: p1,
+                    wallet: 0,
+                    created: Date.now()
+                }).then(() => {
+                    alert("✅ Registration Success! Please Login.");
+                    switchAuth('login');
+                });
+            }
+        });
+    }
+
+    // --- 5. LOGIN LOGIC ---
+    function handleLogin() {
+        const ph = document.getElementById('log-phone').value;
+        const ps = document.getElementById('log-pass').value;
+
+        db.ref('users/' + ph).once('value', snapshot => {
+            if(!snapshot.exists()) {
+                alert("❌ Number Not Registered!");
+            } else if(snapshot.val().pass !== ps) {
+                alert("❌ Incorrect Password!");
+            } else {
+                setupUserSession(snapshot.val());
+            }
+        });
+    }
+
+    function setupUserSession(data) {
+        currentUser = data;
+        localStorage.setItem('yg_session', JSON.stringify(currentUser));
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('game-section').classList.remove('hidden');
+        document.getElementById('u-display').innerText = currentUser.phone;
+
+        // Sync Wallet
+        db.ref('users/' + currentUser.phone + '/wallet').on('value', snap => {
+            currentUser.wallet = snap.val() || 0;
+            document.getElementById('wallet-bal').innerText = currentUser.wallet.toFixed(2);
+        });
+
+        // Sync Admin QR
+        db.ref('control/qr').on('value', snap => {
+            const box = document.getElementById('admin-qr-box');
+            if(snap.val()) box.innerHTML = `<img src="${snap.val()}" class="w-full h-full object-contain">`;
+        });
+
+        startEngine();
+    }
+
+    // --- 6. 30S GAME ENGINE (DEBIT/CREDIT LOGIC) ---
+    function startEngine() {
+        setInterval(() => {
+            const now = new Date();
+            const ist = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (5.5 * 3600000));
+            const sec = ist.getSeconds();
+            
+            // 30 Seconds Cycle Logic
+            const isFirstHalf = sec < 30;
+            const remaining = isFirstHalf ? 30 - sec : 60 - sec;
+            
+            // Period Number Generation (Inspired by Java snippet)
+            const dateCode = ist.getFullYear() + String(ist.getMonth()+1).padStart(2,'0') + String(ist.getDate()).padStart(2,'0');
+            const totalMins = ist.getHours() * 60 + ist.getMinutes();
+            const slot = (totalMins * 2) + (isFirstHalf ? 1 : 2);
+            const pId = dateCode + "1000" + (10000 + slot);
+
+            document.getElementById('period-num').innerText = pId;
+            document.getElementById('main-timer').innerText = `00:${remaining < 10 ? '0'+remaining : remaining}`;
+
+            // Visual feedback for last 5 seconds
+            if(remaining <= 5) document.getElementById('main-timer').classList.add('text-red-500', 'timer-active');
+            else document.getElementById('main-timer').classList.remove('text-red-500', 'timer-active');
+
+            // Settlement at the end of cycle
+            if(remaining === 1) {
+                processSettlement(pId);
+            }
+        }, 1000);
+    }
+
+    function processSettlement(currentPid) {
+        db.ref('control/force').once('value', snap => {
+            const forcedResult = snap.val();
+            // Global deterministic result (Everyone sees the same if admin doesn't intervene)
+            const result = (forcedResult && forcedResult !== 'Random') ? forcedResult : (parseInt(currentPid.slice(-1)) % 2 === 0 ? 'Big' : 'Small');
+            
+            // Reset Admin Control
+            db.ref('control/force').set('Random');
+
+            // Handle Active Bet
+            if(activeStake && activeStake.period === currentPid) {
+                if(activeStake.type === result) {
+                    const winAmt = activeStake.amount * 1.96;
+                    db.ref('users/' + currentUser.phone + '/wallet').transaction(w => (w || 0) + winAmt);
+                    triggerResultModal('win', winAmt);
+                } else {
+                    triggerResultModal('loss', 0);
+                }
+                activeStake = null;
+            }
+
+            // Save History
+            updateGameHistory(currentPid, result);
+        });
+    }
+
+    // --- 7. BETTING LOGIC ---
+    function handleBetPlacement(type) {
+        if(currentUser.wallet < 1) {
+            alert("❌ Insufficient Balance! Please Deposit.");
+            return triggerModal('deposit');
+        }
+        document.getElementById('bet-type-label').innerText = type.toUpperCase();
+        document.getElementById('bet-type-label').className = `text-5xl font-black mb-4 italic ${type==='Big' ? 'text-orange-500' : 'text-blue-500'}`;
+        triggerModal('bet');
+    }
+
+    function finalizeBetting() {
+        const amt = parseFloat(document.getElementById('bet-amount-input').value);
+        const type = document.getElementById('bet-type-label').innerText === 'BIG' ? 'Big' : 'Small';
+        const pId = document.getElementById('period-num').innerText;
+
+        if(amt < 1) return alert("❌ Min Bet is ₹1");
+        if(amt > currentUser.wallet) return alert("❌ Balance low!");
+
+        // Deduct balance immediately
+        db.ref('users/' + currentUser.phone + '/wallet').transaction(w => (w || 0) - amt).then(() => {
+            activeStake = { type, amount: amt, period: pId };
+            db.ref('live_bets/' + currentUser.phone).set({ type, amount: amt, p: pId });
+            alert("✅ Bet Placed Successfully!");
+            closeActiveModal();
+        });
+    }
+
+    // --- 8. DEPOSIT & WITHDRAWAL ---
+    function submitDepositRequest() {
+        const amt = parseFloat(document.getElementById('dep-amount').value);
+        const utr = document.getElementById('dep-utr-code').value;
+
+        if(amt < 10) return alert("❌ Minimum Deposit is ₹10");
+        if(utr.length !== 12) return alert("❌ Enter 12-digit UTR Number!");
+
+        db.ref('deposits').push({
+            phone: currentUser.phone,
+            amount: amt,
+            utr: utr,
+            status: 'Pending',
+            timestamp: Date.now()
+        }).then(() => {
+            alert("⌛ Please Wait Patiently! Your amount will be added after manual verification.");
+            closeActiveModal();
+        });
+    }
+
+    function submitWithdrawRequest() {
+        const amt = parseFloat(document.getElementById('wit-amount').value);
+        const upi = document.getElementById('wit-upi-id').value;
+        const name = document.getElementById('wit-full-name').value;
+
+        if(amt < 10) return alert("❌ Min Withdrawal ₹10");
+        if(amt > currentUser.wallet) return alert("❌ Insufficient Funds!");
+        if(!upi || !name) return alert("❌ Fill all bank details!");
+
+        // Lock funds during request
+        db.ref('users/' + currentUser.phone + '/wallet').transaction(w => (w || 0) - amt).then(() => {
+            db.ref('withdraws').push({
+                phone: currentUser.phone,
+                amount: amt,
+                upi: upi,
+                name: name,
+                status: 'Pending',
+                pass: currentUser.pass
+            });
+            alert("✅ Withdrawal Request Sent!");
+            closeActiveModal();
+        });
+    }
+
+    // --- 9. UI HELPERS ---
+    function triggerModal(type) {
+        document.getElementById('modal-screen').classList.remove('hidden');
+        document.getElementById('modal-deposit').classList.toggle('hidden', type !== 'deposit');
+        document.getElementById('modal-withdraw').classList.toggle('hidden', type !== 'withdraw');
+        document.getElementById('modal-bet').classList.toggle('hidden', type !== 'bet');
+        document.getElementById('modal-result').classList.add('hidden');
+    }
+
+    function triggerResultModal(status, amt) {
+        document.getElementById('modal-screen').classList.remove('hidden');
+        document.getElementById('modal-result').classList.remove('hidden');
+        document.getElementById('modal-deposit').classList.add('hidden');
+        document.getElementById('modal-withdraw').classList.add('hidden');
+        document.getElementById('modal-bet').classList.add('hidden');
+
+        const label = document.getElementById('res-status');
+        const icon = document.getElementById('res-icon');
+        const text = document.getElementById('res-amount-text');
+
+        if(status === 'win') {
+            label.innerText = "WINNER!";
+            label.className = "text-4xl font-black mb-2 italic text-green-500";
+            icon.innerText = "🏆";
+            text.innerText = "+ ₹" + amt.toFixed(2);
+        } else {
+            label.innerText = "BET LOST";
+            label.className = "text-4xl font-black mb-2 italic text-red-500";
+            icon.innerText = "💀";
+            text.innerText = "- Better Luck Next Time";
+        }
+    }
+
+    function closeActiveModal() {
+        document.getElementById('modal-screen').classList.add('hidden');
+    }
+
+    function updateGameHistory(p, r) {
+        db.ref('history').once('value', snap => {
+            let h = snap.val() || [];
+            if(h[0]?.p !== p) {
+                h.unshift({ p, r });
+                if(h.length > 10) h.pop();
+                db.ref('history').set(h);
+            }
+        });
+    }
+
+    db.ref('history').on('value', snap => {
+        const h = snap.val() || [];
+        document.getElementById('history-box').innerHTML = h.map(item => `
+            <tr class="history-row">
+                <td class="py-4 px-6 text-xs font-mono text-slate-400">${item.p}</td>
+                <td class="py-4 px-6 text-center">
+                    <span class="px-4 py-1 rounded-full text-[10px] font-black ${item.r==='Big' ? 'bg-orange-500/20 text-orange-500' : 'bg-blue-500/20 text-blue-500'}">
+                        ${item.r.toUpperCase()}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    });
+
+    function processLogout() {
+        localStorage.removeItem('yg_session');
+        location.reload();
+    }
+</script>
+
+</body>
+</html>
