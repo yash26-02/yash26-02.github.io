@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BEAST GLOBAL | Ultimate Prediction Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS: Professional & Critical UI Design */
+        :root {
+            --neon-gold: #f3ba2f;
+            --deep-dark: #0a0b0d;
+            --card-bg: #161a1e;
+            --win-green: #00ff88;
+            --loss-red: #ff3355;
+            --admin-blue: #007bff;
+        }
+
+        body {
+            background-color: var(--deep-dark);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        .app-shell { max-width: 500px; margin: auto; min-height: 100vh; position: relative; border-left: 1px solid #333; border-right: 1px solid #333; }
+        .view { display: none; padding: 20px; box-sizing: border-box; }
+        .active { display: block; animation: slideIn 0.3s ease-out; }
+
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Typography */
+        h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; text-align: center; }
+        .gold-text { color: var(--neon-gold); text-shadow: 0 0 10px rgba(243, 186, 47, 0.4); }
+
+        /* Professional Inputs */
+        .input-group { margin-bottom: 15px; }
+        input {
+            width: 100%;
+            background: #1e2329;
+            border: 1px solid #474d57;
+            padding: 15px;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon-gold); outline: none; background: #2b3139; }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-primary { background: var(--neon-gold); color: #000; }
+        .btn-deposit { background: var(--loss-red); color: white; box-shadow: 0 4px 15px rgba(255, 51, 85, 0.3); }
+        .btn-withdraw { background: #fbc02d; color: black; box-shadow: 0 4px 15px rgba(251, 192, 45, 0.3); }
+        .btn:active { transform: scale(0.98); opacity: 0.8; }
+
+        /* Wallet Section */
+        .wallet-card {
+            background: linear-gradient(180deg, #1e2329 0%, #0a0b0d 100%);
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .balance-label { color: #848e9c; font-size: 14px; margin-bottom: 5px; }
+        .balance-amount { font-size: 40px; font-weight: 700; color: var(--win-green); font-family: 'Orbitron', sans-serif; }
+
+        /* Game Mechanics UI */
+        .timer-container {
+            display: flex;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-bottom: 2px solid var(--neon-gold);
+        }
+        .time-left { font-size: 28px; font-weight: bold; color: var(--neon-gold); }
+
+        .bet-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .big-btn { background: #6a1b9a; height: 100px; font-size: 24px; color: white; border-radius: 15px; border-bottom: 5px solid #4a148c; }
+        .small-btn { background: #00695c; height: 100px; font-size: 24px; color: white; border-radius: 15px; border-bottom: 5px solid #004d40; }
+
+        /* Tables & Lists */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .history-table th { color: #848e9c; border-bottom: 1px solid #333; padding: 10px; }
+        .history-table td { padding: 12px; text-align: center; border-bottom: 1px solid #1e2329; }
+
+        /* Admin UI Specifics */
+        .admin-box { background: #000; border: 2px solid var(--admin-blue); border-radius: 15px; padding: 15px; margin-bottom: 20px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-pending { background: #f39c12; }
+        .badge-success { background: #27ae60; }
+
+        /* Popup Notification */
+        #popup {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: var(--neon-gold); color: black; padding: 15px 30px;
+            border-radius: 50px; font-weight: bold; transition: 0.5s; z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<div id="popup">Notification Message</div>
+
+<div class="app-shell">
+
+    <div id="viewRegister" class="view active">
+        <h1 class="gold-text">Join Beast</h1>
+        <div class="input-group">
+            <input type="number" id="regPhone" placeholder="Mobile Number">
+        </div>
+        <div class="input-group">
+            <input type="password" id="regPass" placeholder="Password">
+        </div>
+        <div class="input-group">
+            <input type="password" id="regConfirm" placeholder="Confirm Password">
+        </div>
+        <button class="btn btn-primary" onclick="Logic.handleRegister()">CREATE ACCOUNT</button>
+        <p style="text-align: center;">Already member? <span class="gold-text" onclick="Router.go('viewLogin')">Login Now</span></p>
+    </div>
+
+    <div id="viewLogin" class="view">
+        <h1 class="gold-text">Access Game</h1>
+        <div class="input-group">
+            <input type="number" id="loginPhone" placeholder="Registered Number">
+        </div>
+        <div class="input-group">
+            <input type="password" id="loginPass" placeholder="Password">
+        </div>
+        <button class="btn btn-primary" onclick="Logic.handleLogin()">SECURE LOGIN</button>
+        <p style="text-align: center;">Not registered? <span class="gold-text" onclick="Router.go('viewRegister')">Join Now</span></p>
+        <div onclick="Logic.adminEntry()" style="margin-top: 100px; text-align: center; color: #1e2329;">Admin Access</div>
+    </div>
+
+    <div id="viewGame" class="view">
+        <div class="wallet-card">
+            <div class="balance-label">SECURE WALLET BALANCE</div>
+            <div class="balance-amount">₹<span id="displayBalance">0.00</span></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-deposit" onclick="Router.go('viewDeposit')">DEPOSIT</button>
+                <button class="btn btn-withdraw" onclick="Router.go('viewWithdraw')">WITHDRAW</button>
+            </div>
+        </div>
+
+        <div class="timer-container">
+            <div>
+                <div style="color: #848e9c; font-size: 12px;">PERIOD ID</div>
+                <div id="displayPeriod" style="letter-spacing: 1px; font-weight: bold;">----</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: #848e9c; font-size: 12px;">COUNT DOWN</div>
+                <div id="displayTimer" class="time-left">00:00</div>
+            </div>
+        </div>
+
+        <div class="bet-buttons">
+            <button class="big-btn" onclick="Logic.prepareBet('Big')">BIG</button>
+            <button class="small-btn" onclick="Logic.prepareBet('Small')">SMALL</button>
+        </div>
+
+        <h3 style="margin-top: 40px; text-align: left;">GAME LOG HISTORY</h3>
+        <table class="history-table">
+            <thead>
+                <tr><th>Period</th><th>Res</th><th>Type</th></tr>
+            </thead>
+            <tbody id="gameHistoryList"></tbody>
+        </table>
+    </div>
+
+    <div id="viewDeposit" class="view">
+        <button onclick="Router.go('viewGame')" style="background:none; color:white; border:none; cursor:pointer;">< BACK</button>
+        <h2 class="gold-text">RECHARGE</h2>
+        <div class="wallet-card" style="margin-bottom: 20px;">
+            <p>Scan QR to Pay</p>
+            <img id="globalQR" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BeastAdmin" style="width: 180px; border-radius: 10px; border: 4px solid white;">
+        </div>
+        <input type="number" id="depAmt" placeholder="Enter Deposit Amount (Min ₹10)">
+        <input type="number" id="depUTR" placeholder="Enter 12-Digit Transaction UTR">
+        <button class="btn btn-primary" onclick="Logic.submitDeposit()">PROCESS DEPOSIT</button>
+    </div>
+
+    <div id="viewWithdraw" class="view">
+        <button onclick="Router.go('viewGame')" style="background:none; color:white; border:none; cursor:pointer;">< BACK</button>
+        <h2 class="gold-text">WITHDRAWAL</h2>
+        <div class="input-group">
+            <input type="text" id="witName" placeholder="Bank Account Holder Name">
+        </div>
+        <div class="input-group">
+            <input type="text" id="witUPI" placeholder="UPI Address (VPA)">
+        </div>
+        <div class="input-group">
+            <input type="number" id="witAmt" placeholder="Withdrawal Amount">
+        </div>
+        <button class="btn btn-primary" onclick="Logic.submitWithdrawal()">REQUEST CASHOUT</button>
+    </div>
+
+    <div id="viewAdmin" class="view">
+        <h1 style="color: var(--admin-blue)">ADMIN CONTROLLER</h1>
+        
+        <div class="admin-box">
+            <h3>NEXT RESULT CONTROL</h3>
+            <select id="ctrlResult" style="width:100%; padding:15px; background:black; color:gold;">
+                <option value="auto">RANDOM (AUTOMATIC)</option>
+                <option value="Big">FORCE BIG</option>
+                <option value="Small">FORCE SMALL</option>
+            </select>
+        </div>
+
+        <h3>PENDING TRANSACTIONS</h3>
+        <div id="adminReqList"></div>
+
+        <h3>USER LIST</h3>
+        <div id="adminUserList" style="font-size: 12px; color: #848e9c;"></div>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBBlKPL2V0JKCYN_GBGGSqDBZr7kFNiKZc",
+        authDomain: "beast-web-cff81.firebaseapp.com",
+        databaseURL: "https://beast-web-cff81-default-rtdb.firebaseio.com",
+        projectId: "beast-web-cff81",
+        storageBucket: "beast-web-cff81.firebasestorage.app",
+        messagingSenderId: "457850837406",
+        appId: "1:457850837406:web:32263b2b15fb8705ddde8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ROUTER SYSTEM
+    window.Router = {
+        go: (viewId) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+    };
+
+    // UTILS
+    window.Utils = {
+        notify: (msg) => {
+            const p = document.getElementById('popup');
+            p.innerText = msg;
+            p.style.top = '20px';
+            setTimeout(() => { p.style.top = '-100px'; }, 3000);
+        }
+    };
+
+    // MAIN LOGIC
+    window.Logic = {
+        currentUser: null,
+        currentPeriod: "",
+
+        handleRegister: async () => {
+            const phone = document.getElementById('regPhone').value;
+            const pass = document.getElementById('regPass').value;
+            const conf = document.getElementById('regConfirm').value;
+
+            if(phone.length < 10) return Utils.notify("Invalid Phone Number");
+            if(pass !== conf) return Utils.notify("Passwords do not match!");
+
+            const snap = await get(ref(db, `users/${phone}`));
+            if(snap.exists()) return Utils.notify("Number already registered!");
+
+            await set(ref(db, `users/${phone}`), {
+                phone, password: pass, balance: 0, joined: serverTimestamp()
+            });
+            Utils.notify("Registration Successful!");
+            Router.go('viewLogin');
+        },
+
+        handleLogin: async () => {
+            const phone = document.getElementById('loginPhone').value;
+            const pass = document.getElementById('loginPass').value;
+
+            const snap = await get(ref(db, `users/${phone}`));
+            if(!snap.exists()) return Utils.notify("Number not registered!");
+            
+            if(snap.val().password !== pass) return Utils.notify("Invalid Password!");
+
+            Logic.currentUser = snap.val();
+            localStorage.setItem('beast_user', phone);
+            Logic.initSync();
+            Router.go('viewGame');
+        },
+
+        initSync: () => {
+            const phone = localStorage.getItem('beast_user');
+            onValue(ref(db, `users/${phone}/balance`), (s) => {
+                document.getElementById('displayBalance').innerText = parseFloat(s.val() || 0).toFixed(2);
+            });
+            Logic.loadHistory();
+        },
+
+        // REAL-TIME CLOCK LOGIC (JAVA STYLE)
+        startClock: () => {
+            setInterval(async () => {
+                const now = new Date();
+                const ist = new Date(now.getTime() + (330 * 60 * 1000));
+                
+                const seconds = now.getSeconds();
+                const remain = 60 - seconds;
+                const totalMins = now.getHours() * 60 + now.getMinutes();
+                
+                const dateCode = now.toISOString().slice(0,10).replace(/-/g, "");
+                const pId = dateCode + "1000" + (10001 + totalMins - 330);
+                
+                Logic.currentPeriod = pId;
+                document.getElementById('displayPeriod').innerText = pId;
+                document.getElementById('displayTimer').innerText = `00:${remain < 10 ? '0'+remain : remain}`;
+
+                // Process result at the start of every minute
+                if(remain === 60) {
+                    Logic.executeResultEngine(pId);
+                }
+            }, 1000);
+        },
+
+        executeResultEngine: async (pId) => {
+            const ctrl = await get(ref(db, 'admin/nextResult'));
+            const finalRes = ctrl.val() === 'auto' || !ctrl.val() ? (Math.random() > 0.5 ? 'Big' : 'Small') : ctrl.val();
+            
+            // Log History
+            await set(ref(db, `history/${pId}`), finalRes);
+            await set(ref(db, 'admin/nextResult'), 'auto'); // Reset admin control
+            
+            // Settlement Logic for currentUser
+            Logic.settleBets(pId, finalRes);
+        },
+
+        prepareBet: async (type) => {
+            const amt = prompt(`Confirm Bet on ${type}\nEnter Amount (Min ₹1):`);
+            if(!amt || amt < 1) return;
+
+            const phone = localStorage.getItem('beast_user');
+            const userRef = ref(db, `users/${phone}`);
+            const snap = await get(userRef);
+            const bal = snap.val().balance;
+
+            if(bal < amt) return Utils.notify("Insufficient Balance!");
+
+            // Deduct
+            await update(userRef, { balance: bal - parseInt(amt) });
+            
+            // Record
+            await push(ref(db, `bets/${Logic.currentPeriod}/${phone}`), {
+                type, amount: parseInt(amt), status: 'pending'
+            });
+            Utils.notify("Bet Locked Successfully!");
+        },
+
+        settleBets: async (pId, result) => {
+            const phone = localStorage.getItem('beast_user');
+            const betSnap = await get(ref(db, `bets/${pId}/${phone}`));
+            
+            if(betSnap.exists()) {
+                let winAmt = 0;
+                betSnap.forEach(child => {
+                    const bet = child.val();
+                    if(bet.type === result) {
+                        winAmt += bet.amount * 1.96; // 96% Profit
+                    }
+                });
+
+                if(winAmt > 0) {
+                    const userRef = ref(db, `users/${phone}`);
+                    const uSnap = await get(userRef);
+                    await update(userRef, { balance: uSnap.val().balance + winAmt });
+                    Utils.notify("Victory! You won the bet.");
+                } else {
+                    Utils.notify("Loss! Better luck next time.");
+                }
+            }
+        },
+
+        submitDeposit: async () => {
+            const amt = document.getElementById('depAmt').value;
+            const utr = document.getElementById('depUTR').value;
+            if(utr.length !== 12) return Utils.notify("Invalid UTR. Must be 12 digits.");
+            if(amt < 10) return Utils.notify("Minimum Deposit is ₹10");
+
+            await push(ref(db, 'requests/deposits'), {
+                phone: localStorage.getItem('beast_user'),
+                amount: parseInt(amt),
+                utr,
+                status: 'pending',
+                time: serverTimestamp()
+            });
+            Utils.notify("Please Wait Patiently. Verification in progress.");
+            Router.go('viewGame');
+        },
+
+        submitWithdrawal: async () => {
+            const amt = document.getElementById('witAmt').value;
+            const upi = document.getElementById('witUPI').value;
+            const name = document.getElementById('witName').value;
+            const phone = localStorage.getItem('beast_user');
+
+            const uSnap = await get(ref(db, `users/${phone}`));
+            if(uSnap.val().balance < amt) return Utils.notify("Insufficient Balance!");
+
+            await push(ref(db, 'requests/withdrawals'), {
+                phone, amount: parseInt(amt), upi, name, status: 'pending'
+            });
+            // Note: Withdrawal balance deduct on Admin Approval usually, or deduct here.
+            Utils.notify("Withdrawal Request Submitted.");
+            Router.go('viewGame');
+        },
+
+        adminEntry: () => {
+            const p = prompt("ACCESS KEY:");
+            if(p === "myselfyg26") {
+                Router.go('viewAdmin');
+                Logic.initAdminDashboard();
+            } else {
+                Utils.notify("System Lock: Unauthorized Access.");
+            }
+        },
+
+        initAdminDashboard: () => {
+            // Monitor Admin Control
+            document.getElementById('ctrlResult').onchange = (e) => {
+                set(ref(db, 'admin/nextResult'), e.target.value);
+            };
+
+            // Monitor Deposits
+            onValue(ref(db, 'requests/deposits'), (s) => {
+                const list = document.getElementById('adminReqList');
+                list.innerHTML = "<h4>Deposit Requests</h4>";
+                s.forEach(child => {
+                    const d = child.val();
+                    if(d.status === 'pending') {
+                        list.innerHTML += `<div class="admin-box">
+                            User: ${d.phone} | Amt: ₹${d.amount} <br> UTR: ${d.utr} <br>
+                            <button onclick="window.Logic.adminAction('deposits', '${child.key}', 'approve', ${d.amount}, '${d.phone}')" style="background:green">Approve</button>
+                            <button onclick="window.Logic.adminAction('deposits', '${child.key}', 'reject')" style="background:red">Reject</button>
+                        </div>`;
+                    }
+                });
+            });
+        },
+
+        adminAction: async (type, id, action, amt, phone) => {
+            if(action === 'approve') {
+                if(type === 'deposits') {
+                    const uRef = ref(db, `users/${phone}`);
+                    const uSnap = await get(uRef);
+                    await update(uRef, { balance: (uSnap.val().balance || 0) + amt });
+                }
+                await update(ref(db, `requests/${type}/${id}`), { status: 'success' });
+            } else {
+                await update(ref(db, `requests/${type}/${id}`), { status: 'failed' });
+            }
+            Utils.notify("Transaction Processed.");
+        },
+
+        loadHistory: () => {
+            onValue(ref(db, 'history'), (s) => {
+                const body = document.getElementById('gameHistoryList');
+                body.innerHTML = "";
+                const data = s.val();
+                if(data) {
+                    Object.keys(data).reverse().slice(0, 10).forEach(key => {
+                        body.innerHTML += `<tr>
+                            <td>${key.slice(-4)}</td>
+                            <td style="color:${data[key] === 'Big' ? '#a020f0' : '#00ff88'}">${data[key]}</td>
+                            <td>${data[key] === 'Big' ? 'B' : 'S'}</td>
+                        </tr>`;
+                    });
+                }
+            });
+        }
+    };
+
+    // BOOTSTRAP
+    Logic.startClock();
+    if(localStorage.getItem('beast_user')) {
+        Logic.initSync();
+        Router.go('viewGame');
+    }
+
+</script>
+</body>
+</html>
