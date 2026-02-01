@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTER ADMIN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-black text-green-500 font-mono p-4">
+
+    <div id="lock" class="max-w-sm mx-auto mt-20 border border-green-900 p-8 rounded-3xl text-center">
+        <h1 class="text-xl mb-6">ADMIN KEY REQUIRED</h1>
+        <input type="password" id="adm-pass" class="w-full bg-black border border-green-900 p-4 rounded-xl mb-6 text-center text-green-500">
+        <button onclick="auth()" class="w-full bg-green-900 text-black font-bold py-4 rounded-xl">LOGIN</button>
+    </div>
+
+    <div id="panel" class="hidden max-w-2xl mx-auto space-y-6">
+        <div class="border border-zinc-800 p-6 rounded-3xl bg-zinc-950 text-center">
+            <h2 class="text-red-500 mb-4 uppercase text-xs">Force Result</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="b-Big" onclick="setF('Big')" class="bg-zinc-900 p-6 rounded-2xl font-bold">BIG</button>
+                <button id="b-Small" onclick="setF('Small')" class="bg-zinc-900 p-6 rounded-2xl font-bold">SMALL</button>
+            </div>
+            <button onclick="setF('Random')" class="mt-4 text-xs text-zinc-600 underline">RESET TO RANDOM</button>
+        </div>
+
+        <div class="border border-zinc-800 p-6 rounded-3xl bg-zinc-950">
+            <h2 class="text-yellow-500 mb-4 text-xs">PENDING REQUESTS</h2>
+            <div id="req-list" class="space-y-4"></div>
+        </div>
+
+        <div class="border border-zinc-800 p-6 rounded-3xl bg-zinc-950">
+            <h2 class="text-blue-500 mb-2 text-xs uppercase">Update Deposit QR</h2>
+            <input type="file" id="qrf" class="mb-4 text-xs">
+            <button onclick="upQR()" class="w-full bg-blue-900 text-white py-3 rounded-xl text-xs">UPLOAD QR</button>
+        </div>
+
+        <div class="border border-zinc-800 p-6 rounded-3xl bg-zinc-950">
+            <h2 class="text-green-500 mb-4 text-xs italic">REGISTERED USERS</h2>
+            <div id="user-list" class="text-[10px] space-y-1"></div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+            projectId: "yggame-23e85",
+            appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function auth() { if(document.getElementById('adm-pass').value === 'myselfyg26') { document.getElementById('lock').classList.add('hidden'); document.getElementById('panel').classList.remove('hidden'); load(); } }
+
+        function setF(v) { db.ref('control/force').set(v); }
+        db.ref('control/force').on('value', s => {
+            document.getElementById('b-Big').style.borderColor = s.val()==='Big'?'red':'transparent';
+            document.getElementById('b-Small').style.borderColor = s.val()==='Small'?'red':'transparent';
+        });
+
+        function load() {
+            db.ref('users').on('value', s => {
+                let d = s.val(), h = '';
+                for(let k in d) h += `<div>ID: ${k} | PASS: ${d[k].pass} | BAL: ₹${d[k].wallet.toFixed(1)}</div>`;
+                document.getElementById('user-list').innerHTML = h;
+            });
+
+            db.ref().on('value', s => {
+                let html = '';
+                let deps = s.val().deposits || {};
+                let wits = s.val().withdraws || {};
+                
+                for(let k in deps) if(deps[k].status === 'Pending') html += `
+                    <div class="border border-zinc-900 p-3 rounded-xl text-[10px] bg-black">
+                        DEP: ${deps[k].phone} | ₹${deps[k].amt} | UTR: ${deps[k].utr}
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="appD('${k}',true)" class="bg-green-900 flex-1 p-1">Approve</button>
+                            <button onclick="appD('${k}',false)" class="bg-red-950 flex-1 p-1">Reject</button>
+                        </div>
+                    </div>`;
+
+                for(let k in wits) if(wits[k].status === 'Pending') html += `
+                    <div class="border border-zinc-900 p-3 rounded-xl text-[10px] bg-black">
+                        WIT: ${wits[k].phone} | ₹${wits[k].amt} | ${wits[k].upi}
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="appW('${k}',true)" class="bg-blue-900 flex-1 p-1">Approve</button>
+                            <button onclick="appW('${k}',false)" class="bg-red-950 flex-1 p-1">Reject</button>
+                        </div>
+                    </div>`;
+                document.getElementById('req-list').innerHTML = html || 'No Pending Tasks';
+            });
+        }
+
+        function appD(id, s) {
+            db.ref('deposits/'+id).once('value', rSnap => {
+                let r = rSnap.val();
+                if(s) {
+                    db.ref('users/'+r.phone+'/wallet').once('value', wSnap => {
+                        db.ref('users/'+r.phone+'/wallet').set((wSnap.val() || 0) + r.amt);
+                    });
+                    db.ref('deposits/'+id+'/status').set('Success');
+                } else { db.ref('deposits/'+id+'/status').set('Failed'); }
+            });
+        }
+
+        function appW(id, s) {
+            db.ref('withdraws/'+id).once('value', rSnap => {
+                let r = rSnap.val();
+                if(s) { db.ref('withdraws/'+id+'/status').set('Success'); } 
+                else {
+                    db.ref('users/'+r.phone+'/wallet').once('value', wSnap => {
+                        db.ref('users/'+r.phone+'/wallet').set((wSnap.val() || 0) + r.amt);
+                    });
+                    db.ref('withdraws/'+id+'/status').set('Failed');
+                }
+            });
+        }
+
+        function upQR() {
+            let f = document.getElementById('qrf').files[0];
+            let rd = new FileReader();
+            rd.onload = (e) => { db.ref('control/qr').set(e.target.result); alert("QR Updated!"); }
+            rd.readAsDataURL(f);
+        }
+    </script>
+</body>
+</html>
