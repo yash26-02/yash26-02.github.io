@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>YGWIN | ULTIMATE WIN-GO 30S</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ROOT & THEME VARIABLES --- */
+        :root {
+            --primary: #fbbf24;
+            --bg-deep: #010409;
+            --bg-card: #0d1117;
+            --accent-red: #ef4444;
+            --accent-blue: #6366f1;
+            --text-main: #e6edf3;
+        }
+
+        /* --- CORE STYLING --- */
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(13, 17, 23, 0.95); border: 1px solid #30363d; backdrop-filter: blur(10px); }
+        .hidden { display: none !important; }
+
+        /* --- BUTTON DESIGNS --- */
+        .btn-bet {
+            height: 48px;
+            width: 120px;
+            border-radius: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .btn-bet:active { transform: scale(0.92); filter: brightness(1.2); }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), #d97706);
+            color: #000;
+            padding: 14px;
+            border-radius: 16px;
+            font-weight: 800;
+            width: 100%;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+
+        @keyframes timerPulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .timer-warning { color: var(--accent-red) !important; animation: timerPulse 0.8s infinite; }
+
+        /* --- HISTORY TABLE --- */
+        .history-row {
+            display: grid;
+            grid-template-cols: 1.5fr 1fr;
+            padding: 12px 16px;
+            border-bottom: 1px solid #21262d;
+            font-size: 11px;
+        }
+
+        /* --- CUSTOM MODALS --- */
+        .modal-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 2px solid var(--primary);
+            border-radius: 30px 30px 0 0;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .modal-active { transform: translateY(0); }
+
+        /* --- DEPOSIT QR BOX --- */
+        #qr-box {
+            width: 220px;
+            height: 220px;
+            background: #fff;
+            margin: 20px auto;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-module" class="w-full max-w-md mx-auto p-6 mt-10">
+        <div class="glass p-10 rounded-[40px] shadow-2xl animate-fade">
+            <div class="text-center mb-10">
+                <h1 class="text-6xl font-black italic text-yellow-500 tracking-tighter orbitron">YGWIN</h1>
+                <div class="h-1 w-20 bg-yellow-500 mx-auto mt-2 rounded-full"></div>
+            </div>
+
+            <div id="reg-screen">
+                <div class="space-y-4">
+                    <input type="number" id="r-phone" placeholder="Mobile Number" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none focus:border-yellow-500 transition">
+                    <input type="password" id="r-pass" placeholder="Password" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none">
+                    <input type="password" id="r-cpass" placeholder="Confirm Password" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none">
+                    <button onclick="executeRegister()" class="btn-action mt-4 shadow-lg shadow-yellow-900/20">REGISTER NOW</button>
+                    <p class="text-center text-sm text-gray-500 mt-6">Already member? <button onclick="showLogin()" class="text-yellow-500 font-bold underline">Login</button></p>
+                </div>
+            </div>
+
+            <div id="log-screen" class="hidden">
+                <div class="space-y-4">
+                    <input type="number" id="l-phone" placeholder="Mobile Number" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none focus:border-yellow-500 transition">
+                    <input type="password" id="l-pass" placeholder="Password" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none">
+                    <button onclick="executeLogin()" class="btn-action mt-4 shadow-lg shadow-yellow-900/20">ACCESS ACCOUNT</button>
+                    <p class="text-center text-sm text-gray-500 mt-6">New user? <button onclick="showRegister()" class="text-yellow-500 font-bold underline">Create Account</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-module" class="w-full max-w-md mx-auto px-4 pb-20 hidden animate-fade">
+        <div class="flex justify-between items-center py-6 px-2">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-yellow-500 flex items-center justify-center text-black font-black shadow-lg">YG</div>
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Active Player</p>
+                    <h3 id="display-user" class="text-sm font-bold orbitron">---</h3>
+                </div>
+            </div>
+            <button onclick="performLogout()" class="bg-red-500/10 text-red-500 text-[10px] font-black px-4 py-2 rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition">LOGOUT</button>
+        </div>
+
+        <div class="glass p-8 rounded-[35px] mb-6 relative overflow-hidden shadow-2xl">
+            <div class="absolute top-0 right-0 p-4 opacity-5"><h1 class="orbitron text-5xl">WALLET</h1></div>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2">Available Credits</p>
+            <div class="flex justify-between items-end">
+                <h2 class="text-4xl font-black orbitron">₹<span id="user-balance">0.00</span></h2>
+                <div class="flex gap-2">
+                    <button onclick="toggleModal('dep', true)" class="bg-red-600 px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg">DEPOSIT</button>
+                    <button onclick="toggleModal('wit', true)" class="bg-yellow-500 text-black px-6 py-3 rounded-2xl text-[10px] font-black shadow-lg">WITHDRAW</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-8 rounded-[40px] mb-6 border-b-4 border-yellow-500 shadow-2xl">
+            <div class="flex justify-between items-center mb-10">
+                <div class="text-left">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Win Go 30s</p>
+                    </div>
+                    <p id="period-id" class="text-xl font-black orbitron text-white">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Time Left</p>
+                    <div id="game-timer" class="text-4xl font-black orbitron text-yellow-500 tracking-tighter">00:30</div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-5">
+                <button onclick="triggerBet('Big')" class="btn-bet bg-orange-600 shadow-orange-900/40 text-white">BIG</button>
+                <button onclick="triggerBet('Small')" class="btn-bet bg-indigo-600 shadow-indigo-900/40 text-white">SMALL</button>
+            </div>
+        </div>
+
+        <div class="glass rounded-[30px] p-6 mb-10">
+            <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] text-center mb-6 border-b border-gray-800 pb-3">Titan History Records</h3>
+            <div class="grid grid-cols-2 text-[9px] font-bold text-gray-600 px-4 mb-4">
+                <span>PERIOD ID</span>
+                <span class="text-right">RESULT</span>
+            </div>
+            <div id="history-feed" class="max-h-[300px] overflow-y-auto">
+                </div>
+        </div>
+    </div>
+
+    <div id="dep-modal" class="modal-bottom p-8">
+        <div class="w-16 h-1 bg-gray-800 mx-auto rounded-full mb-8"></div>
+        <h2 class="text-2xl font-black text-red-500 orbitron italic mb-6 text-center underline decoration-yellow-500 underline-offset-8">CREDIT RECHARGE</h2>
+        
+        <div id="qr-box" class="flex items-center justify-center overflow-hidden">
+            <img id="admin-qr" src="" class="w-full h-full object-contain rounded-xl">
+        </div>
+
+        <div class="space-y-4">
+            <input type="number" id="d-amount" placeholder="Deposit Amount (Min ₹10)" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none font-bold">
+            <input type="number" id="d-utr" placeholder="12-Digit Payment UTR" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none font-bold">
+            <button onclick="commitDeposit()" class="btn-action bg-red-600 text-white text-lg italic">SEND DATA FOR CHECKING</button>
+            <button onclick="toggleModal('dep', false)" class="w-full text-gray-500 font-bold text-xs py-4">ABORT RECHARGE</button>
+        </div>
+    </div>
+
+    <div id="wit-modal" class="modal-bottom p-8">
+        <div class="w-16 h-1 bg-gray-800 mx-auto rounded-full mb-8"></div>
+        <h2 class="text-2xl font-black text-yellow-500 orbitron italic mb-8 text-center">LIQUIDATE BALANCE</h2>
+        <div class="space-y-4">
+            <input type="text" id="w-upi" placeholder="Your UPI ID" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none">
+            <input type="text" id="w-name" placeholder="Bank Account Holder Name" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none">
+            <input type="number" id="w-amount" placeholder="Withdrawal Amount" class="w-full p-5 rounded-2xl bg-black border border-gray-800 outline-none font-black text-xl">
+            <button onclick="commitWithdraw()" class="btn-action text-lg italic">EXECUTE WITHDRAWAL</button>
+            <button onclick="toggleModal('wit', false)" class="w-full text-gray-500 font-bold text-xs py-4">BACK TO TERMINAL</button>
+        </div>
+    </div>
+
+    <div id="result-overlay" class="fixed inset-0 bg-black/90 z-[2000] hidden flex items-center justify-center p-8">
+        <div class="glass p-12 rounded-[50px] border-2 border-yellow-500 text-center shadow-[0_0_60px_rgba(250,189,5,0.2)] animate-fade">
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Period Concluded</p>
+            <h1 id="pop-res" class="text-7xl font-black italic orbitron mb-6">---</h1>
+            <div id="pop-status" class="py-2 px-6 rounded-full text-xs font-black inline-block mb-10">---</div>
+            <button onclick="closeResultOverlay()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-2xl shadow-xl">CONTINUE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. FIREBASE ARCHITECTURE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+            projectId: "yggame-23e85",
+            appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. CORE SYSTEM VARIABLES ---
+        let current_user_session = null;
+        let active_period_bet = null;
+        let global_period_id = "";
+        let sync_time_ready = false;
+
+        // --- 3. SESSION MANAGER ---
+        const checkActiveSession = () => {
+            const cache = localStorage.getItem('yg_titan_v3');
+            if(cache) {
+                current_user_session = JSON.parse(cache);
+                launchGamePlatform();
+            }
+        };
+
+        // --- 4. AUTHENTICATION MODULE ---
+        const showLogin = () => { document.getElementById('reg-screen').classList.add('hidden'); document.getElementById('log-screen').classList.remove('hidden'); };
+        const showRegister = () => { document.getElementById('log-screen').classList.add('hidden'); document.getElementById('reg-screen').classList.remove('hidden'); };
+
+        async function executeRegister() {
+            const ph = document.getElementById('r-phone').value;
+            const ps = document.getElementById('r-pass').value;
+            const cps = document.getElementById('r-cpass').value;
+
+            if(ph.length < 10) return alert("❌ Invalid Phone Number!");
+            if(ps.length < 4) return alert("❌ Password too weak!");
+            if(ps !== cps) return alert("❌ Passwords do not match!");
+
+            try {
+                const snap = await db.ref('users/' + ph).once('value');
+                if(snap.exists()) return alert("⚠️ Number already registered!");
+                
+                await db.ref('users/' + ph).set({ phone: ph, pass: ps, wallet: 0 });
+                alert("✅ Registration Successful! Login now.");
+                showLogin();
+            } catch (e) { alert("Error: " + e.message); }
+        }
+
+        async function executeLogin() {
+            const ph = document.getElementById('l-phone').value;
+            const ps = document.getElementById('l-pass').value;
+
+            try {
+                const snap = await db.ref('users/' + ph).once('value');
+                if(!snap.exists()) return alert("❌ Number not registered!");
+                if(snap.val().pass !== ps) return alert("❌ Incorrect password!");
+
+                current_user_session = snap.val();
+                localStorage.setItem('yg_titan_v3', JSON.stringify(current_user_session));
+                launchGamePlatform();
+            } catch (e) { alert("Login Error"); }
+        }
+
+        function launchGamePlatform() {
+            document.getElementById('auth-module').classList.add('hidden');
+            document.getElementById('game-module').classList.remove('hidden');
+            document.getElementById('display-user').innerText = current_user_session.phone;
+
+            // Start Real-time Balance Monitor
+            db.ref('users/' + current_user_session.phone + '/wallet').on('value', s => {
+                current_user_session.wallet = s.val() || 0;
+                document.getElementById('user-balance').innerText = current_user_session.wallet.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            });
+
+            // Start Global History Monitor
+            db.ref('history').limitToLast(15).on('value', s => {
+                const container = document.getElementById('history-feed');
+                container.innerHTML = '';
+                let data = [];
+                s.forEach(c => { data.unshift({p: c.key, r: c.val()}); });
+                data.forEach(item => {
+                    const color = item.r === 'Big' ? 'text-orange-500' : 'text-indigo-500';
+                    container.innerHTML += `
+                        <div class="history-row">
+                            <span class="orbitron text-gray-400">${item.p}</span>
+                            <span class="text-right font-black orbitron ${color}">${item.r.toUpperCase()}</span>
+                        </div>
+                    `;
+                });
+            });
+
+            // Admin QR Update
+            db.ref('control/qr').on('value', s => { document.getElementById('admin-qr').src = s.val(); });
+            sync_time_ready = true;
+        }
+
+        // --- 5. THE 30S TITAN ENGINE ---
+        function runGlobalEngine() {
+            if(!sync_time_ready) return;
+
+            const now = new Date();
+            const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const sec = ist.getSeconds();
+            const rem = 30 - (sec % 30);
+            
+            const totalSec = ist.getHours() * 3600 + ist.getMinutes() * 60 + ist.getSeconds();
+            const periodIdx = Math.floor(totalSec / 30);
+            global_period_id = ist.toISOString().slice(0,10).replace(/-/g,"") + "100" + (1000 + periodIdx);
+
+            document.getElementById('period-id').innerText = global_period_id;
+            document.getElementById('game-timer').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+
+            if(rem <= 5) document.getElementById('game-timer').classList.add('timer-warning');
+            else document.getElementById('game-timer').classList.remove('timer-warning');
+
+            // --- RESULT PHASE ---
+            if(rem === 1) {
+                db.ref('control/force').once('value', s => {
+                    const force = s.val();
+                    // LOGIC: IF ADMIN NOT SET, RANDOMIZE BIG/SMALL
+                    const result = (force && force !== 'Random') ? force : (Math.random() > 0.5 ? 'Big' : 'Small');
+                    
+                    // SAVE TO GLOBAL HISTORY
+                    db.ref('history/' + global_period_id).set(result);
+                    
+                    setTimeout(() => {
+                        displayPeriodResult(result);
+                        // Reset Admin Force to Random automatically
+                        db.ref('control/force').set('Random');
+                    }, 1500);
+                });
+            }
+        }
+        setInterval(runGlobalEngine, 1000);
+
+        function displayPeriodResult(res) {
+            const overlay = document.getElementById('result-overlay');
+            const txt = document.getElementById('pop-res');
+            const status = document.getElementById('pop-status');
+
+            txt.innerText = res.toUpperCase();
+            txt.className = `text-7xl font-black italic orbitron mb-6 ${res === 'Big' ? 'text-orange-500' : 'text-indigo-500'}`;
+
+            if(active_period_bet) {
+                if(active_period_bet.type === res) {
+                    const win = active_period_bet.amt * 1.96;
+                    db.ref('users/'+current_user_session.phone+'/wallet').set(current_user_session.wallet + win);
+                    status.innerText = "SUCCESS! +₹" + win.toFixed(2);
+                    status.className = "py-2 px-6 rounded-full text-xs font-black inline-block mb-10 bg-green-500 text-black";
+                } else {
+                    status.innerText = "FAILED! -₹" + active_period_bet.amt.toFixed(2);
+                    status.className = "py-2 px-6 rounded-full text-xs font-black inline-block mb-10 bg-red-500 text-white";
+                }
+                active_period_bet = null;
+            } else {
+                status.innerText = "NO POSITION TAKEN";
+                status.className = "py-2 px-6 rounded-full text-xs font-black inline-block mb-10 bg-gray-700 text-gray-400";
+            }
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => { overlay.classList.add('hidden'); }, 6000);
+        }
+
+        // --- 6. BETTING SYSTEM ---
+        function triggerBet(type) {
+            if(current_user_session.wallet < 1) return alert("❌ Low Balance! Please Recharge.");
+            
+            const amt = prompt(`[${type.toUpperCase()}] Enter Bet Amount (Min ₹1):`, "10");
+            const val = parseFloat(amt);
+
+            if(isNaN(val) || val < 1) return;
+            if(val > current_user_session.wallet) return alert("❌ Insufficient Balance!");
+
+            // Lock the Bet
+            db.ref('users/'+current_user_session.phone+'/wallet').set(current_user_session.wallet - val);
+            active_period_bet = { type: type, amt: val };
+
+            // Admin Live Feed
+            db.ref('live_bets/' + current_user_session.phone).set({
+                phone: current_user_session.phone,
+                type: type,
+                amt: val,
+                period: global_period_id,
+                timestamp: Date.now()
+            });
+
+            alert("✅ Bet Confirmed on " + type);
+        }
+
+        // --- 7. FINANCE MODULE (DEP/WIT) ---
+        function commitDeposit() {
+            const amt = parseFloat(document.getElementById('d-amount').value);
+            const utr = document.getElementById('d-utr').value;
+
+            if(amt < 10) return alert("❌ Minimum deposit is ₹10");
+            if(utr.length !== 12) return alert("❌ UTR must be 12 digits!");
+
+            db.ref('requests/deposits').push({
+                phone: current_user_session.phone,
+                amt: amt,
+                utr: utr,
+                status: 'Pending',
+                time: new Date().toLocaleString()
+            });
+
+            alert("🔔 Payment Data Sent! Please Wait Patiently for Checking.");
+            toggleModal('dep', false);
+        }
+
+        function commitWithdraw() {
+            const upi = document.getElementById('w-upi').value;
+            const name = document.getElementById('w-name').value;
+            const amt = parseFloat(document.getElementById('w-amount').value);
+
+            if(!upi || !name || amt < 10) return alert("❌ Invalid Data!");
+            if(amt > current_user_session.wallet) return alert("❌ Insufficient Wallet Balance!");
+
+            db.ref('requests/withdraws').push({
+                phone: current_user_session.phone,
+                upi: upi,
+                name: name,
+                amt: amt,
+                status: 'Pending',
+                time: new Date().toLocaleString()
+            });
+
+            db.ref('users/'+current_user_session.phone+'/wallet').set(current_user_session.wallet - amt);
+            alert("✅ Withdrawal Request Sent to Admin.");
+            toggleModal('wit', false);
+        }
+
+        // --- 8. UI CONTROLLERS ---
+        function toggleModal(id, show) {
+            const m = document.getElementById(id + '-modal');
+            if(show) m.classList.add('modal-active');
+            else m.classList.remove('modal-active');
+        }
+
+        function closeResultOverlay() { document.getElementById('result-overlay').classList.add('hidden'); }
+        function performLogout() { localStorage.removeItem('yg_titan_v3'); location.reload(); }
+
+        // Start Initializer
+        checkActiveSession();
+
+    </script>
+</body>
+</html>
