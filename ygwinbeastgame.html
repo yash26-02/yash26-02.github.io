@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>YGWIN | OFFICIAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: #010409; color: #e6edf3; font-family: 'Inter', sans-serif; margin: 0; user-select: none; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass-box { background: #0d1117; border: 1px solid #30363d; border-radius: 20px; }
+        .btn-bet { height: 45px; width: 120px; border-radius: 12px; font-weight: 900; font-size: 14px; transition: 0.2s; color: white; }
+        .btn-bet:active { transform: scale(0.9); }
+        .hidden { display: none !important; }
+        
+        /* Modal Style */
+        .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #0d1117; border-top: 2px solid #fbbf24; border-radius: 25px 25px 0 0; z-index: 1000; transform: translateY(100%); transition: 0.4s cubic-bezier(0, 0, 0.2, 1); visibility: hidden; }
+        .sheet-active { transform: translateY(0); visibility: visible; }
+        
+        /* Result Pop Animation */
+        #res-pop { animation: popIn 0.5s ease forwards; }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        input { background: #010409 !important; border: 1px solid #30363d !important; color: white !important; }
+    </style>
+</head>
+<body class="flex flex-col items-center">
+
+    <div id="auth-section" class="w-full max-w-md p-6 mt-10">
+        <div class="glass-box p-8 text-center shadow-2xl">
+            <h1 class="text-5xl font-black italic text-yellow-500 orbitron mb-8">YGWIN</h1>
+            
+            <div id="login-form" class="space-y-4">
+                <input type="number" id="log-phone" placeholder="Mobile Number" class="w-full p-4 rounded-xl outline-none">
+                <input type="password" id="log-pass" placeholder="Password" class="w-full p-4 rounded-xl outline-none">
+                <button onclick="login()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl text-sm">LOGIN</button>
+                <p class="text-xs text-gray-500 mt-4">Don't have account? <span onclick="toggleAuth(false)" class="text-yellow-500 font-bold cursor-pointer">Register</span></p>
+            </div>
+
+            <div id="reg-form" class="hidden space-y-4">
+                <input type="number" id="reg-phone" placeholder="Mobile Number" class="w-full p-4 rounded-xl outline-none">
+                <input type="password" id="reg-pass" placeholder="Set Password" class="w-full p-4 rounded-xl outline-none">
+                <button onclick="register()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl text-sm">CREATE ACCOUNT</button>
+                <p class="text-xs text-gray-500 mt-4">Already member? <span onclick="toggleAuth(true)" class="text-yellow-500 font-bold cursor-pointer">Login</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-section" class="w-full max-w-md px-4 hidden">
+        
+        <div class="flex justify-between items-center py-5">
+            <div>
+                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Player ID</p>
+                <h3 id="user-id-txt" class="text-sm font-bold text-white orbitron">---</h3>
+            </div>
+            <button onclick="logout()" class="text-[11px] font-black text-red-500 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20">LOGOUT</button>
+        </div>
+
+        <div class="glass-box p-6 mb-4 text-center">
+            <p class="text-[11px] text-gray-400 font-bold uppercase mb-2">Wallet Balance</p>
+            <h2 class="text-4xl font-black orbitron text-white mb-6">₹<span id="bal-val">0.00</span></h2>
+            <div class="flex gap-3">
+                <button onclick="openSheet('wit')" class="flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-xs font-black">Withdraw</button>
+                <button onclick="openSheet('dep')" class="flex-1 bg-yellow-500 text-black py-3 rounded-xl text-xs font-black shadow-lg">Deposit</button>
+            </div>
+        </div>
+
+        <div class="glass-box p-6 mb-4">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <p class="text-[10px] text-gray-500 font-bold">PERIOD NUMBER</p>
+                    <p id="period-txt" class="text-base font-bold text-white orbitron">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-500 font-bold">TIMER</p>
+                    <div id="timer-txt" class="text-3xl font-black orbitron text-yellow-500">00:30</div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="placeBet('Big')" class="btn-bet bg-orange-600 shadow-lg shadow-orange-900/20">BIG</button>
+                <button onclick="placeBet('Small')" class="btn-bet bg-indigo-600 shadow-lg shadow-indigo-900/20">SMALL</button>
+            </div>
+        </div>
+
+        <div class="glass-box p-5 mb-10">
+            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest text-center mb-4">Result History</p>
+            <div id="history-list" class="space-y-2">
+                </div>
+        </div>
+    </div>
+
+    <div id="res-overlay" class="fixed inset-0 bg-black/90 z-[2000] hidden flex items-center justify-center p-6">
+        <div id="res-pop" class="glass-box p-10 border-2 border-yellow-500 text-center w-full max-w-xs">
+            <p class="text-[10px] text-gray-400 font-bold uppercase mb-4">Upcoming Result</p>
+            <h1 id="pop-val" class="text-6xl font-black orbitron italic mb-6">---</h1>
+            <div id="pop-status" class="text-xs font-black uppercase py-2 px-6 rounded-full inline-block">---</div>
+        </div>
+    </div>
+
+    <div id="sheet-dep" class="bottom-sheet p-8">
+        <h2 class="text-xl font-black text-yellow-500 orbitron mb-6">Deposit Money</h2>
+        <div class="bg-white p-2 w-44 h-44 mx-auto mb-6 rounded-xl"><img id="qr-img" class="w-full h-full object-contain"></div>
+        <input type="number" id="d-amt" placeholder="Enter Amount" class="w-full p-4 rounded-xl mb-3 outline-none">
+        <input type="number" id="d-utr" placeholder="Enter 12-Digit UTR" class="w-full p-4 rounded-xl mb-6 outline-none">
+        <button onclick="submitDep()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl">SUBMIT PAYMENT</button>
+        <button onclick="closeSheet()" class="w-full text-gray-500 text-xs py-4">Cancel</button>
+    </div>
+
+    <div id="sheet-wit" class="bottom-sheet p-8">
+        <h2 class="text-xl font-black text-yellow-500 orbitron mb-6">Withdraw Money</h2>
+        <input type="text" id="w-upi" placeholder="Your UPI ID" class="w-full p-4 rounded-xl mb-3 outline-none">
+        <input type="number" id="w-amt" placeholder="Withdrawal Amount" class="w-full p-4 rounded-xl mb-6 outline-none">
+        <button onclick="submitWit()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl">REQUEST WITHDRAW</button>
+        <button onclick="closeSheet()" class="w-full text-gray-500 text-xs py-4">Cancel</button>
+    </div>
+
+    <script>
+        // FIREBASE SETUP
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+            projectId: "yggame-23e85",
+            appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let user = null;
+        let activeBet = null;
+        let periodId = "";
+
+        // AUTH LOGIC
+        function toggleAuth(isLog) {
+            document.getElementById('login-form').classList.toggle('hidden', !isLog);
+            document.getElementById('reg-form').classList.toggle('hidden', isLog);
+        }
+
+        async function register() {
+            const ph = document.getElementById('reg-phone').value;
+            const ps = document.getElementById('reg-pass').value;
+            if(ph.length < 10) return alert("Invalid Phone");
+            const s = await db.ref('users/'+ph).once('value');
+            if(s.exists()) return alert("User exists");
+            await db.ref('users/'+ph).set({ phone: ph, pass: ps, wallet: 0 });
+            alert("Registered!"); toggleAuth(true);
+        }
+
+        async function login() {
+            const ph = document.getElementById('log-phone').value;
+            const ps = document.getElementById('log-pass').value;
+            const s = await db.ref('users/'+ph).once('value');
+            if(s.exists() && s.val().pass === ps) {
+                user = s.val();
+                localStorage.setItem('yg_session', JSON.stringify(user));
+                startApp();
+            } else alert("Invalid Login");
+        }
+
+        function startApp() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            document.getElementById('user-id-txt').innerText = user.phone;
+
+            // Balance Listener
+            db.ref('users/'+user.phone+'/wallet').on('value', s => {
+                user.wallet = s.val() || 0;
+                document.getElementById('bal-val').innerText = user.wallet.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            });
+
+            // History Listener (Online/Offline hamesha dikhega)
+            db.ref('history').limitToLast(10).on('value', s => {
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                let items = [];
+                s.forEach(c => { items.unshift({p: c.key, r: c.val()}) });
+                items.forEach(i => {
+                    list.innerHTML += `<div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                        <span class="text-[10px] orbitron text-gray-500">${i.p}</span>
+                        <span class="text-xs font-black orbitron ${i.r==='Big'?'text-orange-500':'text-indigo-500'}">${i.r.toUpperCase()}</span>
+                    </div>`;
+                });
+            });
+
+            db.ref('control/qr').on('value', s => document.getElementById('qr-img').src = s.val());
+            setInterval(engine, 1000);
+        }
+
+        // ENGINE LOGIC (30S LOOP)
+        function engine() {
+            const ist = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const sec = ist.getSeconds();
+            const rem = 30 - (sec % 30);
+            
+            const pIdx = Math.floor((ist.getHours()*3600 + ist.getMinutes()*60 + ist.getSeconds()) / 30);
+            periodId = ist.toISOString().slice(0,10).replace(/-/g,"") + (1000 + pIdx);
+            
+            document.getElementById('period-txt').innerText = periodId;
+            document.getElementById('timer-txt').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+
+            // AT TIMER 1: DECIDE RESULT
+            if (rem === 1) {
+                db.ref('control/force').once('value', s => {
+                    const force = s.val();
+                    // RANDOM UNLESS ADMIN SETS
+                    const res = (force && force !== 'Random') ? force : (Math.random() > 0.5 ? 'Big' : 'Small');
+                    
+                    db.ref('history/' + periodId).set(res);
+                    
+                    setTimeout(() => {
+                        showPop(res);
+                        db.ref('control/force').set('Random');
+                    }, 1200);
+                });
+            }
+        }
+
+        function showPop(res) {
+            const over = document.getElementById('res-overlay');
+            const val = document.getElementById('pop-val');
+            const stat = document.getElementById('pop-status');
+            
+            val.innerText = res.toUpperCase();
+            val.className = `text-6xl font-black orbitron italic mb-6 ${res==='Big'?'text-orange-500':'text-indigo-500'}`;
+            
+            if(activeBet) {
+                if(activeBet.type === res) {
+                    // WIN: 0.96% PROFIT (Total 1.96x)
+                    const winAmt = activeBet.amt * 1.96;
+                    db.ref('users/'+user.phone+'/wallet').set(user.wallet + winAmt);
+                    stat.innerText = "WINNER"; stat.className = "bg-green-500 text-black py-2 px-6 rounded-full font-black text-xs";
+                } else {
+                    stat.innerText = "LOSS"; stat.className = "bg-red-500 text-white py-2 px-6 rounded-full font-black text-xs";
+                }
+                activeBet = null;
+            } else {
+                stat.innerText = "NO BET"; stat.className = "bg-gray-700 text-gray-400 py-2 px-6 rounded-full font-black text-xs";
+            }
+
+            over.classList.remove('hidden');
+            setTimeout(() => over.classList.add('hidden'), 5000); // 5 SEC GAYAB
+        }
+
+        function placeBet(type) {
+            const amt = prompt(`Bet on ${type}:`, "10");
+            const val = parseFloat(amt);
+            if(val > 0 && val <= user.wallet) {
+                db.ref('users/'+user.phone+'/wallet').set(user.wallet - val);
+                activeBet = { type: type, amt: val };
+                alert("Bet Placed!");
+            } else alert("Invalid Amount/Balance");
+        }
+
+        // SHEETS LOGIC
+        function openSheet(id) { document.getElementById('sheet-'+id).classList.add('sheet-active'); }
+        function closeSheet() { document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('sheet-active')); }
+
+        function submitDep() {
+            const a = document.getElementById('d-amt').value;
+            const u = document.getElementById('d-utr').value;
+            if(a >= 10 && u.length === 12) {
+                db.ref('requests/deposits').push({ phone: user.phone, amt: a, utr: u, status: 'Pending' });
+                alert("Submitted!"); closeSheet();
+            }
+        }
+
+        function submitWit() {
+            const upi = document.getElementById('w-upi').value;
+            const a = document.getElementById('w-amt').value;
+            if(a >= 10 && a <= user.wallet) {
+                db.ref('requests/withdraws').push({ phone: user.phone, upi, amt: a, status: 'Pending' });
+                db.ref('users/'+user.phone+'/wallet').set(user.wallet - a);
+                alert("Requested!"); closeSheet();
+            }
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+        window.onload = () => {
+            const s = localStorage.getItem('yg_session');
+            if(s) { user = JSON.parse(s); startApp(); }
+        }
+    </script>
+</body>
+</html>
