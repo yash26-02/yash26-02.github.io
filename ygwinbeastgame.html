@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGWIN | PROFESSIONAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0a0f1e; color: white; font-family: 'Inter', sans-serif; user-select: none; }
+        .bg-card { background: #161d31; border: 1px solid #283046; }
+        .input-box { background: #283046 !important; border: 1px solid #404656 !important; color: white !important; }
+        .hidden { display: none !important; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-10">
+
+    <div id="auth-section" class="w-full max-w-md px-6 pt-10">
+        <h1 class="text-4xl font-black text-center mb-10 text-blue-500 italic">YGWIN</h1>
+        
+        <div id="register-box" class="space-y-4">
+            <h2 class="text-xl font-bold">Register</h2>
+            <input type="number" id="reg-phone" placeholder="Phone Number" class="w-full p-4 rounded-xl input-box outline-none">
+            <input type="password" id="reg-pass" placeholder="Password" class="w-full p-4 rounded-xl input-box outline-none">
+            <input type="password" id="reg-conf" placeholder="Confirm Password" class="w-full p-4 rounded-xl input-box outline-none">
+            <button onclick="handleRegister()" class="w-full bg-blue-600 py-4 rounded-full font-bold shadow-lg">Register</button>
+            <p class="text-center text-sm">Already have an account? <span onclick="toggleAuth('login')" class="text-blue-400 cursor-pointer">Login</span></p>
+        </div>
+
+        <div id="login-box" class="space-y-4 hidden">
+            <h2 class="text-xl font-bold">Login</h2>
+            <input type="number" id="log-phone" placeholder="Phone Number" class="w-full p-4 rounded-xl input-box outline-none">
+            <input type="password" id="log-pass" placeholder="Password" class="w-full p-4 rounded-xl input-box outline-none">
+            <button onclick="handleLogin()" class="w-full bg-green-600 py-4 rounded-full font-bold shadow-lg">Login</button>
+            <p class="text-center text-sm">Don't have an account? <span onclick="toggleAuth('register')" class="text-blue-400 cursor-pointer">Register</span></p>
+        </div>
+    </div>
+
+    <div id="game-section" class="w-full max-w-md hidden px-4">
+        <div class="flex justify-between items-center py-6">
+            <h1 class="text-2xl font-black text-blue-500 italic">YGWIN</h1>
+            <div class="text-right">
+                <p class="text-xs text-slate-400">Wallet Balance</p>
+                <p class="text-xl font-bold">₹<span id="bal">0.00</span></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <button onclick="openModal('dep')" class="bg-red-600 py-3 rounded-xl font-bold">DEPOSIT</button>
+            <button onclick="openModal('wit')" class="bg-yellow-500 py-3 rounded-xl font-bold text-black">WITHDRAW</button>
+        </div>
+
+        <div class="bg-card p-5 rounded-3xl mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Period Number</p>
+                    <p id="period" class="font-mono text-white">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Count Down</p>
+                    <div id="timer" class="text-3xl font-black orbitron text-white">00:00</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="openBet('Big')" class="bg-orange-500 h-16 rounded-2xl text-xl font-black italic shadow-lg active:scale-95 transition">BIG</button>
+                <button onclick="openBet('Small')" class="bg-blue-500 h-16 rounded-2xl text-xl font-black italic shadow-lg active:scale-95 transition">SMALL</button>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-3xl overflow-hidden">
+            <div class="py-3 px-5 font-bold border-b border-slate-700">Recent Records</div>
+            <table class="w-full text-center text-sm">
+                <tbody id="history-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-6">
+        <div id="bet-modal" class="bg-card w-full max-w-xs p-6 rounded-3xl hidden text-center">
+            <h2 id="bet-title" class="text-2xl font-black mb-4 italic"></h2>
+            <input type="number" id="bet-amt" placeholder="Enter Amount (Min ₹1)" class="w-full p-4 rounded-xl mb-4 input-box outline-none">
+            <button onclick="confirmBet()" class="w-full bg-blue-600 py-3 rounded-full font-bold">CONFIRM BET</button>
+        </div>
+
+        <div id="dep-modal" class="bg-card w-full max-w-sm p-6 rounded-3xl hidden">
+            <h2 class="text-xl font-bold mb-4 text-red-500">DEPOSIT</h2>
+            <div id="qr-container" class="bg-white p-2 rounded-xl mb-4 w-48 h-48 mx-auto flex items-center justify-center text-black text-xs font-bold">QR Loading...</div>
+            <input type="number" id="dep-amt" placeholder="Amount (Min ₹10)" class="w-full p-4 rounded-xl mb-2 input-box outline-none">
+            <input type="number" id="dep-utr" placeholder="12 Digit UTR Number" class="w-full p-4 rounded-xl mb-4 input-box outline-none">
+            <button onclick="handleDep()" class="w-full bg-red-600 py-3 rounded-full font-bold">DEPOSIT NOW</button>
+        </div>
+
+        <div id="wit-modal" class="bg-card w-full max-w-sm p-6 rounded-3xl hidden">
+            <h2 class="text-xl font-bold mb-4 text-yellow-500">WITHDRAW</h2>
+            <input type="text" id="wit-name" placeholder="Full Name" class="w-full p-4 rounded-xl mb-2 input-box outline-none">
+            <input type="text" id="wit-upi" placeholder="UPI ID" class="w-full p-4 rounded-xl mb-2 input-box outline-none">
+            <input type="number" id="wit-amt" placeholder="Amount" class="w-full p-4 rounded-xl mb-4 input-box outline-none">
+            <button onclick="handleWit()" class="w-full bg-yellow-500 text-black py-3 rounded-full font-bold">WITHDRAW</button>
+        </div>
+        
+        <div id="res-popup" class="bg-card p-8 rounded-3xl text-center hidden border-2 border-yellow-500">
+            <div id="res-icon" class="text-6xl mb-2"></div>
+            <h2 id="res-title" class="text-3xl font-black mb-1"></h2>
+            <p id="res-amt" class="text-green-400 font-bold mb-4"></p>
+            <button onclick="closeModal()" class="px-8 py-2 bg-white text-black rounded-full font-bold">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA", 
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com", 
+            projectId: "yggame-23e85", 
+            appId: "1:805643944561:web:ce050febb92770031c51d0" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let user = null;
+        let activeBet = null;
+        let lastPeriod = "";
+
+        // AUTH LOGIC
+        function toggleAuth(type) {
+            document.getElementById('login-box').classList.toggle('hidden', type === 'register');
+            document.getElementById('register-box').classList.toggle('hidden', type === 'login');
+        }
+
+        function handleRegister() {
+            let ph = document.getElementById('reg-phone').value, ps = document.getElementById('reg-pass').value, cp = document.getElementById('reg-conf').value;
+            if(ph.length < 10) return alert("Enter valid number");
+            if(ps !== cp) return alert("Passwords do not match!");
+            
+            db.ref('users/'+ph).once('value', s => {
+                if(s.exists()) alert("Number has already registered!");
+                else db.ref('users/'+ph).set({phone: ph, pass: ps, wallet: 0}).then(() => { alert("Success! Please Login."); toggleAuth('login'); });
+            });
+        }
+
+        function handleLogin() {
+            let ph = document.getElementById('log-phone').value, ps = document.getElementById('log-pass').value;
+            db.ref('users/'+ph).once('value', s => {
+                if(!s.exists()) return alert("Number not registered!");
+                if(s.val().pass !== ps) return alert("Wrong password!");
+                user = s.val();
+                localStorage.setItem('yg_user', ph);
+                startApp();
+            });
+        }
+
+        function startApp() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            db.ref('users/'+user.phone+'/wallet').on('value', s => {
+                user.wallet = s.val() || 0;
+                document.getElementById('bal').innerText = user.wallet.toFixed(2);
+            });
+            updateEngine();
+        }
+
+        // TIMER & PERIOD (JAVA LOGIC CONVERTED)
+        function updateEngine() {
+            setInterval(() => {
+                const now = new Date();
+                const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                const sec = ist.getSeconds(), rem = 60 - sec;
+                const totalMinutes = ist.getHours() * 60 + ist.getMinutes();
+                const pId = ist.toISOString().slice(0,10).replace(/-/g,"") + "1000" + (10001 + totalMinutes - 330);
+                
+                document.getElementById('period').innerText = pId;
+                document.getElementById('timer').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+
+                if(rem === 60 && lastPeriod !== pId) {
+                    lastPeriod = pId;
+                    checkResult(pId);
+                }
+            }, 1000);
+        }
+
+        // GAME LOGIC
+        function openBet(type) {
+            if(user.wallet < 1) return alert("Insufficient Balance! Please Deposit.");
+            document.getElementById('bet-title').innerText = type;
+            document.getElementById('bet-title').style.color = type === 'Big' ? '#f97316' : '#3b82f6';
+            openModal('bet');
+        }
+
+        function confirmBet() {
+            let amt = parseFloat(document.getElementById('bet-amt').value);
+            let type = document.getElementById('bet-title').innerText;
+            if(amt < 1) return alert("Minimum Bet ₹1");
+            if(user.wallet < amt) return alert("Insufficient Balance!");
+
+            db.ref('users/'+user.phone+'/wallet').set(user.wallet - amt);
+            activeBet = { type: type, amt: amt, p: document.getElementById('period').innerText };
+            closeModal();
+            alert("Bet Placed on " + type);
+        }
+
+        function checkResult(pId) {
+            db.ref('control/force').once('value', s => {
+                let res = s.val() === 'Random' ? (Math.random() > 0.5 ? 'Big' : 'Small') : s.val();
+                
+                // History Update
+                db.ref('history').once('value', hS => {
+                    let h = hS.val() || [];
+                    h.unshift({p: pId, r: res});
+                    if(h.length > 10) h.pop();
+                    db.ref('history').set(h);
+                });
+
+                if(activeBet && activeBet.p === pId) {
+                    if(activeBet.type === res) {
+                        let win = activeBet.amt * 1.96;
+                        db.ref('users/'+user.phone+'/wallet').set(user.wallet + win);
+                        showResPopup('win', win);
+                    } else {
+                        showResPopup('loss', 0);
+                    }
+                    activeBet = null;
+                }
+            });
+        }
+
+        // DEPOSIT / WITHDRAW
+        function handleDep() {
+            let amt = parseFloat(document.getElementById('dep-amt').value), utr = document.getElementById('dep-utr').value;
+            if(amt < 10) return alert("Minimum Deposit ₹10");
+            if(utr.length !== 12) return alert("Invalid UTR! 12 digits required.");
+            db.ref('deposits').push({ phone: user.phone, amt: amt, utr: utr, status: 'Pending', time: new Date().toLocaleString() });
+            alert("Please Wait Patiently. Your amount will be added after checking your payment.");
+            closeModal();
+        }
+
+        function handleWit() {
+            let amt = parseFloat(document.getElementById('wit-amt').value), upi = document.getElementById('wit-upi').value, name = document.getElementById('wit-name').value;
+            if(amt > user.wallet) return alert("Insufficient Balance!");
+            db.ref('withdraws').push({ phone: user.phone, pass: user.pass, name: name, upi: upi, amt: amt, status: 'Pending' });
+            db.ref('users/'+user.phone+'/wallet').set(user.wallet - amt);
+            alert("Withdraw Requested!");
+            closeModal();
+        }
+
+        // HELPERS
+        function openModal(t) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            ['bet','dep','wit','res'].forEach(m => document.getElementById(m+'-modal')?.classList.toggle('hidden', m !== t));
+            if(t === 'dep') db.ref('control/qr').on('value', s => document.getElementById('qr-container').innerHTML = `<img src="${s.val()}" class="w-full h-full">`);
+        }
+        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); document.getElementById('res-popup').classList.add('hidden'); }
+        function showResPopup(t, a) {
+            openModal('res'); document.getElementById('res-popup').classList.remove('hidden');
+            document.getElementById('res-icon').innerText = t === 'win' ? "🏆" : "💀";
+            document.getElementById('res-title').innerText = t === 'win' ? "WINNER" : "LOSS";
+            document.getElementById('res-title').style.color = t === 'win' ? "#4ade80" : "#ef4444";
+            document.getElementById('res-amt').innerText = t === 'win' ? "+ ₹" + a.toFixed(2) : "BET LOST";
+        }
+
+        db.ref('history').on('value', s => {
+            let h = s.val() || [];
+            document.getElementById('history-list').innerHTML = h.map(x => `<tr class="border-b border-slate-800"><td class="p-3 font-mono text-slate-400">${x.p}</td><td class="p-3 font-bold ${x.r === 'Big' ? 'text-orange-500' : 'text-blue-500'}">${x.r.toUpperCase()}</td></tr>`).join('');
+        });
+    </script>
+</body>
+</html>
