@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YGWIN | ULTIMATE BEAST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --main-bg: #050a1f; --glass: rgba(13, 22, 50, 0.9); --gold: #facc15; }
+        body { background: var(--main-bg); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; user-select: none; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(15px); }
+        .hidden { display: none !important; }
+        .btn-active:active { transform: scale(0.92); opacity: 0.8; }
+        input { background: #0a0f29 !important; border: 1px solid #1e293b !important; color: white !important; }
+        @keyframes pulse-red { 0%, 100% { color: #ef4444; } 50% { color: #7f1d1d; } }
+        .timer-danger { animation: pulse-red 0.5s infinite; }
+        .win-popup { animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes zoomIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <div id="auth-section" class="w-full max-w-md mt-10">
+        <div id="register-box" class="glass-card p-8 rounded-[3rem] shadow-2xl">
+            <h1 class="text-5xl font-black text-yellow-500 mb-2 italic tracking-tighter">YGWIN</h1>
+            <p class="text-slate-500 text-[10px] uppercase tracking-widest mb-8 font-bold">New Registration</p>
+            <div class="space-y-4">
+                <input type="number" id="reg-phone" placeholder="Mobile Number" class="w-full p-4 rounded-2xl outline-none">
+                <input type="password" id="reg-pass" placeholder="Create Password" class="w-full p-4 rounded-2xl outline-none">
+                <input type="password" id="reg-cpass" placeholder="Confirm Password" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="handleRegister()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-2xl btn-active shadow-xl shadow-yellow-500/20">CREATE ACCOUNT</button>
+                <p class="text-center text-sm text-slate-400 mt-6">Already a member? <button onclick="toggleAuth('login')" class="text-yellow-500 font-bold">Login Access</button></p>
+            </div>
+        </div>
+
+        <div id="login-box" class="glass-card p-8 rounded-[3rem] shadow-2xl hidden">
+            <h1 class="text-5xl font-black text-yellow-500 mb-2 italic tracking-tighter">YGWIN</h1>
+            <p class="text-slate-500 text-[10px] uppercase tracking-widest mb-8 font-bold">Secure Login</p>
+            <div class="space-y-4">
+                <input type="number" id="log-phone" placeholder="Mobile Number" class="w-full p-4 rounded-2xl outline-none">
+                <input type="password" id="log-pass" placeholder="Password" class="w-full p-4 rounded-2xl outline-none">
+                <button onclick="handleLogin()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-2xl btn-active shadow-xl shadow-yellow-500/20">ENTER GAME</button>
+                <p class="text-center text-sm text-slate-400 mt-6">Need an account? <button onclick="toggleAuth('register')" class="text-yellow-500 font-bold">Register Now</button></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-section" class="w-full max-w-md hidden">
+        <div class="flex justify-between items-center mb-6 px-2">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-black font-black">YG</div>
+                <span id="u-display" class="text-xs font-black text-white">---</span>
+            </div>
+            <button onclick="handleLogout()" class="text-[10px] bg-red-500/10 text-red-500 px-4 py-2 rounded-xl border border-red-500/20 font-black btn-active">LOGOUT</button>
+        </div>
+
+        <div class="glass-card p-6 rounded-[2rem] flex justify-between items-center mb-6 border-b-2 border-yellow-500/20">
+            <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Total Assets</p>
+                <h2 class="text-4xl font-black text-white italic">₹<span id="bal">0.00</span></h2>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button onclick="openModal('dep')" class="bg-red-600 px-8 py-2 rounded-xl text-[10px] font-black italic shadow-lg shadow-red-900/40 btn-active">DEPOSIT</button>
+                <button onclick="openModal('wit')" class="bg-yellow-500 text-black px-6 py-2 rounded-xl text-[10px] font-black italic btn-active">WITHDRAW</button>
+            </div>
+        </div>
+
+        <div class="glass-card p-8 rounded-[2.5rem] text-center mb-6 border-t-2 border-white/5">
+            <div class="flex justify-between items-center mb-6">
+                <div class="text-left">
+                    <p class="text-[10px] text-slate-500 font-black uppercase">Wingo 30s</p>
+                    <p id="period" class="text-sm font-black text-white tracking-tighter orbitron">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-500 font-black uppercase">Count Down</p>
+                    <div id="timer" class="text-5xl font-black text-red-500 orbitron italic">00:00</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <button onclick="placeBet('Big')" id="btn-big" class="bg-gradient-to-br from-orange-400 to-orange-700 h-32 rounded-[2rem] text-4xl font-black shadow-xl shadow-orange-900/40 btn-active border-b-4 border-orange-900">BIG</button>
+                <button onclick="placeBet('Small')" id="btn-small" class="bg-gradient-to-br from-indigo-500 to-indigo-800 h-32 rounded-[2rem] text-4xl font-black shadow-xl shadow-indigo-900/40 btn-active border-b-4 border-indigo-900">SMALL</button>
+            </div>
+        </div>
+
+        <div class="glass-card p-6 rounded-[2rem]">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Game Records</h3>
+            <div id="history-list" class="flex flex-col gap-3">
+                </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-6">
+        <div id="dep-modal" class="glass-card w-full max-w-sm p-10 rounded-[3rem] hidden text-center">
+            <h2 class="text-2xl font-black text-red-500 mb-6 italic uppercase">Recharge Center</h2>
+            <div class="bg-white p-2 rounded-2xl w-52 h-52 mx-auto mb-8 shadow-2xl shadow-white/5">
+                <img id="qr-img" src="" alt="QR" class="w-full h-full object-contain">
+            </div>
+            <input type="number" id="dep-amt" placeholder="Amount (Min ₹10)" class="w-full p-4 rounded-2xl mb-3 outline-none font-bold">
+            <input type="number" id="dep-utr" placeholder="12-Digit UTR Number" class="w-full p-4 rounded-2xl mb-6 outline-none font-bold text-center tracking-widest">
+            <button onclick="submitDeposit()" class="w-full bg-red-600 py-4 rounded-2xl font-black italic btn-active">REQUEST DEPOSIT</button>
+            <button onclick="closeModal()" class="mt-4 text-slate-500 text-xs font-black uppercase">Cancel</button>
+        </div>
+
+        <div id="wit-modal" class="glass-card w-full max-w-sm p-10 rounded-[3rem] hidden text-center">
+            <h2 class="text-2xl font-black text-yellow-500 mb-8 italic uppercase">Fast Withdrawal</h2>
+            <div class="space-y-4">
+                <input type="text" id="wit-upi" placeholder="Your UPI ID" class="w-full p-4 rounded-2xl outline-none font-bold">
+                <input type="text" id="wit-name" placeholder="Account Holder Name" class="w-full p-4 rounded-2xl outline-none font-bold">
+                <input type="number" id="wit-amt" placeholder="Withdrawal Amount" class="w-full p-4 rounded-2xl outline-none font-bold">
+                <button onclick="submitWithdraw()" class="w-full bg-yellow-500 text-black py-4 rounded-2xl font-black italic btn-active">CASH OUT</button>
+            </div>
+            <button onclick="closeModal()" class="mt-8 text-slate-500 text-xs font-black uppercase">Back to Game</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+            projectId: "yggame-23e85",
+            appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let userSession = JSON.parse(localStorage.getItem('yg_session'));
+        let myActiveBet = null;
+        let marketLock = false;
+
+        // --- AUTH ENGINE ---
+        function toggleAuth(mode) {
+            document.getElementById('register-box').classList.toggle('hidden', mode === 'login');
+            document.getElementById('login-box').classList.toggle('hidden', mode === 'register');
+        }
+
+        async function handleRegister() {
+            const ph = document.getElementById('reg-phone').value;
+            const p1 = document.getElementById('reg-pass').value;
+            const p2 = document.getElementById('reg-cpass').value;
+
+            if(ph.length < 10) return alert("❌ Valid 10-digit number required!");
+            if(p1 !== p2) return alert("❌ Passwords do not match!");
+            if(p1.length < 4) return alert("❌ Password too short!");
+
+            const snap = await db.ref('users/' + ph).once('value');
+            if(snap.exists()) return alert("⚠️ This number is already registered!");
+
+            await db.ref('users/' + ph).set({ phone: ph, pass: p1, wallet: 0 });
+            alert("✅ Registration Successful! Login now.");
+            toggleAuth('login');
+        }
+
+        async function handleLogin() {
+            const ph = document.getElementById('log-phone').value;
+            const ps = document.getElementById('log-pass').value;
+
+            const snap = await db.ref('users/' + ph).once('value');
+            if(!snap.exists()) return alert("❌ Number not registered!");
+            if(snap.val().pass !== ps) return alert("❌ Wrong Password!");
+
+            initGame(snap.val());
+        }
+
+        function initGame(data) {
+            userSession = data;
+            localStorage.setItem('yg_session', JSON.stringify(userSession));
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            document.getElementById('u-display').innerText = "+91 " + userSession.phone;
+
+            db.ref('users/' + userSession.phone + '/wallet').on('value', s => {
+                userSession.wallet = s.val() || 0;
+                document.getElementById('bal').innerText = userSession.wallet.toFixed(2);
+            });
+            runBeastEngine();
+        }
+
+        // --- [BEAST ENGINE: 30S TIMER & RESULT] ---
+        function runBeastEngine() {
+            setInterval(() => {
+                const now = new Date();
+                const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                const sec = ist.getSeconds();
+                const rem = 30 - (sec % 30);
+                
+                // Period Generation (Java Logic Sync)
+                const totalMin = ist.getHours() * 60 + ist.getMinutes();
+                const pId = ist.toISOString().slice(0,10).replace(/-/g,"") + "30S" + (10001 + totalMin + (sec >= 30 ? 0.5 : 0));
+                
+                document.getElementById('period').innerText = "PERIOD: " + pId;
+                document.getElementById('timer').innerText = 00:${rem < 10 ? '0'+rem : rem};
+
+                if(rem <= 5) {
+                    marketLock = true;
+                    document.getElementById('timer').classList.add('timer-danger');
+                    document.getElementById('btn-big').style.opacity = "0.5";
+                    document.getElementById('btn-small').style.opacity = "0.5";
+                } else {
+                    marketLock = false;
+                    document.getElementById('timer').classList.remove('timer-danger');
+                    document.getElementById('btn-big').style.opacity = "1";
+                    document.getElementById('btn-small').style.opacity = "1";
+                }
+
+                if(rem === 1) {
+                    setTimeout(() => settleRound(pId), 1200);
+                }
+            }, 1000);
+        }
+
+        async function settleRound(pId) {
+            const snap = await db.ref('control/force').once('value');
+            const forced = snap.val();
+            
+            // Random or Forced Result
+            let result = (forced && forced !== 'Random') ? forced : (Math.random() > 0.5 ? 'Big' : 'Small');
+            
+            // Push Global History (Only once by admin or system)
+            db.ref('history/' + pId).set({ r: result, t: Date.now() });
+
+            if(myActiveBet && myActiveBet.period === pId) {
+                if(myActiveBet.type === result) {
+                    const profit = myActiveBet.amt * 1.96;
+                    await db.ref('users/' + userSession.phone + '/wallet').transaction(w => (w || 0) + profit);
+                    alert("🎊 WINNER! Result: " + result);
+                } else {
+                    alert("💀 BETTER LUCK NEXT TIME! Result: " + result);
+                }
+                myActiveBet = null;
+            }
+            db.ref('control/force').set('Random');
+        }
+
+        // --- BETTING ---
+        function placeBet(type) {
+            if(marketLock) return alert("🚫 Market Locked! Wait for next round.");
+            if(userSession.wallet < 1) return alert("❌ Insufficient Balance! Deposit ₹10.");
+
+            let amt = prompt(`Stake on ${type.toUpperCase()} (Min ₹1):`, "10");
+            let finalAmt = parseFloat(amt);
+
+            if(finalAmt >= 1 && finalAmt <= userSession.wallet) {
+                const currentPid = document.getElementById('period').innerText.split(': ')[1];
+                db.ref('users/' + userSession.phone + '/wallet').transaction(w => w - finalAmt);
+                myActiveBet = { type, amt: finalAmt, period: currentPid };
+                
+                // Admin Feed
+                db.ref('admin_live_bets').push({ ph: userSession.phone, type, amt: finalAmt });
+                alert("✅ Bet Placed: ₹" + finalAmt);
+            } else {
+                alert("❌ Invalid Amount!");
+            }
+        }
+
+        // --- DEPOSIT / WITHDRAW ---
+        function openModal(t) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById('dep-modal').classList.toggle('hidden', t !== 'dep');
+            document.getElementById('wit-modal').classList.toggle('hidden', t !== 'wit');
+            if(t === 'dep') {
+                db.ref('control/qr').on('value', s => document.getElementById('qr-img').src = s.val());
+            }
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+        async function submitDeposit() {
+            const amt = parseFloat(document.getElementById('dep-amt').value);
+            const utr = document.getElementById('dep-utr').value;
+            if(amt < 10) return alert("Minimum Deposit is ₹10!");
+            if(utr.length !== 12) return alert("Invalid UTR! 12 digits required.");
+
+            await db.ref('requests/deposits').push({
+                ph: userSession.phone,
+                amt: amt,
+                utr: utr,
+                status: 'Pending',
+                time: Date.now()
+            });
+            alert("⏳ Request Sent! Please Wait Patiently. Your amount will be added after checking.");
+            closeModal();
+        }
+
+        async function submitWithdraw() {
+            const upi = document.getElementById('wit-upi').value;
+            const name = document.getElementById('wit-name').value;
+            const amt = parseFloat(document.getElementById('wit-amt').value);
+
+            if(amt > userSession.wallet) return alert("❌ Insufficient Balance!");
+            if(amt < 10) return alert("Minimum withdrawal ₹10");
+
+            // Deduct first
+            await db.ref('users/' + userSession.phone + '/wallet').transaction(w => w - amt);
+            await db.ref('requests/withdraws').push({
+                ph: userSession.phone,
+                upi, name, amt,
+                status: 'Pending',
+                time: Date.now()
+            });
+            alert("✅ Withdrawal Request Submitted!");
+            closeModal();
+        }
+
+        // --- HISTORY SYNC ---
+        db.ref('history').limitToLast(10).on('value', s => {
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+            let items = [];
+            s.forEach(child => {
+                items.unshift({ id: child.key, ...child.val() });
+            });
+            items.forEach(i => {
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border-l-4 ${i.r === 'Big' ? 'border-orange-500' : 'border-indigo-500'}">
+                        <span class="text-[10px] orbitron text-slate-500">${i.id}</span>
+                        <span class="font-black ${i.r === 'Big' ? 'text-orange-500' : 'text-indigo-400'}">${i.r.toUpperCase()}</span>
+                    </div>`;
+            });
+        });
+
+        if(userSession) initGame(userSession);
+        function handleLogout() { localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
