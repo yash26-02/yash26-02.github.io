@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>YGWIN | PROFESSIONAL BEAST</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #050a1f;
+            --card-bg: rgba(13, 22, 50, 0.95);
+            --gold: #facc15;
+            --red: #ef4444;
+            --green: #22c55e;
+            --indigo: #6366f1;
+            --orange: #f97316;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at top right, #1e1b4b, transparent), 
+                              radial-gradient(circle at bottom left, #020617, transparent);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* UI Components */
+        .glass-panel {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-beast {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-beast:active { transform: scale(0.95); }
+
+        .btn-beast::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 5px; height: 5px;
+            background: rgba(255,255,255,0.4);
+            opacity: 0; border-radius: 100%;
+            transform: scale(1, 1) translate(-50%); transform-origin: 50% 50%;
+        }
+
+        /* Form Inputs */
+        input {
+            background: #0a0f29 !important;
+            border: 1px solid #1e293b !important;
+            color: white !important;
+            transition: border-color 0.3s ease;
+        }
+        input:focus { border-color: var(--gold) !important; outline: none; }
+
+        /* Animations */
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-beast { animation: slideUp 0.5s ease-out forwards; }
+
+        @keyframes pulse-timer { 
+            0% { transform: scale(1); text-shadow: 0 0 0px var(--red); }
+            50% { transform: scale(1.05); text-shadow: 0 0 20px var(--red); }
+            100% { transform: scale(1); text-shadow: 0 0 0px var(--red); }
+        }
+        .timer-active { animation: pulse-timer 1s infinite; }
+
+        .history-row {
+            border-left: 4px solid transparent;
+            background: rgba(255,255,255,0.03);
+            transition: 0.3s;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-layer" class="flex flex-col items-center justify-center min-h-screen p-6">
+        
+        <div id="reg-box" class="glass-panel w-full max-w-md p-10 rounded-[3rem] animate-beast">
+            <h1 class="text-6xl font-black text-yellow-500 italic tracking-tighter mb-2">YGWIN</h1>
+            <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-10">Titan Game Network</p>
+            
+            <div class="space-y-5">
+                <div class="relative">
+                    <input type="number" id="reg-phone" placeholder="Mobile Number" class="w-full p-5 rounded-2xl pl-12 text-lg">
+                    <span class="absolute left-4 top-5 text-slate-500">📱</span>
+                </div>
+                <input type="password" id="reg-pass" placeholder="Set Password" class="w-full p-5 rounded-2xl text-lg">
+                <input type="password" id="reg-cpass" placeholder="Confirm Password" class="w-full p-5 rounded-2xl text-lg">
+                
+                <button onclick="processRegister()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl text-xl shadow-2xl shadow-yellow-500/20 btn-beast mt-4">
+                    JOIN THE BEAST
+                </button>
+                
+                <div class="text-center mt-8">
+                    <p class="text-slate-500 text-sm">Existing Warrior?</p>
+                    <button onclick="toggleAuth('login')" class="text-yellow-500 font-black text-xl hover:scale-110 transition">LOGIN HERE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="log-box" class="glass-panel w-full max-w-md p-10 rounded-[3rem] hidden animate-beast">
+            <h1 class="text-6xl font-black text-yellow-500 italic tracking-tighter mb-2">YGWIN</h1>
+            <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-10">Secure Gateway</p>
+            
+            <div class="space-y-6">
+                <input type="number" id="log-phone" placeholder="Registered Number" class="w-full p-5 rounded-2xl text-lg">
+                <input type="password" id="log-pass" placeholder="Enter Password" class="w-full p-5 rounded-2xl text-lg">
+                
+                <button onclick="processLogin()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl text-xl shadow-2xl shadow-yellow-500/20 btn-beast">
+                    AUTHENTICATE
+                </button>
+                
+                <button onclick="toggleAuth('register')" class="w-full border border-slate-800 text-slate-400 font-bold py-4 rounded-2xl mt-4">Create New Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-layer" class="w-full max-w-md hidden p-4 pb-20">
+        
+        <div class="flex justify-between items-center mb-8 px-2">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-black font-black shadow-lg">YG</div>
+                <div>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase">Member ID</p>
+                    <p id="u-phone" class="text-xs font-black text-white">---</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="bg-red-500/10 text-red-500 px-5 py-2 rounded-2xl border border-red-500/20 text-[10px] font-black btn-beast">LOGOUT</button>
+        </div>
+
+        <div class="glass-panel p-8 rounded-[2.5rem] flex justify-between items-center mb-6 relative overflow-hidden border-b-4 border-yellow-500/30">
+            <div class="z-10">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Vault Balance</p>
+                <h2 class="text-4xl font-black text-white italic">₹<span id="u-bal">0.00</span></h2>
+            </div>
+            <div class="flex flex-col gap-3 z-10">
+                <button onclick="showModal('dep')" class="bg-red-600 px-10 py-3 rounded-2xl text-[10px] font-black italic shadow-lg shadow-red-900/40 btn-beast">DEPOSIT</button>
+                <button onclick="showModal('wit')" class="bg-yellow-500 text-black px-10 py-3 rounded-2xl text-[10px] font-black italic btn-beast">WITHDRAW</button>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="glass-panel p-8 rounded-[3rem] text-center mb-6 border-t border-white/5">
+            <div class="flex justify-between items-center mb-8">
+                <div class="text-left">
+                    <p class="text-[10px] text-slate-500 font-black uppercase">Wingo Elite</p>
+                    <p id="period-num" class="text-sm font-black text-white orbitron tracking-tighter">---</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-500 font-black uppercase">Market Closes</p>
+                    <div id="game-timer" class="text-5xl font-black text-red-500 orbitron italic">00:00</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <button onclick="bet('Big')" id="btn-big" class="bg-gradient-to-br from-orange-400 to-orange-700 h-36 rounded-[2.5rem] text-4xl font-black shadow-2xl shadow-orange-900/40 border-b-8 border-orange-900 btn-beast">BIG</button>
+                <button onclick="bet('Small')" id="btn-small" class="bg-gradient-to-br from-indigo-500 to-indigo-800 h-36 rounded-[2.5rem] text-4xl font-black shadow-2xl shadow-indigo-900/40 border-b-8 border-indigo-900 btn-beast">SMALL</button>
+            </div>
+            <p class="text-[8px] text-slate-600 font-black uppercase tracking-[0.2em]">High Stakes | 1:1.96 Payout</p>
+        </div>
+
+        <div class="glass-panel p-6 rounded-[2.5rem]">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Recent Conflicts</h3>
+                <div class="h-[2px] w-20 bg-slate-800 rounded-full"></div>
+            </div>
+            <div id="res-history" class="space-y-3">
+                </div>
+        </div>
+    </div>
+
+    <div id="modal-screen" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 hidden flex items-center justify-center p-6 overflow-y-auto">
+        
+        <div id="dep-panel" class="glass-panel w-full max-w-sm p-10 rounded-[3.5rem] hidden animate-beast text-center">
+            <h2 class="text-3xl font-black text-red-600 italic mb-2">TOP UP</h2>
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-8">Scan & Upload Screenshot</p>
+            
+            <div class="bg-white p-3 rounded-3xl w-56 h-56 mx-auto mb-8 shadow-2xl shadow-white/5 border-4 border-slate-900 overflow-hidden">
+                <img id="admin-qr" src="" class="w-full h-full object-contain">
+            </div>
+
+            <div class="space-y-4">
+                <input type="number" id="dep-amt" placeholder="Amount (Min ₹10)" class="w-full p-5 rounded-2xl outline-none font-black text-center">
+                <input type="number" id="dep-utr" placeholder="12 Digit UTR Number" class="w-full p-5 rounded-2xl outline-none font-black text-center tracking-widest">
+                
+                <button onclick="submitDep()" class="w-full bg-red-600 py-5 rounded-2xl font-black text-xl shadow-lg shadow-red-900/40 btn-beast">INITIALIZE PAYMENT</button>
+            </div>
+            <button onclick="hideModal()" class="mt-8 text-slate-600 text-[10px] font-black uppercase tracking-widest">Cancel Mission</button>
+        </div>
+
+        <div id="wit-panel" class="glass-panel w-full max-w-sm p-10 rounded-[3.5rem] hidden animate-beast text-center">
+            <h2 class="text-3xl font-black text-yellow-500 italic mb-2">WITHDRAW</h2>
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-8">Secure Fund Transfer</p>
+            
+            <div class="space-y-4">
+                <input type="text" id="wit-upi" placeholder="UPI Address (e.g. yash@upi)" class="w-full p-5 rounded-2xl font-bold">
+                <input type="text" id="wit-name" placeholder="Full Account Name" class="w-full p-5 rounded-2xl font-bold">
+                <input type="number" id="wit-amt" placeholder="Amount To Withdraw" class="w-full p-5 rounded-2xl font-black">
+                
+                <button onclick="submitWit()" class="w-full bg-yellow-500 text-black py-5 rounded-2xl font-black text-xl shadow-lg shadow-yellow-500/20 btn-beast">EXECUTE WITHDRAW</button>
+            </div>
+            <button onclick="hideModal()" class="mt-8 text-slate-600 text-[10px] font-black uppercase tracking-widest">Return To Battle</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. FIREBASE INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdro-HbE-RSNvx4-ftDTTVLEH9ZAlmCBA",
+            databaseURL: "https://yggame-23e85-default-rtdb.firebaseio.com",
+            projectId: "yggame-23e85",
+            appId: "1:805643944561:web:e445cb4d236b3e731c51d0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. STATE REPOSITORY ---
+        let currentSession = JSON.parse(localStorage.getItem('yg_beast_session'));
+        let activeBetInfo = null;
+        let isBettingLocked = false;
+
+        // --- 3. AUTH LOGIC ---
+        function toggleAuth(target) {
+            document.getElementById('reg-box').classList.toggle('hidden', target === 'login');
+            document.getElementById('log-box').classList.toggle('hidden', target === 'register');
+        }
+
+        async function processRegister() {
+            const ph = document.getElementById('reg-phone').value;
+            const p1 = document.getElementById('reg-pass').value;
+            const p2 = document.getElementById('reg-cpass').value;
+
+            if (ph.length < 10) return alert("❌ ERROR: Valid Phone Number Required.");
+            if (p1 !== p2) return alert("❌ ERROR: Passwords Do Not Match.");
+            if (p1.length < 4) return alert("❌ ERROR: Password Too Weak.");
+
+            const snap = await db.ref('users/' + ph).once('value');
+            if (snap.exists()) return alert("🚫 DENIED: Number Already Registered!");
+
+            await db.ref('users/' + ph).set({
+                phone: ph, pass: p1, wallet: 0, 
+                meta: { joined: Date.now(), role: 'player' }
+            });
+            alert("🔥 ACCOUNT CREATED: Welcome to YGWIN.");
+            toggleAuth('login');
+        }
+
+        async function processLogin() {
+            const ph = document.getElementById('log-phone').value;
+            const ps = document.getElementById('log-pass').value;
+
+            const snap = await db.ref('users/' + ph).once('value');
+            if (!snap.exists()) return alert("❌ ERROR: User Not Found.");
+            if (snap.val().pass !== ps) return alert("❌ ERROR: Incorrect Password.");
+
+            launchGame(snap.val());
+        }
+
+        function launchGame(data) {
+            currentSession = data;
+            localStorage.setItem('yg_beast_session', JSON.stringify(currentSession));
+            document.getElementById('auth-layer').classList.add('hidden');
+            document.getElementById('game-layer').classList.remove('hidden');
+            document.getElementById('u-phone').innerText = "+91 " + currentSession.phone;
+
+            // Live Wallet Listener
+            db.ref('users/' + currentSession.phone + '/wallet').on('value', s => {
+                currentSession.wallet = s.val() || 0;
+                document.getElementById('u-bal').innerText = currentSession.wallet.toFixed(2);
+            });
+            startBeastEngine();
+        }
+
+        // --- 4. BEAST ENGINE: JAVA-STYLE TIMER & PERIOD ---
+        function startBeastEngine() {
+            setInterval(() => {
+                const now = new Date();
+                const ist = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                
+                const seconds = ist.getSeconds();
+                const minutes = ist.getMinutes();
+                const hours = ist.getHours();
+                
+                // 30s Loop Logic
+                const rem = 30 - (seconds % 30);
+                
+                // PERIOD ID GENERATION (As per your Java request)
+                const dateCode = ist.toISOString().slice(0,10).replace(/-/g,"");
+                const totalMinutes = hours * 60 + minutes;
+                const pId = dateCode + "1000" + (10001 + totalMinutes - 330) + (seconds >= 30 ? "B" : "A");
+
+                document.getElementById('period-num').innerText = pId;
+                document.getElementById('game-timer').innerText = `00:${rem < 10 ? '0'+rem : rem}`;
+
+                // Lock Market in last 5s
+                if (rem <= 5) {
+                    isBettingLocked = true;
+                    document.getElementById('game-timer').classList.add('timer-active');
+                    document.getElementById('btn-big').style.opacity = "0.4";
+                    document.getElementById('btn-small').style.opacity = "0.4";
+                } else {
+                    isBettingLocked = false;
+                    document.getElementById('game-timer').classList.remove('timer-active');
+                    document.getElementById('btn-big').style.opacity = "1";
+                    document.getElementById('btn-small').style.opacity = "1";
+                }
+
+                // Settle Round at 0
+                if (rem === 1) {
+                    setTimeout(() => settleConflict(pId), 1500);
+                }
+            }, 1000);
+        }
+
+        async function settleConflict(pId) {
+            const snap = await db.ref('control/force').once('value');
+            const force = snap.val();
+            
+            // Priority: Admin Force > Random
+            let finalRes = (force && force !== 'Random') ? force : (Math.random() > 0.5 ? 'Big' : 'Small');
+            
+            // Global Sync
+            db.ref('history/' + pId).set({ res: finalRes, time: Date.now() });
+
+            if (activeBetInfo && activeBetInfo.p === pId) {
+                if (activeBetInfo.type === finalRes) {
+                    const winAmt = activeBetInfo.amt * 1.96;
+                    await db.ref('users/' + currentSession.phone + '/wallet').transaction(w => (w || 0) + winAmt);
+                    showNotice(`🎊 VICTORY! Result: ${finalRes}`, 'green');
+                } else {
+                    showNotice(`💔 DEFEAT! Result: ${finalRes}`, 'red');
+                }
+                activeBetInfo = null;
+            }
+            // Auto Reset Control
+            db.ref('control/force').set('Random');
+        }
+
+        // --- 5. BETTING SYSTEM ---
+        function bet(type) {
+            if (isBettingLocked) return alert("⛔ MARKET CLOSED: Please wait for next period.");
+            if (currentSession.wallet < 1) return alert("💸 BROKE: Deposit at least ₹10 to play.");
+
+            const input = prompt(`[${type}] Stake Amount (Min ₹1):`, "10");
+            const amt = parseFloat(input);
+
+            if (amt >= 1 && amt <= currentSession.wallet) {
+                const pId = document.getElementById('period-num').innerText;
+                
+                // Immediate Deduction
+                db.ref('users/' + currentSession.phone + '/wallet').transaction(w => w - amt);
+                activeBetInfo = { type: type, amt: amt, p: pId };
+                
+                // Admin Feed Notification
+                db.ref('admin_live_feed').push({ 
+                    ph: currentSession.phone, type, amt, p: pId, time: Date.now() 
+                });
+                
+                alert(`🎯 BET LOCKED: ₹${amt} on ${type}`);
+            } else {
+                alert("❌ INVALID: Check balance or amount.");
+            }
+        }
+
+        // --- 6. DEPOSIT / WITHDRAWAL ---
+        function showModal(t) {
+            document.getElementById('modal-screen').classList.remove('hidden');
+            document.getElementById('dep-panel').classList.toggle('hidden', t !== 'dep');
+            document.getElementById('wit-panel').classList.toggle('hidden', t !== 'wit');
+            
+            if (t === 'dep') {
+                db.ref('control/qr').on('value', s => {
+                    document.getElementById('admin-qr').src = s.val() || "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=YGWIN";
+                });
+            }
+        }
+
+        function hideModal() { document.getElementById('modal-screen').classList.add('hidden'); }
+
+        async function submitDep() {
+            const amt = parseFloat(document.getElementById('dep-amt').value);
+            const utr = document.getElementById('dep-utr').value;
+
+            if (amt < 10) return alert("❌ MINIMUM: ₹10 Required.");
+            if (utr.length !== 12) return alert("❌ INVALID UTR: Must be 12 digits.");
+
+            await db.ref('requests/deposits').push({
+                ph: currentSession.phone, amt, utr, status: 'Pending', time: Date.now()
+            });
+            alert("⏳ SUBMITTED: Please Wait Patiently. Your amount will be added after verification.");
+            hideModal();
+        }
+
+        async function submitWit() {
+            const upi = document.getElementById('wit-upi').value;
+            const name = document.getElementById('wit-name').value;
+            const amt = parseFloat(document.getElementById('wit-amt').value);
+
+            if (!upi || !name || amt < 10) return alert("❌ DATA MISSING: Check all fields.");
+            if (amt > currentSession.wallet) return alert("❌ INSUFFICIENT: Max withdrawal ₹" + currentSession.wallet);
+
+            // Subtract from wallet immediately
+            await db.ref('users/' + currentSession.phone + '/wallet').transaction(w => w - amt);
+            
+            await db.ref('requests/withdrawals').push({
+                ph: currentSession.phone, upi, name, amt, status: 'Pending', time: Date.now()
+            });
+            alert("✅ REQUESTED: Fund transfer initiated.");
+            hideModal();
+        }
+
+        // --- 7. HISTORY SYNC ---
+        db.ref('history').limitToLast(10).on('value', s => {
+            const container = document.getElementById('res-history');
+            container.innerHTML = "";
+            let data = [];
+            s.forEach(c => { data.unshift({ p: c.key, ...c.val() }); });
+            
+            data.forEach(item => {
+                const color = item.res === 'Big' ? 'var(--orange)' : 'var(--indigo)';
+                container.innerHTML += `
+                    <div class="history-row p-4 rounded-2xl flex justify-between items-center" style="border-left-color: ${color}">
+                        <span class="text-[10px] orbitron text-slate-500">${item.p}</span>
+                        <span class="font-black text-xs" style="color: ${color}">${item.res.toUpperCase()}</span>
+                    </div>`;
+            });
+        });
+
+        // --- 8. UTILS ---
+        function logout() { localStorage.clear(); location.reload(); }
+        function showNotice(msg, color) {
+            const div = document.createElement('div');
+            div.className = `fixed top-10 left-1/2 -translate-x-1/2 bg-${color}-600 p-5 rounded-2xl font-black shadow-2xl z-[100] animate-beast`;
+            div.innerText = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
+
+        // Session Resume
+        if (currentSession) launchGame(currentSession);
+    </script>
+</body>
+</html>
